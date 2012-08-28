@@ -1,5 +1,5 @@
 from SimpleCV import *
-cam = Camera()
+cam = Camera(1)
 
 while (1):
         i = cam.getImage()

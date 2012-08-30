@@ -1,7 +1,9 @@
+#!usr/bin/python
+
 import serial
 
 #Read from serial
-ser = serial.Serial('/dev/ttyXXX', BAUD_RATE)
+ser = serial.Serial('/dev/ttyACM0', 9600)
 ser.readline()
 
 #Write to serial

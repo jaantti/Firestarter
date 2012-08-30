@@ -2,6 +2,7 @@ String aa;
 int com;
 int stat;
 
+
 void setup(){
   Serial.begin(9600);
 }
@@ -15,9 +16,15 @@ void loop(){
     aa += a;
     
   }
-  if (aa.length() > 0){
-    Serial.println(aa + "0");
+//  if (aa.length() > 0){
+//    Serial.println(aa + "0");
+//  }
+
+  if (aa == "sA0"){
+
+    Serial.println((float)analogRead(0) / 1023 * 5);
   }
+  
   aa = "";
   
   

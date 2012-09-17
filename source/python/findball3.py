@@ -7,7 +7,7 @@ previous_ball_xy = None
 previous_ball_size = 100
 while disp.isNotDone():
 	img = cam.getImage()
-	dist = img.colorDistance(Color.BLACK).dilate(2)
+	'''dist = img.colorDistance(Color.BLACK).dilate(2)
 	segmented = dist.binarize()
 	blobs = segmented.findBlobs(minsize=2000)
 	if blobs:
@@ -25,6 +25,6 @@ while disp.isNotDone():
 				previous_ball_xy = (circles[-1].x, circles[-1].y)
 				previous_ball_size = circles[-1].radius()
 		else:
-			img.drawText("No circles found")	
+			img.drawText("No circles found")'''	
 	img.save(disp)
 

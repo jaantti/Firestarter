@@ -1,12 +1,14 @@
+#!/usr/bin/python
+
 import cv
 from cv import *
 import serial
 import time
 
-ser1 = serial.Serial('/dev/ttyACM1', 115200)
-ser2 = serial.Serial('/dev/ttyACM0', 115200)
+#ser1 = serial.Serial('/dev/ttyACM1', 115200)
+#ser2 = serial.Serial('/dev/ttyACM0', 115200)
 cv.NamedWindow("camera", 1)
-capture = cv.CaptureFromCAM(-1)
+capture = cv.CaptureFromCAM(1)
 cv.NamedWindow("t2", 1)
 cv.NamedWindow("t3", 1)
 cv.NamedWindow("track", 1)
@@ -62,10 +64,10 @@ while True:
     cv.CvtColor(img, hsv, cv.CV_BGR2HSV)
     thresholded_img =  cv.CreateImage(cv.GetSize(hsv), 8, 1)
     cv.InRangeS(hsv, (a, b, c), (d, e, f), thresholded_img)
-    cv.Smooth(thresholded_img, thresholded_img, CV_GAUSSIAN, 5, 5)
+    cv.Smooth(thresholded_img, thresholded_img, CV_GAUSSIAN, 9, 9)
     cv.Dilate(thresholded_img, thresholded_img)
     Canny(thresholded_img, edges, g, h, 3)
-    circles = cv.HoughCircles(edges, storage, cv.CV_HOUGH_GRADIENT, 2, img.height/4, h, g, 5, 100)
+    cv.HoughCircles(edges, storage, cv.CV_HOUGH_GRADIENT, 1, img.height/2, h, h/2, 5, 250)
     value = bool()
     for i in xrange(storage.height - 1):
          if maxRadius < int(storage[i, 0][2]):

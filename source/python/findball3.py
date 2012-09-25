@@ -1,15 +1,15 @@
 #!/usr/bin/python
 
 from SimpleCV import Camera, Color, Display
-cam = Camera()
+cam = Camera(1)
 disp = Display()
 previous_ball_xy = None
 previous_ball_size = 100
 while disp.isNotDone():
 	img = cam.getImage()
-	'''dist = img.colorDistance(Color.BLACK).dilate(2)
+	dist = img.colorDistance((254, 55, 19))
 	segmented = dist.binarize()
-	blobs = segmented.findBlobs(minsize=2000)
+	blobs = segmented.findBlobs(minsize=600)
 	if blobs:
 		circles = blobs.filter([b.isCircle(0.2) for b in blobs])
 		if circles:
@@ -25,6 +25,6 @@ while disp.isNotDone():
 				previous_ball_xy = (circles[-1].x, circles[-1].y)
 				previous_ball_size = circles[-1].radius()
 		else:
-			img.drawText("No circles found")'''	
+			img.drawText("No circles found")	
 	img.save(disp)
 

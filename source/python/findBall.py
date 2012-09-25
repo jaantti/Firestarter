@@ -2,12 +2,15 @@
 
 import cv2
 import numpy as np
-#import serial
+import serial
  
-capture = cv2.VideoCapture(0)
+capture = cv2.VideoCapture(1)
 cv2.cv.NamedWindow("track", 0)
 #capture = cv.CaptureFromCAM(0)
 #storage = cv.CreateMemStorage(0)
+
+ser1 = serial.Serial('/dev/ttyACM0', 115200)
+ser2 = serial.Serial('/dev/ttyACM1', 115200)
  
 a = 5
 b = 125
@@ -82,8 +85,12 @@ while True:
         if centroid_x > 340:
             #drive_right
             print('Wrumm! Going right.')
+			ser1.write('sd20\n')
+			ser2.write('sd20\n')
         elif centroid_x < 300:
             print('Wrumm! Going left.')
+			ser1.write('sd-20\n')
+			ser2.write('sd-20\n')
         else:
             print('Wrumm! Full speed ahead.')
  

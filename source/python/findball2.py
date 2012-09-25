@@ -1,4 +1,4 @@
-#!bin/usr/python
+#!/usr/bin/python
 '''
 This is how to track a white ball example using SimpleCV
 
@@ -13,7 +13,7 @@ print __doc__
 import SimpleCV
 
 display = SimpleCV.Display() #create the display to show the image
-cam = SimpleCV.Camera() # initalize the camera
+cam = SimpleCV.Camera(1) # initalize the camera
 normaldisplay = True # mode toggle for segment detection and display
 
 while display.isNotDone(): # loop until we tell the program to stop
@@ -22,9 +22,9 @@ while display.isNotDone(): # loop until we tell the program to stop
 		normaldisplay = not(normaldisplay)
 		print "Display Mode:", "Normal" if normaldisplay else "Segmented" 
 	
-	#img = cam.getImage().flipHorizontal() # grab image from camera
-	img = SimpleCV.Image("pic.png")	
-	dist = img.colorDistance(SimpleCV.Color.ORANGE).dilate(2) # try to separate colors in image
+	img = cam.getImage().flipHorizontal() # grab image from camera
+	#img = SimpleCV.Image("pic.png")	
+	dist = img.colorDistance((254, 55, 19)).dilate(2) # try to separate colors in image
 	segmented = dist.stretch(200,255) # really try to push out white colors
 	blobs = segmented.findBlobs() # search the image for blob objects
 	if blobs: # if blobs are found

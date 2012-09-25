@@ -1,6 +1,10 @@
 import cv
 from cv import *
+import serial
+import time
 
+ser1 = serial.Serial('/dev/ttyACM1', 115200)
+ser2 = serial.Serial('/dev/ttyACM0', 115200)
 cv.NamedWindow("camera", 1)
 capture = cv.CaptureFromCAM(-1)
 cv.NamedWindow("t2", 1)
@@ -49,6 +53,7 @@ cv.CreateTrackbar("threshlow", "filter", g, 500, thresh)
 cv.CreateTrackbar("threshhigh", "filter", h, 500, thresh1)
 
 while True:
+    maxRadius = 0
     img = cv.QueryFrame(capture)
     cv.Smooth(img, img, cv.CV_BLUR, 3)
     edges = cv.CreateImage(cv.GetSize(img), IPL_DEPTH_8U, 1)
@@ -56,12 +61,11 @@ while True:
     hsv = cv.CreateImage(cv.GetSize(img), 8, 3)
     cv.CvtColor(img, hsv, cv.CV_BGR2HSV)
     thresholded_img =  cv.CreateImage(cv.GetSize(hsv), 8, 1)
-    cv.Smooth(thresholded_img, thresholded_img, CV_GAUSSIAN, 9, 9)
-    cv.Dilate(thresholded_img, thresholded_img)
     cv.InRangeS(hsv, (a, b, c), (d, e, f), thresholded_img)
+    cv.Smooth(thresholded_img, thresholded_img, CV_GAUSSIAN, 5, 5)
+    cv.Dilate(thresholded_img, thresholded_img)
     Canny(thresholded_img, edges, g, h, 3)
-    circles = cv.HoughCircles(edges, storage, cv.CV_HOUGH_GRADIENT, 2, img.height/4, h, g, 10, 500)
-    maxRadius = 0
+    circles = cv.HoughCircles(edges, storage, cv.CV_HOUGH_GRADIENT, 2, img.height/4, h, g, 5, 100)
     value = bool()
     for i in xrange(storage.height - 1):
          if maxRadius < int(storage[i, 0][2]):
@@ -69,17 +73,16 @@ while True:
              x = int(storage[i, 0][0])
              y = int(storage[i, 0][1])
              maxRadius = int(storage[i, 0][2])
-         if value:
-             print((x, y), maxRadius)
-             cv.Circle(img, (x, y), maxRadius, (15, 150, 150), 3, 8, 0)
-         radius = int(storage[i, 0][2])
-         center = (int(storage[i, 0][0]), int(storage[i, 0][1]))
-        
-##         print (radius, center)
- 
-         cv.Circle(thresholded_img, center, radius, (15, 255, 255), 3, 8, 0)
-         cv.Circle(edges, center, radius, (0, 0, 255), 3, 8, 0)
-    
+
+    if value:
+        print((x, y), maxRadius)
+        cv.Circle(img, (x, y), maxRadius, (15, 255, 255), 3, 8, 0)
+##        if x < 320:
+##                       
+##
+## 
+##         cv.Circle(thresholded_img, center, radius, (15, 255, 255), 3, 8, 0)
+##         cv.Circle(edges, center, radius, (0, 0, 255), 3, 8, 0)
     cv.ShowImage("camera", thresholded_img)
     cv.ShowImage("t2", edges)
     cv.ShowImage("t3", img)

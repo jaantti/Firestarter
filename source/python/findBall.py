@@ -13,10 +13,10 @@ cv2.cv.NamedWindow("track", 0)
 ser1 = serial.Serial('/dev/ttyACM0', 115200)
 ser2 = serial.Serial('/dev/ttyACM1', 115200)
  
-a = 5
-b = 125
-c = 125
-d = 12
+a = 0
+b = 110
+c = 40
+d = 15
 e = 255
 f = 255
  
@@ -53,7 +53,7 @@ cv2.cv.CreateTrackbar("vmax", "track", f, 255, trackf)
  
 while True:
     ret, img = capture.read()
-    #img = cv2.medianBlur(img, 51)
+    img = cv2.medianBlur(img, 31)
     #img = cv2.erode(img, np.ones((11,11),'int'))
    
     img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
@@ -83,20 +83,23 @@ while True:
         centroid_x = int(M['m10']/M['m00'])
         centroid_y = int(M['m01']/M['m00'])
         print(centroid_x, centroid_y)
-        if centroid_x > 340:
+        if centroid_x > 390:
             #drive_right
             print('Wrumm! Going right.')
-			ser1.write('sd20\n')
-			ser2.write('sd20\n')
-        elif centroid_x < 300:
+#	    ser1.write('sd-20\n')
+            ser2.write('sd-10\n')
+        elif centroid_x < 250:
             print('Wrumm! Going left.')
-			ser1.write('sd-20\n')
-			ser2.write('sd-20\n')
+  #          ser1.write('sd20\n')
+            ser2.write('sd10\n')
         else:
             print('Wrumm! Full speed ahead.')
- 
- 
-    cv2.imshow('blurred', img)
+            ser1.write('sd10\n')
+            ser2.write('sd-10\n')
+    else:
+		ser1.write('sd0\n')
+		ser2.write('sd0\n')
+#    cv2.imshow('blurred', img)
    
     if cv2.waitKey(10) == 27:
         break

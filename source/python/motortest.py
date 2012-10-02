@@ -13,3 +13,7 @@ ser1.write('fs1\n')
 ser2.write('fs1\n')
 ser1.write('sd0\n')
 ser2.write('sd0\n')
+
+ser1.write('s\n')
+ser.readline()
+

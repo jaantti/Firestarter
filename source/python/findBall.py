@@ -10,8 +10,8 @@ cv2.cv.NamedWindow("track", 0)
 #capture = cv.CaptureFromCAM(0)
 #storage = cv.CreateMemStorage(0)
 
-ser1 = serial.Serial('/dev/ttyACM0', 115200)
-ser2 = serial.Serial('/dev/ttyACM1', 115200)
+ser1 = serial.Serial('/dev/ttyACM0', 115200) #Right
+ser2 = serial.Serial('/dev/ttyACM1', 115200) #Left
  
 a = 4
 b = 125
@@ -53,7 +53,7 @@ cv2.cv.CreateTrackbar("vmax", "track", f, 255, trackf)
  
 while True:
     ret, img = capture.read()
-    img = cv2.GaussianBlur(img, (3, 3), 1)
+    #img = cv2.GaussianBlur(img, (3, 3), 1)
 #    img = cv2.medianBlur(img, 31)
     #img = cv2.erode(img, np.ones((11,11),'int'))
    
@@ -78,7 +78,7 @@ while True:
     biggest = [] #np.ones((2,2),'int')
     for i in range(len(contours)):
         size = cv2.contourArea(contours[i])
-        if size > bigsize and size > 250:
+        if size > bigsize and size > 200:
             bigsize = size
             biggest = contours[i]
  
@@ -91,26 +91,39 @@ while True:
         centroid_y = int(M['m01']/M['m00'])
         print(centroid_x, centroid_y)
         cv2.circle(img, (centroid_x, centroid_y), 5, (255, 0, 0), -1)
-        if centroid_x > 390:
-            #drive_right
-            print('Wrumm! Going right.')
-            #ser1.write('sd-20\n')
-            ser1.write('sd-10\n')
-        elif centroid_x < 250:
-            print('Wrumm! Going left.')
-            #ser1.write('sd20\n')
-            ser2.write('sd10\n')
+        rel_pos = (centroid_x - 320)/320.0
+        max_spd = 30
+
+
+        if rel_pos > 0:
+            ser1.write('sd'+str(30-int((rel_pos)*max_spd))+'\n')
+            ser2.write('sd-30\n')
+        elif rel_pos < 0:
+            ser1.write('sd30\n')
+            ser2.write('sd'+str(-30-int((rel_pos)*max_spd))+'\n')
         else:
-            print('Wrumm! Full speed ahead.')
-            ser1.write('sd-10\n')
-            ser2.write('sd10\n')
+            ser1.write('sd30\n')
+            ser2.write('sd30\n')
+##        if centroid_x > 390:
+##            #drive_right
+##            print('Wrumm! Going right.')
+##            #ser1.write('sd-20\n')
+####            ser1.write('sd-10\n')
+##        elif centroid_x < 250:
+##            print('Wrumm! Going left.')
+##            #ser1.write('sd20\n')
+####            ser2.write('sd10\n')
+##        else:
+##            print('Wrumm! Full speed ahead.')
+####            ser1.write('sd-10\n')
+####            ser2.write('sd10\n')
     else:
-		ser1.write('sd0\n')
-		ser2.write('sd0\n')
+        ser1.write('sd0\n')
+        ser2.write('sd0\n')
     cv2.imshow('blurred', img)
    
     if cv2.waitKey(10) == 27:
-    	break
+        break
  
 cv2.destroyAllWindows()
 cv2.VideoCapture(0).release()

@@ -7,6 +7,8 @@ import serial
 
 capture = cv2.VideoCapture(1)
 cv2.cv.NamedWindow("track", 0)
+capture.set(3, 640)
+capture.set(4, 480)
 #capture = cv.CaptureFromCAM(0)
 #storage = cv.CreateMemStorage(0)
 

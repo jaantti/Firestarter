@@ -3,12 +3,11 @@
 import cv2
 import numpy as np
 import serial
- 
 
 capture = cv2.VideoCapture(1)
 cv2.cv.NamedWindow("track", 0)
-capture.set(3, 640)
-capture.set(4, 480)
+capture.set(3, 320)
+capture.set(4, 240)
 #capture = cv.CaptureFromCAM(0)
 #storage = cv.CreateMemStorage(0)
 
@@ -17,11 +16,11 @@ ser2 = serial.Serial('/dev/ttyACM1', 115200) #Left
  
 a = 3
 b = 125
-c = 100
-d = 15
+c = 0
+d = 12
 e = 255
 f = 255
-
+rel_pos = 0
 
 def tracka(s):
     global a
@@ -59,8 +58,8 @@ ser2.write('fs0\n')
 
 while True:
     ret, img = capture.read()
-
-    #img = cv2.GaussianBlur(img, (3, 3), 1)
+    img = cv2.flip(img, -1)
+    img = cv2.GaussianBlur(img, (3, 3), 1)
 #    img = cv2.medianBlur(img, 31)
     #img = cv2.erode(img, np.ones((11,11),'int'))
    
@@ -85,11 +84,12 @@ while True:
     biggest = [] #np.ones((2,2),'int')
     for i in range(len(contours)):
         size = cv2.contourArea(contours[i])
-        if size > bigsize and size > 150:
+        if size > bigsize and size > 20:
             bigsize = size
             biggest = contours[i]
  
     if len(biggest) != 0:
+        print(bigsize)
         #approx = cv2.approxPolyDP(contours[i], 0.02*cv2.arcLength(contours[i],True),True)
         #hull = cv2.convexHull(contours[i])
         #cv2.drawContours(img, biggest, 0, (0, 0, 255), -1)
@@ -97,17 +97,19 @@ while True:
 
         centroid_x = int(M['m10']/M['m00']) #for direction
         centroid_y = int(M['m01']/M['m00']) #for distance
-        print(centroid_x, centroid_y)
+        #print(centroid_x, centroid_y)
         cv2.circle(img, (centroid_x, centroid_y), 5, (255, 0, 0), -1)
-        rel_pos = (centroid_x - 320)/320.0
+        rel_pos = (centroid_x - 160)/160.0
         max_spd = 30
-        slw_spd = int(rel_pos*20)
+        slw_spd = int(rel_pos*5)
+        mtr1_spd = 0
+        mtr2_spd = 0
 
+        if rel_pos < 0:
 
-        if rel_pos > 0:
             ser1.write('sd'+str(max_spd-slw_spd)+'\n')
-            ser2.write('sd-'+str(max_spd)+'\n')
-        elif rel_pos < 0:
+            ser2.write('sd'+str(-max_spd)+'\n')
+        elif rel_pos > 0:
             ser1.write('sd'+str(max_spd)+'\n')
             ser2.write('sd'+str(-max_spd-slw_spd)+'\n')
         else:
@@ -115,18 +117,26 @@ while True:
             ser2.write('sd-'+str(max_spd)+'\n')
 
     else:
-        ser1.write('sd0\n')
-        ser2.write('sd0\n')
-    ser1.write('s\n')
-    ser2.write('s\n')
+        #ser1.write('sd0\n')
+        #ser2.write('sd0\n')
+        if rel_pos > 0:
+            ser1.write('sd5\n')
+            ser2.write('sd-30\n')
+
+        else:
+            ser1.write('sd30\n')
+            ser2.write('sd-5\n')
+        
+    #ser1.write('s\n')
+    #ser2.write('s\n')
         
     cv2.imshow('blurred', img)
 
-    ser1_fb = ser1.readline()
-    ser2_fb = ser2.readline()
-    if not (ser1_fb == '<s:0>\n' and ser2_fb == '<s:0>\n'):
-        print('        '+ser1_fb)
-        print(ser2_fb)
+    #ser1_fb = int(ser1.readline()[3:-2])
+    #ser2_fb = int(ser2.readline()[3:-2])
+    #if not (ser1_fb == '<s:0>\n' and ser2_fb == '<s:0>\n'):
+    #    print(ser1_fb)
+    #    print(ser2_fb)
 
     if cv2.waitKey(10) == 27:
         break
@@ -139,3 +149,16 @@ ser2.write('sd0\n')
 cv2.destroyAllWindows()
 cv2.VideoCapture(0).release()
 ##cv.DestroyWindow("camera2")
+#def grad_chg(mtr1_spd, mtr2_spd, des_spd1, des_spd2):
+#    if mtr1_spd < des_spd1:
+#        if mtr2_spd > des_spd2:
+#            mtr2_spd -= 2
+#        elif mtr2_spd < des_spd2:
+#            mtr2_spd += 2
+#        mtr1_spd += 2
+#    elif mtr1_spd > des_spd1:
+#        if mtr2_spd > des_spd2:
+#            mtr2_spd -= 2
+#        elif mtr2_spd < des_spd2:
+#            mtr2_spd += 2
+#        mtr1_spd -= 2

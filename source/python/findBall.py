@@ -58,7 +58,7 @@ ser2.write('fs0\n')
 
 while True:
     ret, img = capture.read()
-    img = cv2.flip(img, -1)
+#    img = cv2.flip(img, -1)
     img = cv2.GaussianBlur(img, (3, 3), 1)
 #    img = cv2.medianBlur(img, 31)
     #img = cv2.erode(img, np.ones((11,11),'int'))

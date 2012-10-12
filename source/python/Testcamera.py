@@ -4,7 +4,7 @@ import cv
 from cv import *
 
 cv.NamedWindow("camera", 1)
-capture = cv.CaptureFromCAM(0)
+capture = cv.CaptureFromCAM(1)
 
 while True:
     img = cv.QueryFrame(capture)

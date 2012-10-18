@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import serial
 
+
 capture = cv2.VideoCapture(1)
 cv2.cv.NamedWindow("track", 0)
 capture.set(3, 320)

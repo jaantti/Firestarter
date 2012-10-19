@@ -15,10 +15,10 @@ capture.set(4, 240)
 ser1 = serial.Serial('/dev/ttyACM0', 115200) #Right
 ser2 = serial.Serial('/dev/ttyACM1', 115200) #Left
 
-a = 100
-b = 135
-c = 35
-d = 150
+a = 3
+b = 200
+c = 245
+d = 25
 e = 255
 f = 255
 rel_pos = 0
@@ -75,10 +75,10 @@ while True:
        
         img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
 
-        ORANGE_MIN = np.array([3, 200, 245],np.uint8)
+        ORANGE_MIN = np.array([a, b, c],np.uint8)
         #ORANGE_NOTZERO = np.array([180, e, f],np.uint8)
         #ORANGE_ZERO = np.array([0, b, c],np.uint8)
-        ORANGE_MAX = np.array([25, 255, 255],np.uint8)
+        ORANGE_MAX = np.array([d, e, ],np.uint8)
 
         img_thresholded = cv2.inRange(img_hsv, ORANGE_MIN, ORANGE_MAX)
         #img_thresholded_2 = cv2.inRange(img_hsv, ORANGE_ZERO, ORANGE_MAX)
@@ -148,8 +148,8 @@ while True:
         ret, img = capture.read()
         img = cv2.GaussianBlur(img, (3, 3), 1)
         img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV)
-        ORANGE_MIN = np.array([a, b, c],np.uint8)
-        ORANGE_MAX = np.array([d, e, f],np.uint8)
+        ORANGE_MIN = np.array([100, 135, 35],np.uint8)
+        ORANGE_MAX = np.array([150, 255, 255],np.uint8)
         img_thresholded = cv2.inRange(img_hsv, ORANGE_MIN, ORANGE_MAX)
         cv2.imshow('thresholded', img_thresholded)
         contours, hierarchy = cv2.findContours(img_thresholded, cv2.RETR_TREE,cv2.CHAIN_APPROX_TC89_KCOS)
@@ -157,7 +157,7 @@ while True:
         biggest = [] #np.ones((2,2),'int')
         for i in range(len(contours)):
             size = cv2.contourArea(contours[i])
-            if size > bigsize and size > 35:
+            if size > bigsize and size > 1000:
                 bigsize = size
                 biggest = contours[i]
      

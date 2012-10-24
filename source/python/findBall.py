@@ -80,7 +80,7 @@ while True:
         #ORANGE_ZERO = np.array([0, b, c],np.uint8)
         ORANGE_MAX = np.array([d, e, ],np.uint8)
 
-        img_thresholded = cv2.inRange(img_hsv, ORANGE_MIN, ORANGE_MAX)
+        img_thresholded = cv2.inRange(img_hsv, ORANGE_MIN, ORANGE_MAX)s
         #img_thresholded_2 = cv2.inRange(img_hsv, ORANGE_ZERO, ORANGE_MAX)
         # ball orange (5, 125, 125), (12, 255, 255)
         # pen blue (100, 80, 80), (120, 255, 255)

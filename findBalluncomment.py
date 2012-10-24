@@ -82,14 +82,13 @@ def drive(centroids, max_spd, slower_by, ser1, ser2):
         count = 0
         rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision -1 left edge, 1 right edge, 0 center
         max_spd = 30 #fastest wheel speed
-        slw_spd = slower_by - int(rel_pos*slower_by) - 5 #slower wheel speed
 
         if rel_pos < 0: #blob right of center
-            ser1.write('sd'+str(slw_spd)+'\n')
+            ser1.write('sd'+str(max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
             ser2.write('sd'+str(-max_spd)+'\n')
         elif rel_pos > 0: #blob left of center
             ser1.write('sd'+str(max_spd)+'\n')
-            ser2.write('sd'+str(-slw_spd)+'\n')
+            ser2.write('sd'+str(-max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
         else: #blob exactly in the middle
             ser1.write('sd'+str(max_spd)+'\n')
             ser2.write('sd-'+str(max_spd)+'\n')

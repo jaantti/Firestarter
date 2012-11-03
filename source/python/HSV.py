@@ -13,6 +13,9 @@ cv.NamedWindow("t2", 1)
 cv.NamedWindow("t3", 1)
 cv.NamedWindow("track", 1)
 cv.NamedWindow("filter", 1)
+cv.SetCaptureProperty(capture, 3, 320)
+cv.SetCaptureProperty(capture, 4, 240)
+cv.capture.set(4, 240)
 a = 5
 b = 125
 c = 125

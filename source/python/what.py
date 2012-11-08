@@ -5,7 +5,7 @@ switch = 0
 
 capture = cv2.VideoCapture(0)
 capture.set(3, 640)
-capture.set(4, 320)
+capture.set(4, 480)
 def null(*arg):
     pass
 
@@ -57,8 +57,19 @@ while True:
             y = 480
             if l[0] != l[2]:
                 slope = float((-1*(l[3]-l[1])))/float((l[2]-l[0]))
+                b = (-l[0]*(l[3]-l[1]))/((l[2]-l[0])+l[1]*(l[2]-l[0]))
+                
                 if slope > 0:
-##                    if  (0*(l[2]-l[0])+l[1]*(l[2]-l[0]))/((l[3]-l[1])-l[0]*(l[3]-l[1])) 
+                    cv2.fillPoly(img, np.array([(200, 200), (200, 300), (300, 200), (300, 300)], np.float), (0, 255, 255))
+                    '''if b >= 0 and b <= 640:
+                        if 640 * slope + b >= 0 and 640 * slope + b <= 480:
+##                            cv2.fillConvexPoly(img, np.array([(0, 480), (640, 480), (0, b), (640, slope * 640 + b)], np.float), (0, 255, 255))
+                        elif (640 * slope + b < 0):
+##                            cv2.fillConvexPoly(img, np.array([(0, 0), (-b/slope, 0), (0, b)], np.float), (0, 255, 255))
+                        else:
+##                            cv2.fillConvexPoly(img, np.array([(0, 640), ((480-b)/slope, 480), (0, b)], np.float), (0, 255, 255))
+                    elif (b > 0):
+                        cv2.FillConvexPoly(img, []'''
                     if 0 > x*(l[3]-l[1])-l[0]*(l[3]-l[1]) - y*(l[2]-l[0])+l[1]*(l[2]-l[0]):
                         switch = 0
                     elif x*(l[3]-l[1])-l[0]*(l[3]-l[1]) - y*(l[2]-l[0])+l[1]*(l[2]-l[0]) >= 0:

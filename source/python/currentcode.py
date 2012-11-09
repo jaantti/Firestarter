@@ -190,11 +190,11 @@ def goal_find(centroids, ser1, ser2):
             ser2.write('sd15\n')
  
 def boom(ser3):
+    ser3.write('e\n')
+    time.sleep(0.1)
     ser3.write('c\n')
     time.sleep(0.5)
     ser3.write('k\n')
-    time.sleep(0.1)
-    ser3.write('e\n')
            
 def drive(centroids, max_spd, slower_by, count):
     '''Drives towards the provided point (assuming the camera faces forward). Turning rate varies depending on x coordinate.'''

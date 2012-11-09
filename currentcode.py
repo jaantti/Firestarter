@@ -140,8 +140,10 @@ def field_edge(contour, img):
         for i in range(len(line)):
             if line_green[i] == 1:
                 last_green = 0
-            elif not (line[i][0][1] < 40 and line[i][0][2] > 200) and last_green < 2: #is white and just had green
+            elif (not (line[i][0][1] < 40 and line[i][0][2] > 200)) and last_green < 2: #isn't white and just had green
                 return 1
+            else:
+                last_green += 1
     return 0
             
 def edge_check(contour, img):
@@ -153,7 +155,7 @@ def edge_check(contour, img):
         #cv2.imshow('Line', robot_to_ball)
         cnt1 = 0
         cnt2 = 0
-        cnt3 = 2
+        cnt3 = 1
         #print robot_to_ball
         for i in range(len(line)-2):
             if cnt2 >= 2:
@@ -166,7 +168,7 @@ def edge_check(contour, img):
                 cnt3 = cnt3 - 1
             else:
                 cnt1 = 0
-                cnt3 = 2
+                cnt3 = 1
         #print cnt1, cnt2, cnt3, robot_to_ball[i]
     return 0
 

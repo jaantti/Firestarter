@@ -49,6 +49,16 @@ count_goal_find = 0
 c = 0
 switch = 0
 
+#colour tuples, hsv min -> hsv max
+orange_tty = (5,129,149,28,255,255)
+yellow_tty = (29,160,223,32,255,255)
+blue_tty = (93,117,89,136,207,172)
+
+orange_t4 = (5, 188, 160, 15, 255, 255)
+yellow_t4 = (22, 255, 255, 27, 255, 255)
+blue_t4 = (121, 140, 73, 130, 190, 108)
+green_t4  = (35, 136, 0, 55, 255, 255)
+
 ser3.write('e\n')
 ser3.write('c\n')
 
@@ -109,7 +119,7 @@ def green_check(contour, img):
     ball_box = cv2.cvtColor(ball_box,cv2.COLOR_BGR2HSV)
     cnt1 = 0.0
     cnt2 = 0
-    not_orange_threshold = cv2.bitwise_not(thresholdedImg(ball_box, (5,179,149,28,255,255)))
+    not_orange_threshold = cv2.bitwise_not(thresholdedImg(ball_box, orange_t4))
     #green_threshold = thresholdedImg(ball_box, 42, 67, 126, 66, 183, 255)
     #thresholded_img = not_orange_threshold - green_threshold
     #ball_box = cv2.cvtColor(ball_box,cv2.COLOR_HSV2BGR)
@@ -124,14 +134,16 @@ def field_edge(contour, img):
     for line in lines:
         last_green = 2
         line = cv2.cvtColor(line,cv2.COLOR_BGR2HSV)
-        line_green = thresholdedImg(line, (42, 67, 126, 66, 183, 255))
+        line_green = thresholdedImg(line, green_t4)
         #cv2.imshow('Line_green', line_green)
         line = line[::-1]
         for i in range(len(line)):
             if line_green[i] == 1:
                 last_green = 0
-            elif not (line[i][0][1] < 40 and line[i][0][2] > 200) and last_green < 2: #is white and just had green
+            elif (not (line[i][0][1] < 40 and line[i][0][2] > 200)) and last_green < 2: #isn't white and just had green
                 return 1
+            else:
+                last_green += 1
     return 0
             
 def edge_check(contour, img):
@@ -143,7 +155,7 @@ def edge_check(contour, img):
         #cv2.imshow('Line', robot_to_ball)
         cnt1 = 0
         cnt2 = 0
-        cnt3 = 2
+        cnt3 = 1
         #print robot_to_ball
         for i in range(len(line)-2):
             if cnt2 >= 2:
@@ -156,7 +168,7 @@ def edge_check(contour, img):
                 cnt3 = cnt3 - 1
             else:
                 cnt1 = 0
-                cnt3 = 2
+                cnt3 = 1
         #print cnt1, cnt2, cnt3, robot_to_ball[i]
     return 0
 
@@ -165,10 +177,10 @@ def goal_find(centroids, ser1, ser2):
     global count_goal_find
     if centroids != 0:
         rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
-        if rel_pos > 0.1: #blob right of center
+        if rel_pos > 0.15: #blob right of center
             ser1.write('sd-5\n')
             ser2.write('sd-10\n')
-        elif rel_pos < -0.1: #blob left of center
+        elif rel_pos < -0.15: #blob left of center
             ser1.write('sd10\n')
             ser2.write('sd5\n')
         else:
@@ -229,8 +241,8 @@ def drive(centroids, max_spd, slower_by, count):
 def timeout(img_hsv, max_spd, slower_by, count):
     global switch
     global rel_pos
-    img_thresholded_yellow = thresholdedImg(img_hsv, (29,160,223,32,255,255))
-    img_thresholded_blue = thresholdedImg(img_hsv, (93,117,89,136,207,172))
+    img_thresholded_yellow = thresholdedImg(img_hsv, yellow_t4)
+    img_thresholded_blue = thresholdedImg(img_hsv, blue_t4)
     img_thresholded = img_thresholded_blue + img_thresholded_yellow
     cv2.imshow('Timeouted', img_thresholded)
     centroids = findBlobCenter(img_thresholded, 500, 0)
@@ -270,17 +282,26 @@ def timeout(img_hsv, max_spd, slower_by, count):
             ser2.write('sd10\n')
     return (count + 1)
         
-    
+def lineDetection(thresh, c1, c2, l1, l2):
+    global img
+    #thresh = cv2.inRange(img, np.array([0, 0, 0],np.uint8), np.array([50, 50, 50],np.uint8))
+    #cv2.imshow('thresh', thresh)
+    #edge = cv2.Canny(thresh, c1, c1*3)
+    #cv2.imshow('', edge)
+    lines = cv2.HoughLinesP(thresh, 1, np.pi/180, 400, minLineLength = 100, maxLineGap = l2)
+    lines = np.array(lines, ndmin = 2)
+    lines=lines[0]
+    for l in lines:
+        if(l != None):
+            #print(l)
+            cv2.line(img, (l[0], l[1]), (l[2],l[3]), (255, 0, 255), 1)
+
 def ballCheck(ser):
     '''checks if ball is in dribbler
     returns 1 if yes and 0 if no'''
     ko = ser.readline()
     ser.write('ko\n')
     return int(ko[3])
-
-#Turn off automatic stopping
-#ser1.write('fs0\n')
-#ser2.write('fs0\n')
 
 #First IR ball check query
 ser1.write('ko\n')
@@ -304,10 +325,8 @@ while True:
         img_hsv = img_hsv[15:240, 0:320]
         #print count
         if count < 200:
-            img_thresholded = thresholdedImg(img_hsv, (5,179,149,28,255,255))
+            img_thresholded = thresholdedImg(img_hsv, orange_t4)
             cv2.imshow('test', img_thresholded)
-            #5,129,149,28,255,255) #orange ball (TTY)
-            #5, 188, 160, 15, 255, 255) #orange ball (evening)
             centroids = findBlobCenter(img_thresholded, 0, img)
             if centroids != 0 and centroids[1] < 70:
                 count = drive(centroids, 50, 15, count)
@@ -319,13 +338,8 @@ while True:
 
     else: #Ball in dribbler
         img_hsv = img_hsv[0:20, 0:320]
-        img_thresholded = thresholdedImg(img_hsv, (93,117,89,136,207,172))
+        img_thresholded = thresholdedImg(img_hsv, blue_t4)
         cv2.imshow('test', img_thresholded)
-        #29,160,223,32,255,255) #Yellow TTY spordihoone
-        #93,117,89,136,207,172) #Blue TTY spordihoone
-        #26, 175, 255, 31, 255, 255) #Yellow goal (daytime)  
-        #22, 255, 255, 27, 255, 255) #Yellow goal (Evening)
-        #121, 140, 73, 130, 190, 108) #blue goal (Evening)
         centroids = findBlobCenter(img_thresholded, 500, img)
         goal_find(centroids, ser1, ser2)
         #drive(centroids, 40, 15, ser1, ser2)

@@ -3,7 +3,7 @@ import numpy as np
 import cv
 switch = 0
 
-capture = cv2.VideoCapture(0)
+capture = cv2.VideoCapture(1)
 capture.set(3, 640)
 capture.set(4, 320)
 def null(*arg):

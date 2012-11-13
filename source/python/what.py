@@ -22,7 +22,11 @@ cv.CreateTrackbar('vmin', 'aken', 0, 255, null)
 cv.CreateTrackbar('hmax', 'aken', 50, 255, null)
 cv.CreateTrackbar('smax', 'aken', 50, 255, null)
 cv.CreateTrackbar('vmax', 'aken', 50, 255, null)
-                  
+
+def y_f(pos_x):
+    y = (pos_x*(l[3]-l[1])-l[0]*(l[3]-l[1]))/((l[2]-l[0])+l[1]*(l[2]-l[0]))
+def x_f(pos_y):
+    x = (pos_y*(l[2]-l[0])+l[1]*(l[2]-l[0]))/((l[3]-l[1])-l[0]*(l[3]-l[1]))
 while True:
     a = cv2.getTrackbarPos('canny', 'gray')
     b = cv2.getTrackbarPos('threshmax', 'gray')
@@ -38,18 +42,9 @@ while True:
     img = cv2.flip(img, -1)
 ##    img = cv2.GaussianBlur(img, (3, 3),0)    
     thresh = cv2.inRange(img, np.array([hmin, smin, vmin],np.uint8), np.array([hmax, smax, vmax],np.uint8))
-##    thresh = thresh[0:640, 0:480]
-##    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-##    ret2, thresh = cv2.threshold(img, a, b, cv2.THRESH_BINARY)
-##    ret2, thresh2 = cv2.threshold(img, a1, b1, cv2.THRESH_BINARY)
-##    thresh = cv2.bitwise_or(thresh, thresh2)
-##    thresh = cv2.bitwise_not(thresh)
     edge = cv2.Canny(thresh, a, a*3)
-##    roi = img[160:320, 160:240]
     lines = cv2.HoughLinesP(edge, 1, np.pi/180, b, minLineLength = a1, maxLineGap = b1)
     lines = np.array(lines, ndmin = 2)
-##    print(str(len(lines)) + "\n")
-##    print(lines)
     lines=lines[0]
     for l in lines:
         if(l != None):
@@ -57,43 +52,31 @@ while True:
             y = 480
             if l[0] != l[2]:
                 slope = float((-1*(l[3]-l[1])))/float((l[2]-l[0]))
-                b = (-l[0]*(l[3]-l[1]))/((l[2]-l[0])+l[1]*(l[2]-l[0]))
+                if y_f(0) >= 0 and y_f(0) <= 480:
+                    if x_f(0) > 0 and x_f(0) < 640:
+                        
+                    elif y_f(640) > 0 and y_f(640) < 480:
+
+                    elif x_f(480) > 0 and x_f(480) < 640:
+                    
                 
-                if slope > 0:
-                    cv2.fillPoly(img, np.array([(200, 200), (200, 300), (300, 200), (300, 300)], np.float), (0, 255, 255))
-                    '''if b >= 0 and b <= 640:
-                        if 640 * slope + b >= 0 and 640 * slope + b <= 480:
-##                            cv2.fillConvexPoly(img, np.array([(0, 480), (640, 480), (0, b), (640, slope * 640 + b)], np.float), (0, 255, 255))
-                        elif (640 * slope + b < 0):
-##                            cv2.fillConvexPoly(img, np.array([(0, 0), (-b/slope, 0), (0, b)], np.float), (0, 255, 255))
-                        else:
-##                            cv2.fillConvexPoly(img, np.array([(0, 640), ((480-b)/slope, 480), (0, b)], np.float), (0, 255, 255))
-                    elif (b > 0):
-                        cv2.FillConvexPoly(img, []'''
-                    if 0 > x*(l[3]-l[1])-l[0]*(l[3]-l[1]) - y*(l[2]-l[0])+l[1]*(l[2]-l[0]):
-                        switch = 0
-                    elif x*(l[3]-l[1])-l[0]*(l[3]-l[1]) - y*(l[2]-l[0])+l[1]*(l[2]-l[0]) >= 0:
-                        switch = 1
-                elif 0 > slope:
-                    if x*(l[3]-l[1])-l[0]*(l[3]-l[1]) - y*(l[2]-l[0])+l[1]*(l[2]-l[0]) > 0:
-                        switch = 0
-                    elif 0 >= x*(l[3]-l[1])-l[0]*(l[3]-l[1]) - y*(l[2]-l[0])+l[1]*(l[2]-l[0]):
-                        switch = 1
-##                elif slope == 0:
-##                    y = (pos_x*(l[3]-l[1])-l[0]*(l[3]-l[1]))/((l[2]-l[0])+l[1]*(l[2]-l[0]))
-##                    x = (pos_y*(l[2]-l[0])+l[1]*(l[2]-l[0]))/((l[3]-l[1])-l[0]*(l[3]-l[1]))
-##                    poly_list = [(0,0), (640, 0), (0, y), (640, y)]
-##                print slope
-##                print l
-##                z = x*(l[3]-l[1])-l[0]*(l[3]-l[1]) - y*(l[2]-l[0])+l[1]*(l[2]-l[0])
-##                print(z)
-                cv2.line(img, (l[0], l[1]), (l[2],l[3]), (0, 255, 255), 1)
+                elif y_f(640) > 0 and y_f(640) < 0:
+                    if x_f(0) > 0 and x_f(0) < 640:
+
+                    elif x_f(480) > 0 and x_f(480) < 640:
+
+                    elif y_f(640) > 0 and y_f(640) < 480:
+
+                elif y_f(0) < 0 and y_f(640) > 480:
+
+                elif y_f(0) > 480 and y_f(640) < 0:
+                    
+
             else:
                 print("Oh god vertical line!")
             
     cv2.imshow('thresh', thresh)
     cv2.imshow('gray', img)
-##    cv2.imshow('roi', roi)
     if cv2.waitKey(10) == 27:
         break
 print switch

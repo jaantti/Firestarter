@@ -1,10 +1,8 @@
 #!/usr/bin/python
-
 import cv2
 import numpy as np
 import serial
 import time
-
 
 capture = cv2.VideoCapture(1)
 cv2.cv.NamedWindow("track", 0)
@@ -55,9 +53,10 @@ yellow_tty = (29,160,223,32,255,255)
 blue_tty = (93,117,89,136,207,172)
 
 orange_t4 = (5, 188, 160, 15, 255, 255)
-yellow_t4 = (22, 255, 255, 27, 255, 255)
-blue_t4 = (121, 140, 73, 130, 190, 108)
-green_t4  = (35, 136, 0, 55, 255, 255)
+yellow_t4 = (22, 230, 185, 27, 255, 255)
+blue_t4 = (110, 78, 83, 124, 180, 180)
+green_t4 = (35, 136, 0, 55, 255, 255)
+black_t4 = (0, 35, 62, 255, 118, 133)
 
 ser3.write('e\n')
 ser3.write('c\n')
@@ -94,12 +93,12 @@ def findBlobCenter(img_thresholded, minSize, img):
         size = cv2.contourArea(contours[i])
         if size >= minSize and size > bigsize:
             #green_check(contours_1[i], img)
-            if field_edge(contours[i], img) == 1:
-                print 'Off the field'
-                continue
-            elif minSize < 300 and edge_check(contours[i], img) == 1:
-                print 'Behind a line!'
-                continue
+            #if field_edge(contours[i], img) == 1:
+            #    print 'Off the field'
+            #    continue
+            #elif minSize < 300 and edge_check(contours[i], img) == 1:
+            #    print 'Behind a line!'
+            #    continue
             bigsize = size
             biggest = i
     if biggest != -1: #if there is a blob
@@ -282,20 +281,53 @@ def timeout(img_hsv, max_spd, slower_by, count):
             ser2.write('sd10\n')
     return (count + 1)
         
-def lineDetection(thresh, c1, c2, l1, l2):
-    global img
-    #thresh = cv2.inRange(img, np.array([0, 0, 0],np.uint8), np.array([50, 50, 50],np.uint8))
-    #cv2.imshow('thresh', thresh)
-    #edge = cv2.Canny(thresh, c1, c1*3)
-    #cv2.imshow('', edge)
-    lines = cv2.HoughLinesP(thresh, 1, np.pi/180, 400, minLineLength = 100, maxLineGap = l2)
+def lineDetection(img, colour, a, b, minLineLength, maxLineGap):
+    thresh = thresholdedImg(img, colour)
+    edge = cv2.Canny(thresh, a, a*3)
+    lines = cv2.HoughLinesP(edge, 1, np.pi/180, b, minLineLength = minLineLength, maxLineGap = maxLineGap)
     lines = np.array(lines, ndmin = 2)
     lines=lines[0]
+    
     for l in lines:
         if(l != None):
-            #print(l)
-            cv2.line(img, (l[0], l[1]), (l[2],l[3]), (255, 0, 255), 1)
-
+            if l[2]!=l[0] and l[3]!=l[1]:
+                #flip the y
+                #l[1] = 240-l[1]
+                #l[3] = 240-l[3]
+                # y = a * x + b
+                a = (l[3]-l[1])/float((l[2]-l[0]))
+                b = l[1] - (l[0]*(l[3]-l[1]))/float((l[2]-l[0]))
+                #list for fillPoly
+                points = []
+                #print a, b
+                if 0 <= b <= 240:
+                    A = [0, b]
+                    points.append([0, 0])
+                elif b > 240:
+                    A = [(240-b)/a, 240]
+                    points.append([0, 240])
+                    points.append([0, 0])
+                else:
+                    A = [(0-b)/a, 0]                    
+                chk1 = (a*320+b)
+                #print chk1
+                if 0 <= chk1 <= 240:
+                    B = [320, chk1]
+                    points.append([320, 0])
+                elif chk1 < 0:
+                    B = [(0-b)/a, 0]                    
+                else:
+                    B = [(240-b)/a, 240]
+                    points.append([320, 0])
+                    points.append([320, 240])                    
+                    
+                points.append(B)
+                points.append(A)
+                #print points
+                array = np.array(points, 'int32')
+                cv2.fillConvexPoly(img, array, (255, 0, 255))
+    return img
+    
 def ballCheck(ser):
     '''checks if ball is in dribbler
     returns 1 if yes and 0 if no'''
@@ -317,6 +349,7 @@ while True:
     f = cv2.getTrackbarPos('vmax', 'track')
 
     ret, img = capture.read() #get the picture to work with
+    img = lineDetection(img, black_t4, 150, 90, 90, 25)
     img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert the img to HSV colourspace
     #img = cv2.flip(img, -1) #flip if necessary
     ko = ballCheck(ser1) #ball check
@@ -327,11 +360,11 @@ while True:
         if count < 200:
             img_thresholded = thresholdedImg(img_hsv, orange_t4)
             cv2.imshow('test', img_thresholded)
-            centroids = findBlobCenter(img_thresholded, 0, img)
+            centroids = findBlobCenter(img_thresholded, 7, img)
             if centroids != 0 and centroids[1] < 70:
-                count = drive(centroids, 50, 15, count)
+                count = drive(centroids, 70, 15, count)
             else:
-                count = drive(centroids, 30, 10, count)
+                count = drive(centroids, 20, 10, count)
         else:
             count = timeout(img_hsv, 20, 10, count)
         

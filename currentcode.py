@@ -59,6 +59,7 @@ orange_t4 = (5, 188, 160, 15, 255, 255)
 yellow_t4 = (22, 255, 255, 27, 255, 255)
 blue_t4 = (121, 140, 73, 130, 190, 108)
 green_t4  = (35, 136, 0, 55, 255, 255)
+black_t4 = (0, 0, 66, 53, 255, 134)
 
 ser3.write('e\n')
 ser3.write('c\n')
@@ -241,7 +242,7 @@ def drive(centroids, max_spd, slower_by, count):
         count += 1
     return count
 
-def collisionTimeout(ser1, ser2):
+#def collisionTimeout(ser1, ser2):
 ##    Work in progress
 
 
@@ -348,6 +349,7 @@ def timeout(img_hsv, max_spd, slower_by, count):
         
 def lineDetection(img, colour, a, b, minLineLength, maxLineGap):
     thresh = thresholdedImg(img, colour)
+    cv2.imshow('lines', thresh)
     edge = cv2.Canny(thresh, a, a*3)
     lines = cv2.HoughLinesP(edge, 1, np.pi/180, b, minLineLength = minLineLength, maxLineGap = maxLineGap)
     lines = np.array(lines, ndmin = 2)
@@ -411,9 +413,10 @@ while True:
     f = cv2.getTrackbarPos('vmax', 'track')
 
     ret, img = capture.read() #get the picture to work with
-    img = lineCheck(img)
     img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert the img to HSV colourspace
+    img_hsv = lineDetection(img_hsv, black_t4, 150, 90, 90, 25)
     #img = cv2.flip(img, -1) #flip if necessary
+    
     ko = ballCheck(ser1) #ball check
 
     if ko == 0: #ball not in dribbler
@@ -432,8 +435,8 @@ while True:
         
 
     else: #Ball in dribbler
-		img_hsv = img_hsv[0:30, 0:320]
-        current_color = blue_t4 # <<<<< SIHTVÄRAVA VÄRV >>>>>>
+        img_hsv = img_hsv[0:30, 0:320]
+        current_color = blue_t4 # <<<<< SIHTVARAVA VARV >>>>>>
         if count_goal < 100:
             img_thresholded = thresholdedImg(img_hsv, current_color)
             cv2.imshow('goalfinding threshold', img_thresholded)

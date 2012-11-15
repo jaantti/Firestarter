@@ -176,7 +176,7 @@ def goal_find(centroids, ser1, ser2, count_goal):
             ser1.write('sd0\n')
             ser2.write('sd0\n')
             count_goal_find = count_goal_find + 1
-        if rel_pos < 0.1 and rel_pos > -0.1 and count_goal_find >= 10:
+        if rel_pos < 0.15 and rel_pos > -0.15 and count_goal_find >= 10:
             count_goal_find = 0
             print 'BOOOOOOOOMMMMM!'
             boom(ser3)
@@ -243,7 +243,7 @@ def goalTimeout(img_hsv, current_gate, max_spd, slower_by, count_goal):
         thresh = yellow_tty
         
     img_thresholded = thresholdedImg(img_hsv, thresh)
-    cv2.imshow('Timeout_gate', img_thresholded)
+    #cv2.imshow('Timeout_gate', img_thresholded)
     centroids = findBlobCenter(img_thresholded, 500, 0)
     
     if centroids != 0:
@@ -297,7 +297,7 @@ def timeout(img_hsv, max_spd, slower_by, count):
     img_thresholded_yellow = thresholdedImg(img_hsv, yellow_t4)
     img_thresholded_blue = thresholdedImg(img_hsv, blue_t4)
     img_thresholded = img_thresholded_blue + img_thresholded_yellow
-    #cv2.imshow('Timeouted', img_thresholded)
+    cv2.imshow('Timeouted', img_thresholded)
     centroids = findBlobCenter(img_thresholded, 500, 0)
     
     if centroids != 0:
@@ -314,7 +314,7 @@ def timeout(img_hsv, max_spd, slower_by, count):
             switch = 1
         elif switch == 1:
             print 'Gate size' + str(centroids[2])
-            if centroids[2] < 4000:
+            if centroids[2] < 3000:
                 if rel_pos > 0: #blob right of center
                     ser1.write('sd'+str(max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
                     ser2.write('sd'+str(-max_spd)+'\n')
@@ -329,21 +329,13 @@ def timeout(img_hsv, max_spd, slower_by, count):
                 'New position aquired'
                 return 0
         else:
-            if rel_pos > 0: #if blob was last seen on the right, turn right
-                ser1.write('sd-10\n')
-                ser2.write('sd-15\n')
-            else: #if blob was last seen on the left, turn left
-                ser1.write('sd15\n')
-                ser2.write('sd10\n')
+            ser1.write('sd-10\n')
+            ser2.write('sd-15\n')
             return (count + 1)
             
     else:
-        if rel_pos > 0: #if blob was last seen on the right, turn right
-            ser1.write('sd-10\n')
-            ser2.write('sd-15\n')
-        else: #if blob was last seen on the left, turn left
-            ser1.write('sd15\n')
-            ser2.write('sd10\n')
+        ser1.write('sd-10\n')
+        ser2.write('sd-15\n')
     return (count + 1)
         
 def lineDetection(img, colour, a, b, minLineLength, maxLineGap):
@@ -422,14 +414,14 @@ while True:
             if centroids != 0:
                 if centroids[2] < 500:
                     count = drive(centroids, 60, 15, count)
-                elif 0.2 < rel_pos < -0.2:
-                    count = drive(centroids, 30, 0, count)
-                elif rel_pos > 0.2: #if blob was last seen on the right, turn right 
-                    ser1.write('sd-10\n')
-                    ser2.write('sd0\n')
-                else: #if blob was last seen on the left, turn left
-                    ser1.write('sd0\n')
-                    ser2.write('sd10\n')
+                else:
+                    count = drive(centroids, 30, 25, count)
+                #elif rel_pos > 0.2: #if blob was last seen on the right, turn right 
+                #    ser1.write('sd-10\n')
+                #    ser2.write('sd0\n')
+                #else: #if blob was last seen on the left, turn left
+                #    ser1.write('sd0\n')
+                #    ser2.write('sd10\n')
             else: #no blob in view
                 if rel_pos > 0: #if blob was last seen on the right, turn right
                     ser1.write('sd-10\n')
@@ -443,7 +435,6 @@ while True:
             img_hsv = img_hsv[0:30, 0:320]
             count = timeout(img_hsv, 40, 20, count)
         
-
     else: #Ball in dribbler
         print 'Count_goal: ' + str(count_goal)
         img_hsv = img_hsv[0:30, 0:320]

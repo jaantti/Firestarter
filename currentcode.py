@@ -1,8 +1,10 @@
 #!/usr/bin/python
+
 import cv2
 import numpy as np
 import serial
 import time
+
 
 capture = cv2.VideoCapture(1)
 cv2.cv.NamedWindow("track", 0)
@@ -44,6 +46,7 @@ else:
 rel_pos = 0
 count = 0
 count_goal_find = 0
+count_goal = 0
 c = 0
 switch = 0
 
@@ -53,10 +56,9 @@ yellow_tty = (29,160,223,32,255,255)
 blue_tty = (93,117,89,136,207,172)
 
 orange_t4 = (5, 188, 160, 15, 255, 255)
-yellow_t4 = (22, 230, 185, 27, 255, 255)
-blue_t4 = (110, 78, 83, 124, 180, 180)
-green_t4 = (35, 136, 0, 55, 255, 255)
-black_t4 = (0, 35, 62, 255, 118, 133)
+yellow_t4 = (22, 255, 255, 27, 255, 255)
+blue_t4 = (121, 140, 73, 130, 190, 108)
+green_t4  = (35, 136, 0, 55, 255, 255)
 
 ser3.write('e\n')
 ser3.write('c\n')
@@ -171,7 +173,7 @@ def edge_check(contour, img):
         #print cnt1, cnt2, cnt3, robot_to_ball[i]
     return 0
 
-def goal_find(centroids, ser1, ser2):
+def goal_find(centroids, ser1, ser2, count_goal):
     global rel_pos
     global count_goal_find
     if centroids != 0:
@@ -198,6 +200,8 @@ def goal_find(centroids, ser1, ser2):
         else: #if blob was last seen on the left, turn left
             ser1.write('sd20\n')
             ser2.write('sd15\n')
+        count_goal += 1
+    return count_goal
 
 def boom(ser3):
     ser3.write('k\n')
@@ -237,6 +241,67 @@ def drive(centroids, max_spd, slower_by, count):
         count += 1
     return count
 
+def collisionTimeout(ser1, ser2):
+##    Work in progress
+
+
+def goalTimeout(img_hsv, current_gate, max_spd, slower_by, count_goal):
+    global switch
+    global rel_pos
+    global yellow_tty 
+    global blue_tty
+    global yellow_t4
+    global blue_t4
+
+    if current_gate ==  yellow_t4:
+        thresh = blue_t4
+    elif current_gate == blue_t4:
+        thresh = yellow_t4
+    elif current_gate == yellow_tty:
+        thresh = blue_tty
+    else:
+        thresh = yellow_tty
+    img_thresholded = thresholdedImg(img_hsv, thresh)
+    cv2.imshow('Timeout_gate', img_thresholded)
+    centroids = findBlobCenter(img_thresholded, 500, 0)
+    if count_goal == 100 or count_goal > 102:
+        print('Saw one goal!')
+        ser1.write('sd0\n')
+        ser2.write('sd0\n')
+        time.sleep(0.3)
+    count_goal = 100
+    if centroids != 0:
+        rel_pos = (centroids[0] - 160)/160.0
+            
+    if centroids != 0:
+        rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
+        if rel_pos > -0.5 and rel_pos < 0.5 and switch != 1:
+            switch = 1
+        elif switch == 1:
+            if centroids[2] < 2000:
+                if rel_pos > 0: #blob right of center
+                    ser1.write('sd'+str(max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
+                    ser2.write('sd'+str(-max_spd)+'\n')
+                elif rel_pos < 0: #blob left of center
+                    ser1.write('sd'+str(max_spd)+'\n')
+                    ser2.write('sd'+str(-max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
+                else: #blob exactly in the middle
+                    ser1.write('sd'+str(max_spd)+'\n')
+                    ser2.write('sd-'+str(max_spd)+'\n')
+            else:
+                switch = 0
+                'New position aquired'
+                return 0
+    else:
+        if rel_pos > 0: #if blob was last seen on the right, turn right
+            ser1.write('sd-10\n')
+            ser2.write('sd-15\n')
+        else: #if blob was last seen on the left, turn left
+            ser1.write('sd15\n')
+            ser2.write('sd10\n')
+    return (count_goal + 1)
+    
+
 def timeout(img_hsv, max_spd, slower_by, count):
     global switch
     global rel_pos
@@ -246,16 +311,16 @@ def timeout(img_hsv, max_spd, slower_by, count):
     cv2.imshow('Timeouted', img_thresholded)
     centroids = findBlobCenter(img_thresholded, 500, 0)
     
-    if count == 200 or count > 202:
+    if count == 100 or count > 102:
         print('Saw one goal!')
         ser1.write('sd0\n')
         ser2.write('sd0\n')
         time.sleep(0.3)
-    count = 200
+    count = 100
     
     if centroids != 0:
         rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
-        if centroids[2] < 1700 and rel_pos > -0.75 and rel_pos < 0.75 and switch != 1:
+        if centroids[2] < 1700 and rel_pos > -0.5 and rel_pos < 0.5 and switch != 1:
             switch = 1
         elif switch == 1:
             if centroids[2] < 4000:
@@ -291,9 +356,6 @@ def lineDetection(img, colour, a, b, minLineLength, maxLineGap):
     for l in lines:
         if(l != None):
             if l[2]!=l[0] and l[3]!=l[1]:
-                #flip the y
-                #l[1] = 240-l[1]
-                #l[3] = 240-l[3]
                 # y = a * x + b
                 a = (l[3]-l[1])/float((l[2]-l[0]))
                 b = l[1] - (l[0]*(l[3]-l[1]))/float((l[2]-l[0]))
@@ -327,7 +389,7 @@ def lineDetection(img, colour, a, b, minLineLength, maxLineGap):
                 array = np.array(points, 'int32')
                 cv2.fillConvexPoly(img, array, (255, 0, 255))
     return img
-    
+
 def ballCheck(ser):
     '''checks if ball is in dribbler
     returns 1 if yes and 0 if no'''
@@ -349,7 +411,7 @@ while True:
     f = cv2.getTrackbarPos('vmax', 'track')
 
     ret, img = capture.read() #get the picture to work with
-    img = lineDetection(img, black_t4, 150, 90, 90, 25)
+    img = lineCheck(img)
     img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert the img to HSV colourspace
     #img = cv2.flip(img, -1) #flip if necessary
     ko = ballCheck(ser1) #ball check
@@ -357,24 +419,28 @@ while True:
     if ko == 0: #ball not in dribbler
         img_hsv = img_hsv[15:240, 0:320]
         #print count
-        if count < 200:
+        if count < 100:
             img_thresholded = thresholdedImg(img_hsv, orange_t4)
             cv2.imshow('test', img_thresholded)
-            centroids = findBlobCenter(img_thresholded, 7, img)
+            centroids = findBlobCenter(img_thresholded, 5, img)
             if centroids != 0 and centroids[1] < 70:
                 count = drive(centroids, 70, 15, count)
             else:
-                count = drive(centroids, 20, 10, count)
+                count = drive(centroids, 30, 15, count)
         else:
-            count = timeout(img_hsv, 20, 10, count)
+            count = timeout(img_hsv, 40, 20, count)
         
 
     else: #Ball in dribbler
-        img_hsv = img_hsv[0:20, 0:320]
-        img_thresholded = thresholdedImg(img_hsv, blue_t4)
-        cv2.imshow('test', img_thresholded)
-        centroids = findBlobCenter(img_thresholded, 500, img)
-        goal_find(centroids, ser1, ser2)
+		img_hsv = img_hsv[0:30, 0:320]
+        current_color = blue_t4 # <<<<< SIHTVÄRAVA VÄRV >>>>>>
+        if count_goal < 100:
+            img_thresholded = thresholdedImg(img_hsv, current_color)
+            cv2.imshow('goalfinding threshold', img_thresholded)
+            centroids = findBlobCenter(img_thresholded, 500, img)
+            count_goal = goal_find(centroids, ser1, ser2, count_goal)
+        else:
+            count_goal = goalTimeout(img_hsv, current_color, 50, 15, count_goal) 
         #drive(centroids, 40, 15, ser1, ser2)
         
     #cv2.imshow('Threshed', img_thresholded)

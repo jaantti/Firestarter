@@ -413,7 +413,7 @@ while True:
             
             if centroids != 0:
                 if centroids[2] < 500:
-                    count = drive(centroids, 60, 15, count)
+                    count = drive(centroids, 50, 15, count)
                 else:
                     count = drive(centroids, 30, 25, count)
                 #elif rel_pos > 0.2: #if blob was last seen on the right, turn right 

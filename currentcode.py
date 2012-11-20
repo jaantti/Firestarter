@@ -48,7 +48,7 @@ count_goal_find = 0
 count_goal = 0
 c = 0
 switch = 0
-fb_list = [(255, 255), (255, 255), (255, 255)]
+fb_list = [(255, 255), (255, 255), (255, 255), (255, 255)]
 
 #colour tuples, hsv min -> hsv max
 orange_tty = (5,129,149,28,255,255)
@@ -196,8 +196,8 @@ def goal_find(centroids, ser1, ser2, count_goal):
     return count_goal
 
 def boom(ser3):
-    ser3.write('k800\n')
-    time.sleep(0.03)
+    ser3.write('k1200\n')
+    time.sleep(0.04)
             
 def drive(centroids, max_spd, slower_by, count, rel_pos):
     '''Drives towards the provided point (assuming the camera faces forward). Turning rate varies depending on x coordinate.'''
@@ -209,10 +209,10 @@ def drive(centroids, max_spd, slower_by, count, rel_pos):
         time.sleep(0.3)
     count = 1
     
-    if rel_pos > 0.15: #blob right of center
+    if rel_pos > 0: #blob right of center
         ser1.write('sd'+str(max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
         ser2.write('sd'+str(-max_spd)+'\n')
-    elif rel_pos < 0.15: #blob left of center
+    elif rel_pos < 0: #blob left of center
         ser1.write('sd'+str(max_spd)+'\n')
         ser2.write('sd'+str(-max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
     else: #blob exactly in the middle
@@ -430,7 +430,7 @@ while True:
         
         if flag == 1:  
             print 'Stalling'
-            fb_list = [(255, 255), (255, 255), (255, 255)]
+            fb_list = [(255, 255), (255, 255), (255, 255), (255, 255)]
             ser1.write('sd0\n')
             ser2.write('sd0\n')
             time.sleep(0.2)
@@ -442,7 +442,7 @@ while True:
             time.sleep(0.2)
             ser1.write('sd50\n')
             ser2.write('sd50\n')
-            time.sleep(0.5)
+            time.sleep(0.7)
             c = 8
         
     elif ko[0] == 0: #ball not in dribbler
@@ -457,33 +457,34 @@ while True:
             
             if centroids != 0:
                 rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
-                if centroids[2] < 500:
+                if centroids[1] < 70:
                     count = drive(centroids, 60, 15, count, rel_pos)
                     print 'Ball Far'
                 else:
-                    count = drive(centroids, 30, 25, count, rel_pos)
-                #elif rel_pos > 0.2: #if blob was last seen on the right, turn right 
-                #    ser1.write('sd-15\n')
-                #    ser2.write('sd0\n')
-                #    print 'turning right'
-                #    count += 1
-                #elif rel_pos < -0.2: #if blob was last seen on the left, turn left
-                #    ser1.write('sd0\n')
-                #    ser2.write('sd15\n')
-                #    print 'turning left'
-                #    count += 1
-                #elif count > 10 and rel_pos < 0.2 and rel_pos > -0.2:
-                #    ser1.write('sd20\n')
-                #    ser2.write('sd-20\n')
-                #    print 'GOGOGO'
-                #    count = 0
-                #    time.sleep(2)
-                #else:
-                #    ser1.write('sd0\n')
-                #    ser2.write('sd0\n')
-                #    print 'aiming'
-                #    count += 1
-                #    c = 4
+                    drive(centroids, 30, 20, count, rel_pos)
+                
+                '''elif rel_pos > 0.2: #if blob was last seen on the right, turn right 
+                    ser1.write('sd-10\n')
+                    ser2.write('sd-10\n')
+                    print 'turning right'
+                    count += 1
+                elif rel_pos < -0.2: #if blob was last seen on the left, turn left
+                    ser1.write('sd10\n')
+                    ser2.write('sd10\n')
+                    print 'turning left'
+                    count += 1
+                else:
+                    ser1.write('sd0\n')
+                    ser2.write('sd0\n')
+                    print 'aiming'
+                    count += 1
+                    c = 4
+                if count > 10 and rel_pos < 0.2 and rel_pos > -0.2:
+                    ser1.write('sd30\n')
+                    ser2.write('sd-30\n')
+                    print 'GOGOGO'
+                    #count = 0
+                    #time.sleep(2)'''
 
             else: #no blob in view
                 if rel_pos > 0: #if blob was last seen on the right, turn right

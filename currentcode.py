@@ -461,29 +461,36 @@ while True:
                     count = drive(centroids, 60, 15, count, rel_pos)
                 else:
                     count = drive(centroids, 30, 20, count, rel_pos)
-                
-                '''elif rel_pos > 0.2: #if blob was last seen on the right, turn right 
-                    ser1.write('sd-10\n')
-                    ser2.write('sd-10\n')
-                    print 'turning right'
-                    count += 1
-                elif rel_pos < -0.2: #if blob was last seen on the left, turn left
-                    ser1.write('sd10\n')
-                    ser2.write('sd10\n')
-                    print 'turning left'
-                    count += 1
-                else:
-                    ser1.write('sd0\n')
-                    ser2.write('sd0\n')
-                    print 'aiming'
-                    count += 1
-                    c = 4
-                if count > 10 and rel_pos < 0.2 and rel_pos > -0.2:
-                    ser1.write('sd30\n')
-                    ser2.write('sd-30\n')
-                    print 'GOGOGO'
-                    #count = 0
-                    #time.sleep(2)'''
+##                elif rel_pos > 0.15: #if blob was last seen on the right, turn right 
+##                    if 0.3 > rel_pos > 0.15 :
+##                        ser1.write('sd-8\n')
+##                        ser2.write('sd0\n')
+##                    else:
+##                        ser1.write('sd-15\n')
+##                        ser2.write('sd0\n')
+##                    print 'turning right'
+##                    count += 1
+##                elif rel_pos < -0.15: #if blob was last seen on the left, turn left
+##                    if -0.3 < rel_pos < -0.15:
+##                        ser1.write('sd0\n')
+##                        ser2.write('sd8\n')
+##                    else:
+##                        ser1.write('sd0\n')
+##                        ser2.write('sd15\n')
+##                    print 'turning left'
+##                    count += 1
+##                elif count > 10 and rel_pos < 0.15 and rel_pos > -0.15:
+##                    ser1.write('sd20\n')
+##                    ser2.write('sd-20\n')
+##                    print 'GOGOGO'
+##                    count = 0
+##                    time.sleep(2)
+##                else:
+##                    ser1.write('sd0\n')
+##                    ser2.write('sd0\n')
+##                    print 'aiming'
+##                    count += 1
+##                    c = 4
 
             else: #no blob in view
                 if rel_pos > 0: #if blob was last seen on the right, turn right

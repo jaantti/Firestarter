@@ -57,7 +57,7 @@ blue_tty = (93,117,89,136,207,172)
 
 orange_t4 = (6, 198, 193, 18, 255, 255)#4, 245, 232, 25, 255, 255)
 yellow_t4 = (23, 236, 171, 27, 255, 255)#23, 206, 172, 29, 255, 255)
-blue_t4 = (112, 53, 79, 127, 163, 102)#98, 138, 80, 128, 255, 255)
+blue_t4 = (112, 53, 79, 120, 209, 97)#98, 138, 80, 128, 255, 255)
 green_t4  = (35, 136, 0, 55, 255, 255)
 black_t4 = (17, 0, 0, 41, 255, 138)#0, 0, 66, 53, 255, 134)
 
@@ -297,7 +297,7 @@ def timeout(img_hsv, max_spd, slower_by, count):
     img_thresholded_yellow = thresholdedImg(img_hsv, yellow_t4)
     img_thresholded_blue = thresholdedImg(img_hsv, blue_t4)
     img_thresholded = img_thresholded_blue + img_thresholded_yellow
-    cv2.imshow('Timeouted', img_thresholded)
+    #cv2.imshow('Timeouted', img_thresholded)
     centroids = findBlobCenter(img_thresholded, 500, 0)
     
     if centroids != 0:
@@ -452,16 +452,15 @@ while True:
             img_hsv = img_hsv[15:240, 0:320]
             img_hsv = lineDetection(img_hsv, black_t4, 150, 90, 90, 25)
             img_thresholded = thresholdedImg(img_hsv, orange_t4)
-            cv2.imshow('test', img_thresholded)
+            #cv2.imshow('test', img_thresholded)
             centroids = findBlobCenter(img_thresholded, 5, img)
             
             if centroids != 0:
                 rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
                 if centroids[1] < 70:
                     count = drive(centroids, 60, 15, count, rel_pos)
-                    print 'Ball Far'
                 else:
-                    drive(centroids, 30, 20, count, rel_pos)
+                    count = drive(centroids, 30, 20, count, rel_pos)
                 
                 '''elif rel_pos > 0.2: #if blob was last seen on the right, turn right 
                     ser1.write('sd-10\n')
@@ -503,7 +502,7 @@ while True:
         count = 0
         #print 'Count_goal: ' + str(count_goal)
         img_hsv = img_hsv[0:30, 0:320]
-        current_color = yellow_t4 # <<<<< SIHTVARAVA VARV >>>>>>
+        current_color = blue_t4 # <<<<< SIHTVARAVA VARV >>>>>>
         if count_goal < 100:
             img_thresholded = thresholdedImg(img_hsv, current_color)
             #cv2.imshow('goalfinding threshold', img_thresholded)
@@ -515,9 +514,9 @@ while True:
             
             
     #cv2.imshow('Threshed', img_thresholded)
-    if centroids != 0:
-        cv2.circle(img, (centroids[0], centroids[1]+15), 5, (255, 0, 0), -1) #draws a small blue circle at the biggest blob's center for debugging
-    cv2.imshow('Original image', img) #show img for calibration
+   #if centroids != 0:
+#        cv2.circle(img, (centroids[0], centroids[1]+15), 5, (255, 0, 0), -1) #draws a small blue circle at the biggest blob's center for debugging
+#    cv2.imshow('Original image', img) #show img for calibration
 
     if cv2.waitKey(10) == 27: #quit on esc
         break

@@ -459,11 +459,11 @@ while True:
                 rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
                 if centroids[1] < 70:
                     count = drive(centroids, 60, 15, count, rel_pos)
-                #else:
-                #    count = drive(centroids, 30, 20, count, rel_pos)
-                elif rel_pos > 0.15: #if blob was last seen on the right, turn right 
+                else:
+                    count = drive(centroids, 20, 20, count, rel_pos)
+                '''elif rel_pos > 0.15: #if blob was last seen on the right, turn right 
                     if 0.3 > rel_pos > 0.15 :
-                       ser1.write('sd-8\n')
+                        ser1.write('sd-8\n')
                         ser2.write('sd0\n')
                     else:
                         ser1.write('sd-15\n')
@@ -490,7 +490,7 @@ while True:
                     ser2.write('sd0\n')
                     print 'aiming'
                     count += 1
-                    c = 4
+                    c = 4'''
 
             else: #no blob in view
                 if rel_pos > 0: #if blob was last seen on the right, turn right

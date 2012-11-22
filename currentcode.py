@@ -454,7 +454,7 @@ while True:
             img_hsv = img_hsv[15:240, 0:320]
             img_hsv = lineDetection(img_hsv, black_t4, 150, 90, 90, 25)
             img_thresholded = thresholdedImg(img_hsv, orange_t4)
-            cv2.imshow('test', img_thresholded)
+            #cv2.imshow('test', img_thresholded)
             centroids = findBlobCenter(img_thresholded, 5, img)
             
             if centroids != 0:
@@ -527,9 +527,9 @@ while True:
             
             
 #   cv2.imshow('Threshed', img_thresholded)
-    if centroids != 0:
-        cv2.circle(img, (centroids[0], centroids[1]+15), 5, (255, 0, 0), -1) #draws a small blue circle at the biggest blob's center for debugging
-    cv2.imshow('Original image', img) #show img for calibration
+    #if centroids != 0:
+    #    cv2.circle(img, (centroids[0], centroids[1]+15), 5, (255, 0, 0), -1) #draws a small blue circle at the biggest blob's center for debugging
+    #cv2.imshow('Original image', img) #show img for calibration
 
     if cv2.waitKey(10) == 27: #quit on esc
         break

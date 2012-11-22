@@ -48,6 +48,7 @@ count_goal_find = 0
 count_goal = 0
 c = 0
 switch = 0
+was_close = False
 fb_list = [(255, 255), (255, 255), (255, 255), (255, 255)]
 
 #colour tuples, hsv min -> hsv max
@@ -98,7 +99,7 @@ def findBlobCenter(img_thresholded, minSize, img):
         x,y,w,h = cv2.boundingRect(contours[biggest])
         centroid_x = x+w/2 #for direction
         centroid_y = y+h/2 #for distance
-        print bigsize, centroid_y
+        #print bigsize, centroid_y
         #print(centroid_x, centroid_y) #for debugging
         return (centroid_x, centroid_y, bigsize)
     else:
@@ -422,7 +423,7 @@ while True:
     
     if ko[1] != 255:
         flag = 1
-        '''print ko[1], ko[2]
+        print ko[1], ko[2]
         fb_list.pop()
         fb_list.insert(0, (ko[1], ko[2]))
         for fb in fb_list:
@@ -445,7 +446,7 @@ while True:
             ser1.write('sd50\n')
             ser2.write('sd50\n')
             time.sleep(0.7)
-            c = 8'''
+            c = 8
         
     elif ko[0] == 0: #ball not in dribbler
         count_goal = 0
@@ -461,11 +462,26 @@ while True:
                 rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
                 if centroids[1] < 70:
                     count = drive(centroids, 60, 15, count, rel_pos)
-                elif centroids[1] > 200 and centroids[2] > 1500:
-                    drive(centroids, 25, 20, count, rel_pos)
+                    was_close = False
+                elif centroids[1] > 200 and centroids[2] > 1500 and not was_close:
+                    c = 1
+                    ser1.write('sd0\n')
+                    ser2.write('sd0\n')
+                    time.sleep(0.3)
+                    if rel_pos > 0: #blob right of center
+                        ser1.write('sd'+str(25 - int(rel_pos*10))+'\n') #slower wheel speed
+                        ser2.write('sd'+str(-25)+'\n')
+                    elif rel_pos < 0: #blob left of center
+                        ser1.write('sd'+str(25)+'\n')
+                        ser2.write('sd'+str(-25 - int(rel_pos*10))+'\n') #slower wheel speed
+                    else: #blob exactly in the middle
+                        ser1.write('sd'+str(25)+'\n')
+                        ser2.write('sd-'+str(25)+'\n')
+                    print 'Ball close'
                     time.sleep(1)
+                    was_close = True
                 else:
-                    count = drive(centroids, 25, 25, count, rel_pos)
+                    count = drive(centroids, 20, 20, count, rel_pos)
                 '''elif rel_pos > 0.15: #if blob was last seen on the right, turn right 
                     if 0.3 > rel_pos > 0.15 :
                         ser1.write('sd-8\n')

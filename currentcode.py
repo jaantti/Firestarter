@@ -516,11 +516,11 @@ while True:
 
             else: #no blob in view
                 if rel_pos > 0: #if blob was last seen on the right, turn right
-                    ser1.write('sd-10\n')
-                    ser2.write('sd-10\n')
+                    ser1.write('sd0\n')
+                    ser2.write('sd-20\n')
                 else: #if blob was last seen on the left, turn left
-                    ser1.write('sd10\n')
-                    ser2.write('sd10\n')
+                    ser1.write('sd20\n')
+                    ser2.write('s10\n')
                 count += 1
         
         else:
@@ -531,7 +531,7 @@ while True:
         count = 0
         #print 'Count_goal: ' + str(count_goal)
         img_hsv = img_hsv[0:30, 0:320]
-        current_color = blue_t4 # <<<<< SIHTVARAVA VARV >>>>>>
+        current_color = yellow_t4 # <<<<< SIHTVARAVA VARV >>>>>>
         if count_goal < 100:
             img_thresholded = thresholdedImg(img_hsv, current_color)
             #cv2.imshow('goalfinding threshold', img_thresholded)

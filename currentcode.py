@@ -235,14 +235,10 @@ def goalTimeout(img_hsv, current_gate, max_spd, slower_by, count_goal):
     global rel_pos
     global yellow_tty 
     global blue_tty
-    global yellow_t4
-    global blue_t4
+    global yellow_tty
+    global blue_tty
 
-    if current_gate ==  yellow_t4:
-        thresh = blue_t4
-    elif current_gate == blue_t4:
-        thresh = yellow_t4
-    elif current_gate == yellow_tty:
+    if current_gate ==  yellow_tty:
         thresh = blue_tty
     else:
         thresh = yellow_tty
@@ -299,8 +295,8 @@ def goalTimeout(img_hsv, current_gate, max_spd, slower_by, count_goal):
 def timeout(img_hsv, max_spd, slower_by, count):
     global switch
     global rel_pos
-    img_thresholded_yellow = thresholdedImg(img_hsv, yellow_t4)
-    img_thresholded_blue = thresholdedImg(img_hsv, blue_t4)
+    img_thresholded_yellow = thresholdedImg(img_hsv, yellow_tty)
+    img_thresholded_blue = thresholdedImg(img_hsv, blue_tty)
     img_thresholded = img_thresholded_blue + img_thresholded_yellow
     #cv2.imshow('Timeouted', img_thresholded)
     centroids = findBlobCenter(img_thresholded, 500, 0)
@@ -461,8 +457,8 @@ while True:
         #print 'Count: ' + str(count)
         if count < 100:
             img_hsv = img_hsv[15:240, 0:320]
-            img_hsv = lineDetection(img_hsv, black_t4, 150, 90, 90, 25)
-            img_thresholded = thresholdedImg(img_hsv, orange_t4)
+            img_hsv = lineDetection(img_hsv, black_tty, 150, 90, 90, 25)
+            img_thresholded = thresholdedImg(img_hsv, orange_tty)
             #cv2.imshow('test', img_thresholded)
             centroids = findBlobCenter(img_thresholded, 5, img)
             
@@ -545,7 +541,7 @@ while True:
         count = 0
         #print 'Count_goal: ' + str(count_goal)
         img_hsv = img_hsv[0:30, 0:320]
-        current_color = yellow_t4 # <<<<< SIHTVARAVA VARV >>>>>>
+        current_color = yellow_tty # <<<<< SIHTVARAVA VARV >>>>>>
         if count_goal < 100:
             img_thresholded = thresholdedImg(img_hsv, current_color)
             #cv2.imshow('goalfinding threshold', img_thresholded)

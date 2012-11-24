@@ -7,8 +7,8 @@ import time
 
 
 capture = cv2.VideoCapture(1)
-#capture.set(3, 320)
-#capture.set(4, 240)
+capture.set(3, 320)
+capture.set(4, 240)
 
 ser1 = serial.Serial('/dev/ttyACM0', 115200) #Right
 ser2 = serial.Serial('/dev/ttyACM1', 115200)
@@ -58,11 +58,11 @@ orange_tty = (5,129,149,28,255,255)
 yellow_tty = (29,160,223,32,255,255)
 blue_tty = (93,117,89,136,207,172)
 
-orange_t4 = (6, 198, 193, 18, 255, 255)#4, 245, 232, 25, 255, 255)
-yellow_t4 = (23, 236, 171, 27, 255, 255)#23, 206, 172, 29, 255, 255)
-blue_t4 = (112, 53, 79, 120, 209, 97)#98, 138, 80, 128, 255, 255)
+orange_t4 = (6, 198, 193, 18, 255, 255)
+yellow_t4 = (23, 236, 171, 27, 255, 255)
+blue_t4 = (112, 53, 79, 120, 209, 97)
 green_t4  = (35, 136, 0, 55, 255, 255)
-black_t4 = (17, 0, 0, 41, 255, 138)#0, 0, 66, 53, 255, 134)
+black_t4 = (17, 0, 0, 41, 255, 138)
 
 ser3.write('c\n')
 
@@ -406,7 +406,7 @@ def ballCheck(ser):
         ser.write('ko\n')
         return (ko, ser1_fb, ser2_fb)
     
-    ser.write('ko\n')
+    ser.write('gb\n')
     return (ko, 255, 255)
 
 def list_der(in_list):
@@ -470,7 +470,7 @@ while True:
                 rp_list_ball.insert(0, ((centroids[0] - 160)/160.0))
                 rp_list_ball.pop()
                 rel_pos_ball = rp_list[0]-rp_list[1]+rp_list[0]
-                if not (-1 < rel_pos_ball < 1):
+                if not (abs(rp_list[1]-rp_list[0]) < 0.4):
                     rel_pos_ball = rp_list[0]
                 #rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
                 if centroids[1] < 70:

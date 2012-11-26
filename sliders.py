@@ -5,6 +5,8 @@ import numpy as np
 
 capture = cv2.VideoCapture(1)
 cv2.cv.NamedWindow("track", 0)
+capture.set(3, 320)
+capture.set(4, 240)
 
 def null(*arg):
     pass

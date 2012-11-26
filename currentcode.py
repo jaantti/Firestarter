@@ -50,13 +50,16 @@ count_goal = 0
 c = 0
 switch = 0
 was_close = False
-fb_list = [(255, 255), (255, 255), (255, 255), (255, 255)]
-rp_list = [0, 0]
+#fb_list = [(255, 255), (255, 255), (255, 255), (255, 255)]
+fb = (0, 0)
+spd1 = 0
+spd2 = 0
 
 #colour tuples, hsv min -> hsv max
 orange_tty = (8, 138, 43, 17, 255, 255)
 yellow_tty = (34, 196, 92, 41, 255, 165)
 blue_tty = (92, 66, 32, 108, 205, 57)
+green_tty = (61, 138, 53, 73, 255, 210)
 black_tty = (63, 83, 0, 79, 143, 95)
 
 orange_t4 = (6, 198, 193, 18, 255, 255)
@@ -108,65 +111,6 @@ def findBlobCenter(img_thresholded, minSize, img):
     else:
         return 0
 
-def green_check(contour, img):
-    x,y,w,h = cv2.boundingRect(contour)
-    ball_box = img[y:y+h, x:x+w]
-    ball_box = cv2.cvtColor(ball_box,cv2.COLOR_BGR2HSV)
-    cnt1 = 0.0
-    cnt2 = 0
-    #not_orange_threshold = cv2.bitwise_not(thresholdedImg(ball_box, orange_t4))
-    #green_threshold = thresholdedImg(ball_box, 42, 67, 126, 66, 183, 255)
-    #thresholded_img = not_orange_threshold - green_threshold
-    #ball_box = cv2.cvtColor(ball_box,cv2.COLOR_HSV2BGR)
-    return not_orange_threshold
-    #print cnt1/cnt2
-    #print "___________________________"
-    #if cnt1/cnt2 <= 0.25
-
-def field_edge(contour, img):
-    x,y,w,h = cv2.boundingRect(contour)    
-    lines = [img[y+h:240, x:x+1], img[y+h:240, x+w/2:x+w/2+1], img[y+h:240, x+w-1:x+w]]
-    for line in lines:
-        last_green = 2
-        line = cv2.cvtColor(line,cv2.COLOR_BGR2HSV)
-        line_green = thresholdedImg(line, green_t4)
-        #cv2.imshow('Line_green', line_green)
-        line = line[::-1]
-        for i in range(len(line)):
-            if line_green[i] == 1:
-                last_green = 0
-            elif (not (line[i][0][1] < 40 and line[i][0][2] > 200)) and last_green < 2: #isn't white and just had green
-                return 1
-            else:
-                last_green += 1
-    return 0
-            
-def edge_check(contour, img):
-    x,y,w,h = cv2.boundingRect(contour)    
-    lines = [img[y+h:240, x:x+1], img[y+h:240, x+w/2:x+w/2+1], img[y+h:240, x+w-1:x+w]]
-    for line in lines:
-        line = cv2.cvtColor(line,cv2.COLOR_BGR2GRAY)
-        line = line[::-1]
-        #cv2.imshow('Line', robot_to_ball)
-        cnt1 = 0
-        cnt2 = 0
-        cnt3 = 1
-        #print robot_to_ball
-        for i in range(len(line)-2):
-            if cnt2 >= 2:
-                return 1
-            elif cnt1 >= 4 and line[i] <= 120:
-                cnt2 = cnt2 + 1
-            elif line[i] >= 225:
-                cnt1 = cnt1 + 1
-            elif cnt3 >= 0 and cnt1 >= 4:
-                cnt3 = cnt3 - 1
-            else:
-                cnt1 = 0
-                cnt3 = 1
-        #print cnt1, cnt2, cnt3, robot_to_ball[i]
-    return 0
-
 def goal_find(centroids, ser1, ser2, count_goal):
     global c
     global rel_pos
@@ -174,30 +118,25 @@ def goal_find(centroids, ser1, ser2, count_goal):
     if centroids != 0:
         rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
         if rel_pos > 0.15: #blob right of center
-            ser1.write('sd0\n')
-            ser2.write('sd-20\n')
+            write_spd(0, -20)
             c = 5
         elif rel_pos < -0.15: #blob left of center
-            ser1.write('sd20\n')
-            ser2.write('sd0\n')
+            write_spd(20, 0)
             c = 5
         else:
-            ser1.write('sd0\n')
-            ser2.write('sd0\n')
+            write_spd(0, 0)
             c = 5
             count_goal_find = count_goal_find + 1
-        if count_goal_find >= 5 and rel_pos < 0.15 and rel_pos > -0.15:
+        if count_goal_find >= 7 and rel_pos < 0.15 and rel_pos > -0.15:
             count_goal_find = 0
             print 'BOOOOOOOOMMMMM!'
             boom(ser3)
             #raw_input('Press any key to shoot.')
     else: #no blob in view
         if rel_pos > 0: #if blob was last seen on the right, turn right
-            ser1.write('sd0\n')
-            ser2.write('sd-30\n')
+            write_spd(0, -30)
         else: #if blob was last seen on the left, turn left
-            ser1.write('sd30\n')
-            ser2.write('sd0\n')
+            write_spd(30, 0)
         count_goal += 1
     return count_goal
 
@@ -205,30 +144,31 @@ def boom(ser3):
     ser3.write('k1000\n')
     time.sleep(0.1)
             
+def write_spd(write1, write2):
+    global spd1
+    global spd2
+    ser1.write('sd'+str(write1)+'\n')
+    ser2.write('sd'+str(write2)+'\n')
+    spd1 = write1
+    spd2 = write2
+
 def drive(centroids, max_spd, slower_by, count, rel_pos):
     '''Drives towards the provided point (assuming the camera faces forward). Turning rate varies depending on x coordinate.'''
 
     if count == 0 or count > 10:
         print('Saw one!')
-        ser1.write('sd0\n')
-        ser2.write('sd0\n')
+        write_spd(0, 0)
         time.sleep(0.1)
     count = 1
     
     if rel_pos > 0: #blob right of center
-        ser1.write('sd'+str(max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
-        ser2.write('sd'+str(-max_spd)+'\n')
+        write_spd(max_spd - rel_pos*slower_by, -max_spd)
     elif rel_pos < 0: #blob left of center
-        ser1.write('sd'+str(max_spd)+'\n')
-        ser2.write('sd'+str(-max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
+        write_spd(max_spd, -max_spd - int(rel_pos*slower_by))
     else: #blob exactly in the middle
-        ser1.write('sd'+str(max_spd)+'\n')
-        ser2.write('sd-'+str(max_spd)+'\n')
+        write_spd(max_spd, -max_spd)
         
     return count
-
-#def collisionTimeout(ser1, ser2):
-##    Work in progress
 
 
 def goalTimeout(img_hsv, current_gate, max_spd, slower_by, count_goal):
@@ -251,8 +191,7 @@ def goalTimeout(img_hsv, current_gate, max_spd, slower_by, count_goal):
     if centroids != 0:
         if count_goal == 100 or count_goal > 102:
             print('Saw one goal!')
-            ser1.write('sd0\n')
-            ser2.write('sd0\n')
+            write_spd(0, 0)
             time.sleep(0.1)
         count_goal = 100
     
@@ -262,34 +201,27 @@ def goalTimeout(img_hsv, current_gate, max_spd, slower_by, count_goal):
         elif switch == 1:
             if centroids[2] < 2000:
                 if rel_pos > 0: #blob right of center
-                    ser1.write('sd'+str(max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
-                    ser2.write('sd'+str(-max_spd)+'\n')
+                    write_spd(max_spd - int(rel_pos*slower_by), -max_spd)
                 elif rel_pos < 0: #blob left of center
-                    ser1.write('sd'+str(max_spd)+'\n')
-                    ser2.write('sd'+str(-max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
+                    write_spd(max_spd, -max_spd - int(rel_pos*slower_by))
                 else: #blob exactly in the middle
-                    ser1.write('sd'+str(max_spd)+'\n')
-                    ser2.write('sd-'+str(max_spd)+'\n')
+                    write_spd(max_spd, -max_spd)
             else:
                 switch = 0
                 'New position aquired'
                 return 0
         else:
             if rel_pos > 0: #if blob was last seen on the right, turn right
-                ser1.write('sd-15\n')
-                ser2.write('sd-20\n')
+                write_spd(-15, -20)
             else: #if blob was last seen on the left, turn left
-                ser1.write('sd20\n')
-                ser2.write('sd15\n')
+                write_spd(20, 15)
         return (count_goal + 1)
     
     else:
         if rel_pos > 0: #if blob was last seen on the right, turn right
-            ser1.write('sd-15\n')
-            ser2.write('sd-20\n')
+            write_spd(-15, -20)
         else: #if blob was last seen on the left, turn left
-            ser1.write('sd20\n')
-            ser2.write('sd15\n')
+            write_spd(20, 15)
     return (count_goal + 1)
     
 
@@ -306,8 +238,7 @@ def timeout(img_hsv, max_spd, slower_by, count):
         
         if count == 100 or count > 102:
             print('Saw one goal!')
-            ser1.write('sd0\n')
-            ser2.write('sd0\n')
+            write_spd(0, 0)
             time.sleep(0.1)
         count = 100
         
@@ -318,26 +249,21 @@ def timeout(img_hsv, max_spd, slower_by, count):
             print 'Gate size' + str(centroids[2])
             if centroids[2] < 3000:
                 if rel_pos > 0: #blob right of center
-                    ser1.write('sd'+str(max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
-                    ser2.write('sd'+str(-max_spd)+'\n')
+                    write_spd(max_spd - int(rel_pos*slower_by), -max_spd)
                 elif rel_pos < 0: #blob left of center
-                    ser1.write('sd'+str(max_spd)+'\n')
-                    ser2.write('sd'+str(-max_spd - int(rel_pos*slower_by))+'\n') #slower wheel speed
+                    write_spd(max_spd, -max_spd - int(rel_pos*slower_by))
                 else: #blob exactly in the middle
-                    ser1.write('sd'+str(max_spd)+'\n')
-                    ser2.write('sd-'+str(max_spd)+'\n')
+                    write_spd(max_spd, -max_spd)
             else:
                 switch = 0
                 'New position aquired'
                 return 0
         else:
-            ser1.write('sd-15\n')
-            ser2.write('sd-20\n')
+            write_spd(-30, -30)
             return (count + 1)
             
     else:
-        ser1.write('sd-10\n')
-        ser2.write('sd-15\n')
+        write_spd(-30, -30)
     return (count + 1)
         
 def lineDetection(img, colour, a, b, minLineLength, maxLineGap):
@@ -385,14 +311,14 @@ def lineDetection(img, colour, a, b, minLineLength, maxLineGap):
                 cv2.fillConvexPoly(img, array, (255, 0, 255))
     return img
 
-def ballCheck(ser):
+def ballCheck():
     '''checks if ball is in dribbler
     returns 1 if yes and 0 if no'''
     global c
-    ko = int(ser.readline()[3])
+    ko = int(ser1.readline()[3])
     
     if c % 10 == 0:
-        ko = 2
+        #ko = 2
         ser1.write('s\n')
         ser2.write('s\n')
         ser1_fb = int(ser1.readline()[3:-2])
@@ -400,10 +326,10 @@ def ballCheck(ser):
         #if not (ser1_fb == '<s:0>\n' and ser2_fb == '<s:0>\n'):
         #    print(ser1_fb)
         #    print(ser2_fb)
-        ser.write('gb\n')
+        ser1.write('gb\n')
         return (ko, ser1_fb, ser2_fb)
     
-    ser.write('gb\n')
+    ser1.write('gb\n')
     return (ko, 255, 255)
 
 def list_der(in_list):
@@ -417,28 +343,20 @@ ser1.write('gb\n')
 
 #main loop
 while True:
-    #print rp_list
     c += 1
     ser3.write('p\n')
     ret, img = capture.read() #get the picture to work with
     img_hsv = cv2.cvtColor(img,cv2.COLOR_BGR2HSV) #convert the img to HSV colourspace
     #img = cv2.flip(img, -1) #flip if necessary
     
-    ko = ballCheck(ser1) #ball check
-    
+    ko = ballCheck() #ball check
+
     if ko[1] != 255:
-        flag = 1
-        print ko[1], ko[2]
-        fb_list.pop()
-        fb_list.insert(0, (ko[1], ko[2]))
-        for fb in fb_list:
-            if not (-4 < fb[0] < 4 and -4 < fb[1] < 4):
-                flag = 0
-                break
-        
-        if flag == 1:  
-            print 'Stalling'
-            fb_list = [(255, 255), (255, 255), (255, 255), (255, 255)]
+	green = thresholdedImg(img_hsv, green_tty)
+	#print np.sum(green)/255
+	if np.sum(green) < 30720:
+	    print 'Stalling'
+            #fb_list = [(255, 255), (255, 255), (255, 255), (255, 255)]
             ser1.write('sd0\n')
             ser2.write('sd0\n')
             time.sleep(0.2)
@@ -450,28 +368,21 @@ while True:
             time.sleep(0.2)
             ser1.write('sd50\n')
             ser2.write('sd50\n')
-            time.sleep(0.7)
+            time.sleep(0.6)
             ser3.write('k\n')
-            c = 8
-        
-    elif ko[0] == 0: #ball not in dribbler
+            c += 1
+
+    if ko[0] == 0: #ball not in dribbler
         count_goal = 0
         #print 'Count: ' + str(count)
         if count < 100:
             img_hsv = img_hsv[15:240, 0:320]
             img_hsv = lineDetection(img_hsv, black_tty, 150, 90, 90, 25)
             img_thresholded = thresholdedImg(img_hsv, orange_tty)
-            cv2.imshow('test', img_thresholded)
+            #cv2.imshow('test', img_thresholded)
             centroids = findBlobCenter(img_thresholded, 5, img)
             
             if centroids != 0:
-                #rel_pos = (centroids[0] - 160)/160.0
-                #rp_list.insert(0, ((centroids[0] - 160)/160.0))
-                #rp_list.pop()
-                #rel_pos_ball = rp_list[0]-rp_list[1]+rp_list[0]
-                #print rel_pos_ball, rp_list[0], abs(rp_list[1]-rp_list[0])
-                #if not (abs(rp_list[1]-rp_list[0]) < 0.4):
-                #    rel_pos_ball = rp_list[0]
                
                 rel_pos = (centroids[0] - 160)/160.0 #horisontal position of blob in vision: -1 left edge, 1 right edge, 0 center
 
@@ -480,32 +391,26 @@ while True:
                     was_close = False
                 elif centroids[1] > 200 and centroids[2] > 1500 and not was_close:
                     c = 1
-                    ser1.write('sd0\n')
-                    ser2.write('sd0\n')
+                    write_spd(0, 0)
                     time.sleep(0.1)
                     if rel_pos > 0: #blob right of center
-                        ser1.write('sd'+str(25 - int(rel_pos*15))+'\n') #slower wheel speed
-                        ser2.write('sd'+str(-25)+'\n')
+                        write_spd(25 - int(rel_pos*20), -25)
                     elif rel_pos < 0: #blob left of center
-                        ser1.write('sd'+str(25)+'\n')
-                        ser2.write('sd'+str(-25 - int(rel_pos*15))+'\n') #slower wheel speed
+                        write_spd(25, -25 - int(rel_pos*20))
                     else: #blob exactly in the middle
-                        ser1.write('sd'+str(25)+'\n')
-                        ser2.write('sd-'+str(25)+'\n')
+                        write_spd(25, -25)
                     print 'Ball close'
-                    time.sleep(1)
+                    time.sleep(0.6)
                     was_close = True
                 else:
-                    count = drive(centroids, 30, 25, count, rel_pos)
+                    count = drive(centroids, 25, 25, count, rel_pos)
                 
             else: #no blob in view
 
                 if rel_pos > 0: #if blob was last seen on the right, turn right
-                    ser1.write('sd0\n')
-                    ser2.write('sd-30\n')
+                    write_spd(0, -30)
                 else: #if blob was last seen on the left, turn left
-                    ser1.write('sd30\n')
-                    ser2.write('s0\n')
+                    write_spd(30, 0)
                 count += 1
         
         else:
@@ -516,21 +421,19 @@ while True:
         count = 0
         #print 'Count_goal: ' + str(count_goal)
         img_hsv = img_hsv[0:30, 0:320]
-        current_color = blue_tty # <<<<< SIHTVARAVA VARV >>>>>>
+        current_color = yellow_tty # <<<<< SIHTVARAVA VARV >>>>>>
         if count_goal < 100:
             img_thresholded = thresholdedImg(img_hsv, current_color)
-            cv2.imshow('goalfinding threshold', img_thresholded)
             centroids = findBlobCenter(img_thresholded, 500, img)
             count_goal = goal_find(centroids, ser1, ser2, count_goal)
         else:
             count_goal = goalTimeout(img_hsv, current_color, 50, 20, count_goal) 
-        #drive(centroids, 40, 15, ser1, ser2)
             
-            
-#   cv2.imshow('Threshed', img_thresholded)
-    if centroids != 0:
-        cv2.circle(img, (centroids[0], centroids[1]+15), 5, (255, 0, 0), -1) #draws a small blue circle at the biggest blob's center for debugging
-    cv2.imshow('Original image', img) #show img for calibration
+    #if centroids != 0:
+    #    cv2.circle(img, (centroids[0], centroids[1]+15), 5, (255, 0, 0), -1) #draws a small blue circle at the biggest blob's center for debugging
+    #cv2.imshow('Original image', img) #show img for calibration
+
+    #print spd2, spd1, 'wanted speed'
 
     if cv2.waitKey(10) == 27: #quit on esc
         break

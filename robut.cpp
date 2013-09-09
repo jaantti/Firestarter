@@ -25,67 +25,93 @@ int black_tty[] = {63, 83, 0, 79, 143, 95};
 
 int orange_t4[] = {6, 198, 193, 18, 255, 255};
 int yellow_t4[] = {23, 236, 171, 27, 255, 255};
-int blue_t4[] = {112, 53, 79, 120, 209, 97};
+int blue_t4[] = {0, 0, 0, 127, 127, 255};
 int green_t4[] = {35, 136, 0, 55, 255, 255};
 int black_t4[] = {17, 0, 0, 41, 255, 138};
 
+Mat thresholdedImg(Mat, int*);
+vector<Point2f> findBlobCenter(Mat, int);
+bool compareContourAreas (vector<Point>, vector<Point>);
+
 int main(){
+    namedWindow("aken");
+    namedWindow("aken2");
 
     VideoCapture capture(0);
-    capture.set(3, 320);
-    capture.set(4, 240);
+    capture.set(CV_CAP_PROP_FRAME_WIDTH, 320.0);
+    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 240.0);
+
+    Mat img, img_hsv;
+
+
+    while (true){
+        //cout <<"1"<<endl;
+        capture >> img;
+        //cout <<"2"<<endl;
+        cvtColor(img, img_hsv, CV_BGR2HSV);
+        //cout <<"3"<<endl;
+        //imshow("aken2", img_hsv);
+        //cout <<"4"<<endl;
+        Mat tr_img = thresholdedImg(img_hsv, blue_t4);
+        imshow("aken", tr_img);
+
+        vector<Point2f> point = findBlobCenter(tr_img, 50);
+
+        cout << point << endl;
+
+
+        if (waitKey(10) == 27) break;
+
+    }
 
     return 0;
 }
 
-OutputArray thresholdedImg(Mat img, int* colour){
+Mat thresholdedImg(const Mat img, int* colour){
     //reads an image from the feed and thresholds it using the provided min/max HSV values'''
-    Mat img_thresholded;
+    Mat img_thresholded = img.clone();
 
-    int thr_min[] = {colour[0], colour[1], colour[2]};
-    int thr_max[] = {colour[3], colour[4], colour[5]};
+    inRange(img, Scalar(colour[0], colour[1], colour[2]), Scalar(colour[3], colour[4], colour[5]), img_thresholded);
 
-    Mat thresh_MIN = Mat(1, 3, CV_32FC1, &thr_min);
-    Mat thresh_MAX = Mat(1, 3, CV_32FC1, &thr_max);
-
-    inRange(img, thresh_MIN, thresh_MAX, img_thresholded);
-
-    //cv2.imshow('thresholded', img_thresholded) #show picture for calibrating
+    //imshow("aken", img_thresholded); //show picture for calibrating
     return img_thresholded;
 }
 
-int* findBlobCenter(Mat img_thresholded, int minSize, Mat img){
+vector<Point2f> findBlobCenter(Mat img_thresholded, int minSize){
     //using a binary image finds the center of the biggest blob and returns it's coordinates as a tuple'''
     //OutputArrayOfArrays contours;
     //OutputArray hierarchy;
-    Mat contours;
-    Mat hierarchy;
 
-    findContours(img_thresholded, contours, hierarchy, RETR_TREE, CHAIN_APPROX_TC89_KCOS);
+    //Mat contours;
+    //Mat hierarchy;
 
-    //finds the biggest blob
-    int bigsize = 0;
-    int biggest = -1;
+    //vector<vector<Point> > contours;
+    //vector<Vec4i> hierarchy;
 
-    Size s = contours.size();
+    // find contours
+    vector<vector<Point> > contours;
+    vector<Vec4i> hierarchy;
+    findContours(img_thresholded, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
-    for (int i = s.width; i >= 0; i--){
-        int size_ = (int) contourArea(contours.at<float>(0,i));
+    // sort contours
+    sort(contours.begin(), contours.end(), compareContourAreas);
 
-        if (size_ >= minSize && size_ > bigsize){
-            bigsize = size_;
-            biggest = i;
-        }
-    }
+    // grab contours
+    vector<Point> biggestContour = contours[contours.size()-1];
 
-    if (biggest != -1){
-        Rect rect = boundingRect(contours.at<float>(0, biggest));
-        int centroid_x = (int)(rect.x + rect.width/2);
-        int centroid_y = (int)(rect.y + rect.height/2);
+    double area = contourArea(Mat(biggestContour)));
 
-        int out[] = {centroid_x, centroid_y, bigsize};
-        return out;
-    }
-    else return 0;
+    vector<Moments> mu(1);
+    mu[0] = moments(biggestContour, false);
+    vector<Point2f> mc(1);
+    mc[0] = Point2f(mu[0].m10/mu[0].m00, mu[0].m01/mu[0].m00);
 
+    return mc;
+
+}
+
+bool compareContourAreas (vector<Point> contour1, vector<Point> contour2 ) {
+    double i = fabs( contourArea(Mat(contour1)) );
+    double j = fabs( contourArea(Mat(contour2)) );
+    return ( i < j );
 }

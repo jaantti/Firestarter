@@ -1,15 +1,17 @@
 #include <cv.h>
 #include <highgui.h>
 #include <unistd.h>
-#include <rs232.h>
+#include "rs232.h"
+#include <sstream>
 
 using namespace cv;
 using namespace std;
 
 int baudrate = 9600;
-int serialport = 24; //24 /dev/ttyACM0, 25 /dev/ttyACM1
+int motor1 = 24; //parem
+int motor2 = 25; //vasak   24 /dev/ttyACM0, 25 /dev/ttyACM1
 
-int rel_pos = 0;
+double rel_pos = 0;
 int rel_pos_ball = 0;
 int count_ = 0;
 int count_goal_find = 0;
@@ -35,62 +37,66 @@ int green_t4[] = {35, 136, 0, 55, 255, 255};
 int black_t4[] = {17, 0, 0, 41, 255, 138};
 
 Mat thresholdedImg(Mat, int*);
-vector<Point2f> findBlobCenter(Mat, int);
+vector<Point2f> findBlobCenter(Mat, double);
 bool compareContourAreas (vector<Point>, vector<Point>);
+void findBall(double, double);
+void write_spd(int write1, int write2);
+
+string to_string (int Number ){
+    ostringstream ss;
+    ss << Number;
+    return ss.str();
+}
 
 int main(){
 
-    if(RS232_OpenComport(serialport, baudrate))
+    //init motors
+    if(RS232_OpenComport(motor1, baudrate))
     {
-        cout << "Can not open comport\n";
-
-    return(0);
+        cout << "Can not open /dev/ttyACM0\n";
+        return(0);
+    }
+    if(RS232_OpenComport(motor2, baudrate)){
+        cout << "Can not open /dev/ttyACM1\n";
+        return(0);
     }
 
-    RS232_cputs(serialport, "?\n");
 
-    unsigned char buf[11];
+    //RS232_cputs(serialport, "?\n");
 
+    /*unsigned char buf[11];
     usleep(100000);
-
     int n = RS232_PollComport(serialport, buf, 10);
-
     if (n) {
         cout << "n: " << n << endl;
         cout << buf << endl;
-    }
-
-    RS232_CloseComport(serialport);
+    }*/
 
     namedWindow("aken");
     namedWindow("aken2");
 
     VideoCapture capture(1);
-//    capture.set(CV_CAP_PROP_FRAME_WIDTH, 320.0);
-//    capture.set(CV_CAP_PROP_FRAME_HEIGHT, 240.0);
 
     Mat img, img_hsv;
 
+    while (true){
 
-    while (!true){
-        //cout <<"1"<<endl;
         capture >> img;
-        //cout <<"2"<<endl;
         cvtColor(img, img_hsv, CV_BGR2HSV);
-        //cout <<"3"<<endl;
-        //imshow("aken2", img_hsv);
-        //cout <<"4"<<endl;
-        Mat tr_img = thresholdedImg(img_hsv, blue_t4);
+        imshow("aken2", img_hsv);
+        Mat tr_img = thresholdedImg(img_hsv, orange_t4);
         imshow("aken", tr_img);
 
-        vector<Point2f> point = findBlobCenter(tr_img, 50);
+        vector<Point2f> point = findBlobCenter(tr_img, 5.0);
 
-        cout << point << endl;
-
+        cout << point[0].x  << ", " << point[0].y << endl;
+        findBall(point[0].x, point[0].y);
 
         if (waitKey(10) == 27) break;
 
     }
+    RS232_CloseComport(motor1);
+    RS232_CloseComport(motor2);
 
     return 0;
 }
@@ -105,35 +111,32 @@ Mat thresholdedImg(const Mat img, int* colour){
     return img_thresholded;
 }
 
-vector<Point2f> findBlobCenter(Mat img_thresholded, int minSize){
+vector<Point2f> findBlobCenter(Mat img_thresholded, double minSize){
     //using a binary image finds the center of the biggest blob and returns it's coordinates as a tuple'''
-    //OutputArrayOfArrays contours;
-    //OutputArray hierarchy;
-
-    //Mat contours;
-    //Mat hierarchy;
-
-    //vector<vector<Point> > contours;
-    //vector<Vec4i> hierarchy;
 
     // find contours
     vector<vector<Point> > contours;
     vector<Vec4i> hierarchy;
     findContours(img_thresholded, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, cv::Point(0, 0) );
 
-    // sort contours
-    sort(contours.begin(), contours.end(), compareContourAreas);
+    if (!contours.empty()){
+        sort(contours.begin(), contours.end(), compareContourAreas);
 
-    // grab contours
-    vector<Point> biggestContour = contours[contours.size()-1];
+        // grab contours
+        vector<Point> biggestContour = contours[contours.size()-1];
 
-    double area = contourArea(Mat(biggestContour));
+        double area = contourArea(Mat(biggestContour));
 
-    vector<Moments> mu(1);
-    mu[0] = moments(biggestContour, false);
+        if (area >= minSize){
+            vector<Moments> mu(1);
+            mu[0] = moments(biggestContour, false);
+            vector<Point2f> mc(1);
+            mc[0] = Point2f(mu[0].m10/mu[0].m00, mu[0].m01/mu[0].m00);
+            return mc;
+        }
+    }
+
     vector<Point2f> mc(1);
-    mc[0] = Point2f(mu[0].m10/mu[0].m00, mu[0].m01/mu[0].m00);
-
     return mc;
 
 }
@@ -142,4 +145,46 @@ bool compareContourAreas (vector<Point> contour1, vector<Point> contour2 ) {
     double i = fabs( contourArea(Mat(contour1)) );
     double j = fabs( contourArea(Mat(contour2)) );
     return ( i < j );
+}
+
+void findBall(double x, double y){
+
+    int max_spd = 40, slower_by = 20;
+
+    rel_pos = (x-320)/320;
+
+    if (rel_pos > 0) { //blob right of center
+        write_spd(max_spd - (int)(rel_pos*slower_by), -max_spd);
+    }
+    else if (rel_pos < 0) { //blob left of center
+        write_spd(max_spd, -max_spd - (int)(rel_pos*slower_by));
+    }
+    else { //blob exactly in the middle
+        write_spd(max_spd, -max_spd);
+    }
+
+    /*
+    if (x >= 310 && x <= 330){
+        RS232_cputs(motor1, "sd30\n");
+        RS232_cputs(motor2, "sd-30\n");
+    }
+    if (x < 310){
+        RS232_cputs(motor1, "sd30\n");
+        RS232_cputs(motor2, "sd0\n");
+    }
+    if (x >330){
+        RS232_cputs(motor1, "sd0\n");
+        RS232_cputs(motor2, "sd-30\n");
+    }*/
+
+}
+
+void write_spd(int write1, int write2){
+    stringstream ss1, ss2;
+
+    ss1 << "sd" << write1 << "\n";
+    ss2 << "sd" << write2 << "\n";
+
+    RS232_cputs(motor1, ss1.str().c_str());
+    RS232_cputs(motor2, ss2.str().c_str());
 }

@@ -41,6 +41,7 @@ vector<Point2f> findBlobCenter(Mat, double);
 bool compareContourAreas (vector<Point>, vector<Point>);
 void findBall(double, double);
 void write_spd(int write1, int write2);
+char getBall();
 
 string to_string (int Number ){
     ostringstream ss;
@@ -79,6 +80,8 @@ int main(){
 
     Mat img, img_hsv;
 
+    RS232_cputs(motor1, "gb\n");
+
     while (true){
 
         capture >> img;
@@ -89,8 +92,10 @@ int main(){
 
         vector<Point2f> point = findBlobCenter(tr_img, 5.0);
 
-        cout << point[0].x  << ", " << point[0].y << endl;
+//        cout << point[0].x  << ", " << point[0].y << endl;
+        getBall();
         findBall(point[0].x, point[0].y);
+
 
         if (waitKey(10) == 27) break;
 
@@ -187,4 +192,11 @@ void write_spd(int write1, int write2){
 
     RS232_cputs(motor1, ss1.str().c_str());
     RS232_cputs(motor2, ss2.str().c_str());
+}
+
+char getBall(){
+    unsigned char buf[11];
+    RS232_PollComport(motor2, buf, 10);
+    RS232_cputs(motor2, "gb\n");
+    return buf[3];
 }

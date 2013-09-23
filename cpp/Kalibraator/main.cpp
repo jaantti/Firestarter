@@ -27,13 +27,13 @@ Mat img, img_hsv;
 void mouseEvent(int evt, int x, int y, int flags, void* param){
     if(evt==CV_EVENT_LBUTTONDOWN){
         //printf("%d %d\n",x,y);
-        h = img.at<Vec3b>(y,x)[0];
-        s = img.at<Vec3b>(y,x)[1];
-        v = img.at<Vec3b>(y,x)[2];
+        h = img_hsv.at<Vec3b>(y,x)[0];
+        s = img_hsv.at<Vec3b>(y,x)[1];
+        v = img_hsv.at<Vec3b>(y,x)[2];
         printf("%d %d %d\n",h,s,v);
     }
     if(evt==CV_EVENT_RBUTTONDOWN){
-        printf("%d %d %d %d %d %d\n",h_min, s_min, v_min, h_max, s_max, v_max);
+        printf("%d, %d, %d, %d, %d, %d\n",h_min, s_min, v_min, h_max, s_max, v_max);
     }
 }
 
@@ -41,7 +41,6 @@ int main( int argc, char** argv ){
 
     VideoCapture capture(0);
 
- /// Initialize values
     h_min = 0;
     s_min = 0;
     v_min = 0;

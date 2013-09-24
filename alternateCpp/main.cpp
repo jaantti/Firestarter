@@ -3,8 +3,7 @@
 #include <unistd.h>
 #include "rs232.h"
 #include <sstream>
-#include "capture.h"
-#include "segmentation.h"
+
 using namespace cv;
 using namespace std;
 
@@ -42,6 +41,7 @@ vector<Point2f> findBlobCenter(Mat, double);
 bool compareContourAreas (vector<Point>, vector<Point>);
 void findBall(double, double);
 void write_spd(int write1, int write2);
+char getBall();
 
 string to_string (int Number ){
     ostringstream ss;
@@ -52,7 +52,7 @@ string to_string (int Number ){
 int main(){
 
     //init motors
-   /* if(RS232_OpenComport(motor1, baudrate))
+    if(RS232_OpenComport(motor1, baudrate))
     {
         cout << "Can not open /dev/ttyACM0\n";
         return(0);
@@ -61,7 +61,7 @@ int main(){
         cout << "Can not open /dev/ttyACM1\n";
         return(0);
     }
-*/
+
 
     //RS232_cputs(serialport, "?\n");
 
@@ -75,60 +75,33 @@ int main(){
 
     namedWindow("aken");
     namedWindow("aken2");
-    SEGMENTATION segm(640, 480);
-    VideoCapture capture(0);
-	capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-	capture.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+
+    VideoCapture capture(1);
+
     Mat img, img_hsv;
-    unsigned char *data;
+
+    RS232_cputs(motor1, "gb\n");
+
     while (true){
+
         capture >> img;
-        data = img.data;
-        segm.readThresholds("conf");
-
-        segm.thresholdImage( data );
-    	segm.EncodeRuns();
-    	segm.ConnectComponents();
-    	segm.ExtractRegions();
-    	segm.SeparateRegions();
-    	segm.SortRegions();
-
-		int x1, x2, y1, y2;
-		if(segm.colors[ORANGE].list!=NULL){
-		x1 = segm.colors[ORANGE].list->x1;
-		y1 = segm.colors[ORANGE].list->y1;
-		x2 = segm.colors[ORANGE].list->x2;
-		y2 = segm.colors[ORANGE].list->y2;
-        //cout << segm.colors[ORANGE].list->next << endl;
-		cv::rectangle( img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0,0,255) );
-		}
-        for(int i = 0; i<segm.colors[ORANGE].num; i++){
-            int x3, y3, x4, y4;
-            segm.colors[ORANGE].list->next;
-            cout<< segm.colors[ORANGE].list->iterator_id<<endl;
-            x3 = segm.colors[ORANGE].list->x1;
-            y3 = segm.colors[ORANGE].list->y1;
-            x4 = segm.colors[ORANGE].list->x2;
-            y4 = segm.colors[ORANGE].list->y2;
-        //cout << segm.colors[ORANGE].list->next << endl;
-		cv::rectangle( img, cv::Point(x3, y3), cv::Point(x4, y4), cv::Scalar(0,0,255) );
-        }
-        //cout<<segm.colors[ORANGE].num << endl;
         cvtColor(img, img_hsv, CV_BGR2HSV);
-        imshow("aken", img_hsv);
-        //Mat tr_img = thresholdedImg(img_hsv, orange_t4);
-        imshow("aken2", img);
+        imshow("aken2", img_hsv);
+        Mat tr_img = thresholdedImg(img_hsv, orange_t4);
+        imshow("aken", tr_img);
 
-        //vector<Point2f> point = findBlobCenter(tr_img, 5.0);
+        vector<Point2f> point = findBlobCenter(tr_img, 5.0);
 
-        //cout << point[0].x  << ", " << point[0].y << endl;
-        //findBall(point[0].x, point[0].y);
+        cout << point[0].x  << ", " << point[0].y << endl;
+        getBall();
+        findBall(point[0].x, point[0].y);
+
 
         if (waitKey(10) == 27) break;
 
     }
-  //  RS232_CloseComport(motor1);
-    //RS232_CloseComport(motor2);
+    RS232_CloseComport(motor1);
+    RS232_CloseComport(motor2);
 
     return 0;
 }
@@ -145,8 +118,6 @@ Mat thresholdedImg(const Mat img, int* colour){
 
 vector<Point2f> findBlobCenter(Mat img_thresholded, double minSize){
     //using a binary image finds the center of the biggest blob and returns it's coordinates as a tuple'''
-
-
 
     // find contours
     vector<vector<Point> > contours;
@@ -221,4 +192,11 @@ void write_spd(int write1, int write2){
 
     RS232_cputs(motor1, ss1.str().c_str());
     RS232_cputs(motor2, ss2.str().c_str());
+}
+
+char getBall(){
+    unsigned char buf[11];
+    RS232_PollComport(motor2, buf, 10);
+    RS232_cputs(motor2, "gb\n");
+    return buf[3];
 }

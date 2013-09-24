@@ -84,7 +84,7 @@ int main(){
     while (true){
         capture >> img;
         data = img.data;
-        /*segm.readThresholds("conf");
+        segm.readThresholds("conf");
 
         segm.thresholdImage( data );
     	segm.EncodeRuns();
@@ -114,16 +114,15 @@ int main(){
 		cv::rectangle( img, cv::Point(x3, y3), cv::Point(x4, y4), cv::Scalar(0,0,255) );
         }
         //cout<<segm.colors[ORANGE].num << endl;
-*/   
-     	cvtColor(img, img_hsv, CV_BGR2HSV);
+        cvtColor(img, img_hsv, CV_BGR2HSV);
         imshow("aken", img_hsv);
-        Mat tr_img = thresholdedImg(img_hsv, orange_t4);
+        //Mat tr_img = thresholdedImg(img_hsv, orange_t4);
         imshow("aken2", img);
 
-        vector<Point2f> point = findBlobCenter(tr_img, 5.0);
+        //vector<Point2f> point = findBlobCenter(tr_img, 5.0);
 
-        cout << point[0].x  << ", " << point[0].y << endl;
-        findBall(point[0].x, point[0].y);
+        //cout << point[0].x  << ", " << point[0].y << endl;
+        //findBall(point[0].x, point[0].y);
 
         if (waitKey(10) == 27) break;
 

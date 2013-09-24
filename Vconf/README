@@ -1,0 +1,96 @@
+
+====================
+Vision_conf
+by Andres Traumann
+====================
+
+Vision_conf on programm, mille eesmärk on pildituvastuse eesmärgil värvide valimine. Programm võimaldab väga täpselt
+värviruumist erinevate osade valimist. Idee on lihtne: programm näitab kaamerast tulevat pilti ja ekraanile
+klikkides valib kursori all oleva värvi.
+
+Programmis on alati avatud kaks akent, millest üks näitab kaamerast saadud pilti ning teine sama pilti, milles on välja
+"thresholditud" hetkel valitud värvid. Valitud värvid näidatakse valgena, kõik muu näidatakse mustana.
+
+Hetkel on programmi võimalik kasutada ainult piksliformaadi YUYV (YUYV422) korral. Teisi formaate on samuti võimalik
+kasutada, vaja on ainult implementeerida funktsioon, mis seda loeb.
+
+OLULINE:
+Failist "vconf" loeb programm hetkeseadeid. Selle 1. rida sisaldab videoseadme nime (näide: /dev/video0). 2. rida sisaldab
+täielikku teed kausta, kus hoitakse konfiguratsioonifaile (näide: /home/user/robot/). 3. rida määrab akende algkoordinaadid,
+seda pole vaja manuaalselt muuta.
+
+Skript "cam.sh" tekitatakse, et automaatselt saaks alati laadida kaamera viimativalitud seaded nagu brightness, contrast jne.
+Fail "conf" sisaldab informatsiooni valitud värvide kohta. Täpsem formaat on kirjeldatud README allosas.
+
+
+====================
+Lisanupud
+====================
+
+SPACE:
+Jätab pildi seisma. Uuesti vajutamine käivitab selle uuesti. Värve on võimalik valida ka siis, kui pilt seisab
+
+ANY OTHER KEY:
+Võtab tagasi eelneva värvivaliku, põhimõtteliselt "Undo".
+
+
+====================
+Valikud
+====================
+
+Frame brushsize (f_bz):
+Kui hiirega klikitakse mingile punktile (x,y), siis valitakse ekraanil kõikide pikslite värvid, mille koordinaadid on vahemikus
+( (x-f_bz, x+f_bz), (y-f_bz, y+f_bz) ). Lihtsalt öeldes valitakse kõikide pikslite värvid ruudu seest, mille
+keskpunkt on (x,y) ning küljepikkus on 2*f_bz.
+
+Thresholded frame brushsize:
+Threshold brushsize määrab selle, kui palju värve valikust eemaldatakse, kui klikkida mingile punktile Threshold aknas.
+Eemaldatakse kõikide pikslite värvid ruudu seest, mille keskpunkt on (x,y) ning küljepikkus on 2*f_bz.
+
+Colorspace brushsize (c_bz):
+Kui valitakse mingi piksel, mille värvid on (Y, U, v), siis värviruumist valitakse kõik värvid vahemikus
+( [Y-c_bz+1, Y+c_bz-1], [U-c_bz+1, U+c_bz-1], [V-c_bz+1, V+c_bz-1] ) ehk siis värviruumis valitakse kuup, mille
+keskpunkt on (Y, U, V) ning küljepikkus on 2*c_bz-1.
+
+Thres. colors. brushsize:
+Määrab selle, kui suur vahemik värviruumis eemaldatakse. Vahemik määratakse kuubiga samal põhimõttel nagu Colorspace brushsize
+korral.
+
+Additional color:
+Kuna algoritmides, mida kasutasin enda roboti videotuvastuses, oli kasulik määrata värviruumid, kus üks on kitsam
+ja teine laiem, siis seepärast on võimalik valida lisavärve. Additional colors sisaldab alati kõiki värve, mida
+sisaldab põhivärv.
+
+Detect balls:
+Värve oli mugav määrata, kui samal ajal sai kontrollida, kas pallid üles leitakse nende värvide korral. Hetkel on realiseeritud
+minu tuvastusalgoritm, soovitan sinna realiseerida enda oma, et seda võimalust efektiivselt kasutada.
+
+Detect gates:
+Sama nagu Detect balls, erinev aga see, et tuvastab väravaid.
+
+
+=======================
+Conf file'i formaat
+=======================
+
+Iga värvikanali jaoks on olemas kolm massiivi (unsigned char[256]), mis sisaldavad infot kõigi 256 värvi kohta.
+Nii on võimalik talletada infot väga täpselt, kuna värviruum koosneb 256^3 erinevast värvist. Programm indekseerib
+värvid (oranž, sinine, kollane jne) indeksitega nii, et oranž=0, sinine=1, kollane=2 jne. Iga värvi määramisel tõstetakse
+kõrgeks char'i bit vastava indeksiga.
+
+Täpsemalt kirjeldab meetodit:
+http://www.cs.cmu.edu/~jbruce/cmvision/papers/JBThesis00.pdf
+
+Conf file'i formaati iseloomustab kõige paremini järgnev
+("thres" on põhivärvid, "ad_thres" on laiemad värvid (additional color)):
+
+for( int i = 0; i < 3; i++ ) {
+	for( int j = 0; j < 256; j++ ) fprintf( out, "%c", thres[i][j] );
+	for( int j = 0; j < 256; j++ ) fprintf( out, "%c", ad_thres[i][j] );
+}
+
+Selleks, et kontrollida, kas tegu on mingi konkreetse värviga, annab vastuse järgnev:
+if( thres[0][Y] & thres[1][U] & thres[2][V] & (1 << color_id) ) printf("See on värv, mille id on color_id=%d", color_id);
+
+
+

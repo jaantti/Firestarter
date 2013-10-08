@@ -3,13 +3,17 @@
 #include <unistd.h>
 #include "rs232.h"
 #include <sstream>
+#include <string.h>
+#include <stdio.h>
+#include <cstdlib>
 
 using namespace cv;
 using namespace std;
 
-int baudrate = 9600;
+int baudrate = 115200;
 int motor1 = 24; //parem
 int motor2 = 25; //vasak   24 /dev/ttyACM0, 25 /dev/ttyACM1
+int coil = 2;
 
 double rel_pos = 0;
 int rel_pos_ball = 0;
@@ -36,6 +40,8 @@ int blue_t4[] = {0, 0, 0, 127, 127, 255};
 int green_t4[] = {35, 136, 0, 55, 255, 255};
 int black_t4[] = {17, 0, 0, 41, 255, 138};
 
+bool init_serial_dev();
+unsigned char *serial_read(int);
 Mat thresholdedImg(Mat, int*);
 vector<Point2f> findBlobCenter(Mat, double);
 bool compareContourAreas (vector<Point>, vector<Point>);
@@ -43,11 +49,6 @@ void findBall(double, double);
 void write_spd(int write1, int write2);
 char getBall();
 
-string to_string (int Number ){
-    ostringstream ss;
-    ss << Number;
-    return ss.str();
-}
 
 int main(){
 
@@ -61,10 +62,14 @@ int main(){
         cout << "Can not open /dev/ttyACM1\n";
         return(0);
     }
+    if(RS232_OpenComport(coil, baudrate)){
+        cout << "Can not open /dev/ttyACM2\n";
+        return(0);
+    }
 
-
+    init_serial_dev();
     //RS232_cputs(serialport, "?\n");
-
+    //Lugemise aeg
     /*unsigned char buf[11];
     usleep(100000);
     int n = RS232_PollComport(serialport, buf, 10);
@@ -76,7 +81,7 @@ int main(){
     namedWindow("aken");
     namedWindow("aken2");
 
-    VideoCapture capture(1);
+    VideoCapture capture(0);
 
     Mat img, img_hsv;
 
@@ -199,4 +204,66 @@ char getBall(){
     RS232_PollComport(motor2, buf, 10);
     RS232_cputs(motor2, "gb\n");
     return buf[3];
+}
+
+void boom(){
+
+}
+
+unsigned char *serial_read(int id){
+    unsigned char buf[15];
+    int n = RS232_PollComport(id, buf, 15);
+    if (n) {
+        return buf;
+    }
+    else{
+        return 0;
+    }
+}
+
+bool init_serial_dev(){
+    RS232_cputs(motor1, "?\n");
+    unsigned char *m1 = serial_read(motor1);
+    RS232_cputs(motor2, "?\n");
+    unsigned char *m2 = serial_read(motor2);
+    RS232_cputs(coil, "?\n");
+    unsigned char *c0 = serial_read(coil);
+    bool out_status = true;
+    if(m1 && m2 && c0){
+        if(m1[4]=='0'){
+            if(m2[4]=='1'){
+                coil = 2;
+            }
+            else{
+                coil = 1;
+                motor2 = 2;
+            }
+        }
+        else if(m1[4] == '1'){
+            if(m2[4] == '0'){
+                motor1 = 1;
+                motor2 = 0;
+                coil = 2;
+            }
+            else{
+                motor1 = 2;
+                motor2 = 0;
+                coil = 1;
+            }
+        }
+        else{
+            if(m2[4] == '1'){
+                motor1 = 2;
+                coil = 0;
+            }
+            else{
+                motor1 = 2;
+                motor2 = 1;
+                coil = 0;
+            }
+        }
+    }
+    else out_status = false;
+
+    return out_status;
 }

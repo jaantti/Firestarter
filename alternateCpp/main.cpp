@@ -13,7 +13,7 @@ using namespace std;
 int baudrate = 115200;
 int motor1 = 24; //parem
 int motor2 = 25; //vasak   24 /dev/ttyACM0, 25 /dev/ttyACM1
-int coil = 2;
+int coil = 2; // /dev/ttyACM2
 
 double rel_pos = 0;
 int rel_pos_ball = 0;
@@ -41,6 +41,7 @@ int green_t4[] = {35, 136, 0, 55, 255, 255};
 int black_t4[] = {17, 0, 0, 41, 255, 138};
 
 bool init_serial_dev();
+void close_serial();
 unsigned char *serial_read(int);
 Mat thresholdedImg(Mat, int*);
 vector<Point2f> findBlobCenter(Mat, double);
@@ -51,21 +52,6 @@ char getBall();
 
 
 int main(){
-
-    //init motors
-    if(RS232_OpenComport(motor1, baudrate))
-    {
-        cout << "Can not open /dev/ttyACM0\n";
-        return(0);
-    }
-    if(RS232_OpenComport(motor2, baudrate)){
-        cout << "Can not open /dev/ttyACM1\n";
-        return(0);
-    }
-    if(RS232_OpenComport(coil, baudrate)){
-        cout << "Can not open /dev/ttyACM2\n";
-        return(0);
-    }
 
     init_serial_dev();
     //RS232_cputs(serialport, "?\n");
@@ -105,9 +91,8 @@ int main(){
         if (waitKey(10) == 27) break;
 
     }
-    RS232_CloseComport(motor1);
-    RS232_CloseComport(motor2);
 
+    close_serial();
     return 0;
 }
 
@@ -222,6 +207,21 @@ unsigned char *serial_read(int id){
 }
 
 bool init_serial_dev(){
+
+    if(RS232_OpenComport(motor1, baudrate))
+    {
+        cout << "Can not open /dev/ttyACM0\n";
+        return(false);
+    }
+    if(RS232_OpenComport(motor2, baudrate)){
+        cout << "Can not open /dev/ttyACM1\n";
+        return(false);
+    }
+    if(RS232_OpenComport(coil, baudrate)){
+        cout << "Can not open /dev/ttyACM2\n";
+        return(false);
+    }
+
     RS232_cputs(motor1, "?\n");
     unsigned char *m1 = serial_read(motor1);
     RS232_cputs(motor2, "?\n");
@@ -229,6 +229,7 @@ bool init_serial_dev(){
     RS232_cputs(coil, "?\n");
     unsigned char *c0 = serial_read(coil);
     bool out_status = true;
+
     if(m1 && m2 && c0){
         if(m1[4]=='0'){
             if(m2[4]=='1'){
@@ -266,4 +267,10 @@ bool init_serial_dev(){
     else out_status = false;
 
     return out_status;
+}
+
+void close_serial(){
+    RS232_CloseComport(motor1);
+    RS232_CloseComport(motor2);
+    RS232_CloseComport(coil);
 }

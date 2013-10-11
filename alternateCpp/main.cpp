@@ -13,8 +13,8 @@ using namespace cv;
 using namespace std;
 
 int baudrate = 115200;
-int motor1 = 24; //parem
-int motor2 = 25; //vasak   24 /dev/ttyACM0, 25 /dev/ttyACM1
+int motor1 = 0; //parem
+int motor2 = 1; //vasak   24 /dev/ttyACM0, 25 /dev/ttyACM1
 int coil = 2; // /dev/ttyACM2
 
 double rel_pos = 0;
@@ -30,6 +30,9 @@ int fb[] = {0, 0};
 int spd1 = 0;
 int spd2 = 0;
 
+void coil_charge();
+void coil_ping();
+void coil_boom();
 bool init_serial_dev();
 void close_serial();
 unsigned char *serial_read(int);
@@ -63,7 +66,13 @@ int main(){
     Mat img, img_hsv;
 	int x1, x2, y1, y2;
     unsigned char *data = NULL;
+
+    coil_charge();
+
     while (true){
+
+        coil_ping();
+
         capture >> img;
         data = img.data;
         segm.readThresholds("conf");
@@ -76,7 +85,7 @@ int main(){
     	segm.SortRegions();
 
 		RS232_cputs(motor1, "gb\n");
-		
+
 		if(segm.colors[ORANGE].list!=NULL){
 		x1 = segm.colors[ORANGE].list->x1;
 		y1 = segm.colors[ORANGE].list->y1;
@@ -100,10 +109,11 @@ int main(){
         //cout<<segm.colors[ORANGE].num << endl;
         cvtColor(img, img_hsv, CV_BGR2HSV);
         imshow("aken", img_hsv);
-        
+
         imshow("aken2", img);
 
         findBall(x2-x1, y2-y1);
+
 
         if (waitKey(10) == 27) break;
 
@@ -163,17 +173,18 @@ char getBall(){
     return buf[3];
 }
 
-void boom(){
-
-}
 
 unsigned char *serial_read(int id){
-    unsigned char buf[15];
-    int n = RS232_PollComport(id, buf, 15);
+    unsigned char *buf = NULL;
+    buf = (unsigned char*)malloc(15);
+    memset(buf, '\0', 15);
+    int n = RS232_PollComport(id, buf, 14);
+    printf("%s %d\n",buf,n);
     if (n) {
         return buf;
     }
     else{
+        //cout << "NEIN NEIN NEIN!";
         return 0;
     }
 }
@@ -195,11 +206,27 @@ bool init_serial_dev(){
     }
 
     RS232_cputs(motor1, "?\n");
-    unsigned char *m1 = serial_read(motor1);
-    RS232_cputs(motor2, "?\n");
-    unsigned char *m2 = serial_read(motor2);
+    unsigned char *m1 = NULL;
+	m1 = (unsigned char*)malloc(15);
+	memset(m1, '\0', 15);
+	m1 = serial_read(motor1);
+
+	RS232_cputs(motor2, "?\n");
+    unsigned char *m2 = NULL;
+	m2 = (unsigned char*)malloc(15);
+	memset(m1, '\0', 15);
+	m2 = serial_read(motor2);
+
     RS232_cputs(coil, "?\n");
-    unsigned char *c0 = serial_read(coil);
+    unsigned char *c0 = NULL;
+	c0 = (unsigned char*)malloc(15);
+	memset(m1, '\0', 15);
+	c0 = serial_read(coil);
+    //RS232_cputs(motor2, "?\n");
+    //unsigned char *m2 = serial_read(motor2);
+
+    //printf("%s %s %s\n",m1,m2,c0);
+
     bool out_status = true;
 
     if(m1 && m2 && c0){
@@ -237,7 +264,6 @@ bool init_serial_dev(){
         }
     }
     else out_status = false;
-
     return out_status;
 }
 
@@ -245,4 +271,18 @@ void close_serial(){
     RS232_CloseComport(motor1);
     RS232_CloseComport(motor2);
     RS232_CloseComport(coil);
+}
+
+void coil_boom(){
+    RS232_cputs(coil, "k1000\n");
+    sleep(0.1);
+
+}
+
+void coil_ping(){
+    RS232_cputs(coil, "p\n");
+}
+
+void coil_charge(){
+    RS232_cputs(coil, "c\n");
 }

@@ -101,18 +101,21 @@ int main(){
 		y2 = segm.colors[ORANGE].list->y2;
         //cout << segm.colors[ORANGE].list->next << endl;
 		cv::rectangle( img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0,0,255) );
-		}
-        for(int i = 0; i<segm.colors[ORANGE].num; i++){
+        region *nextReg = segm.colors[ORANGE].list->next;
+
+        for(int i = 0; i<segm.colors[ORANGE].num-1; i++){
             int x3, y3, x4, y4;
-            segm.colors[ORANGE].list->next;
-            cout<< segm.colors[ORANGE].list->iterator_id<<endl;
-            x3 = segm.colors[ORANGE].list->x1;
-            y3 = segm.colors[ORANGE].list->y1;
-            x4 = segm.colors[ORANGE].list->x2;
-            y4 = segm.colors[ORANGE].list->y2;
+            x3 = nextReg->x1;
+            y3 = nextReg->y1;
+            x4 = nextReg->x2;
+            y4 = nextReg->y2;
+            nextReg = nextReg->next;
         //cout << segm.colors[ORANGE].list->next << endl;
 		cv::rectangle( img, cv::Point(x3, y3), cv::Point(x4, y4), cv::Scalar(0,0,255) );
         }
+		}
+
+
         //cout<<segm.colors[ORANGE].num << endl;
         cvtColor(img, img_hsv, CV_BGR2HSV);
         imshow("aken", img_hsv);

@@ -47,24 +47,13 @@ char getBall();
 int main(){
 
     init_serial_dev();
-    //RS232_cputs(serialport, "?\n");
-    //Lugemise aeg
-    /*unsigned char buf[11];
-    usleep(100000);
-    int n = RS232_PollComport(serialport, buf, 10);
-    if (n) {
-        cout << "n: " << n << endl;
-        cout << buf << endl;
-    }*/
 
 	namedWindow("aken");
-    namedWindow("aken2");
     SEGMENTATION segm(640, 480);
     VideoCapture capture(0);
 	capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
 	capture.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
-    Mat img, img_hsv;
-	int x1, x2, y1, y2;
+    Mat img;
     unsigned char *data = NULL;
 
     coil_charge();
@@ -86,33 +75,30 @@ int main(){
 
 		RS232_cputs(motor1, "gb\n");
 
+		int x1, x2, y1, y2;
+        struct region *tempRegion=NULL;
+        int bloobinates[5][4];
 		if(segm.colors[ORANGE].list!=NULL){
-		x1 = segm.colors[ORANGE].list->x1;
-		y1 = segm.colors[ORANGE].list->y1;
-		x2 = segm.colors[ORANGE].list->x2;
-		y2 = segm.colors[ORANGE].list->y2;
-        //cout << segm.colors[ORANGE].list->next << endl;
-		cv::rectangle( img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(0,0,255) );
+            tempRegion = segm.colors[ORANGE].list;
 		}
-		/*
-        for(int i = 0; i<segm.colors[ORANGE].num; i++){
-            int x3, y3, x4, y4;
-            segm.colors[ORANGE].list->next;
-            cout<< segm.colors[ORANGE].list->iterator_id<<endl;
-            x3 = segm.colors[ORANGE].list->x1;
-            y3 = segm.colors[ORANGE].list->y1;
-            x4 = segm.colors[ORANGE].list->x2;
-            y4 = segm.colors[ORANGE].list->y2;
-        //cout << segm.colors[ORANGE].list->next << endl;
-			cv::rectangle( img, cv::Point(x3, y3), cv::Point(x4, y4), cv::Scalar(0,0,255) );
-        }*/
-        //cout<<segm.colors[ORANGE].num << endl;
-        cvtColor(img, img_hsv, CV_BGR2HSV);
-        imshow("aken", img_hsv);
+        for(int i = 0; i<6; i++){
+            if(tempRegion == NULL) break;
+            x1 = tempRegion->x1;
+            y1 = tempRegion->y1;
+            x2 = tempRegion->x2;
+            y2 = tempRegion->y2;
+            rectangle(img, Point(x1, y1), Point(x2, y2), Scalar(0,0,255));
 
-        imshow("aken2", img);
+            bloobinates[0][0] = x1;
+            bloobinates[0][1] = x2;
+            bloobinates[0][2] = y1;
+            bloobinates[0][3] = y2;
+            tempRegion = tempRegion->next;
+        }
 
-        findBall(x2-x1, y2-y1);
+        imshow("aken", img);
+
+        findBall(bloobinates[0][1]-bloobinates[0][0], bloobinates[0][3]-bloobinates[0][2]);
 
 
         if (waitKey(10) == 27) break;
@@ -286,3 +272,4 @@ void coil_ping(){
 void coil_charge(){
     RS232_cputs(coil, "c\n");
 }
+

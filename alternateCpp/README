@@ -1,0 +1,7 @@
+=== MAKE-faili kasutamine ===
+
+Kõigepealt tuleb muutuja GITDIR muuta selliseks, et see näitaks repo root kausta
+
+* make - kompileerib koodi
+* make run - käivitab programmi
+* make push - tõmbab gitist uusima koodi (eeldusel, et git on õigesti seadistatud)

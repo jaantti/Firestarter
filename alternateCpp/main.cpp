@@ -13,11 +13,12 @@ using namespace cv;
 using namespace std;
 
 int baudrate = 115200;
-int motor1 = 0; //parem
-int motor2 = 1; //vasak   24 /dev/ttyACM0, 25 /dev/ttyACM1
+int motor1 = 24; //parem
+int motor2 = 25; //vasak   24 /dev/ttyACM0, 25 /dev/ttyACM1
 int coil = 2; // /dev/ttyACM2
 
 double rel_pos = 0;
+double last_gate_pos = 0;
 int rel_pos_ball = 0;
 int count_ = 0;
 int count_goal_find = 0;
@@ -29,6 +30,7 @@ bool was_close = false;
 int fb[] = {0, 0};
 int spd1 = 0;
 int spd2 = 0;
+bool ball_in = false;
 
 void coil_charge();
 void coil_ping();
@@ -39,7 +41,8 @@ unsigned char *serial_read(int);
 Mat thresholdedImg(Mat, int*);
 vector<Point2f> findBlobCenter(Mat, double);
 bool compareContourAreas (vector<Point>, vector<Point>);
-void findBall(double, double);
+void findBall(float, float);
+void findGate(double rel_pos_gate);
 void write_spd(int write1, int write2);
 char getBall();
 
@@ -74,79 +77,85 @@ int main(){
     	segm.SortRegions();
 
 		RS232_cputs(motor1, "gb\n");
-
+        double rel_pos_gate=0;
 		int x1, x2, y1, y2;
         struct region *tempRegion=NULL;
-        int bloobinates[5][4];
-		if(segm.colors[ORANGE].list!=NULL){
+        int bloobinates[2][5][2];
+        if(segm.colors[ORANGE].list!=NULL){
             tempRegion = segm.colors[ORANGE].list;
-		}
-        for(int i = 0; i<6; i++){
-            if(tempRegion == NULL) break;
-            x1 = tempRegion->x1;
-            y1 = tempRegion->y1;
-            x2 = tempRegion->x2;
-            y2 = tempRegion->y2;
-            rectangle(img, Point(x1, y1), Point(x2, y2), Scalar(0,0,255));
-
-            bloobinates[0][0] = x1;
-            bloobinates[0][1] = x2;
-            bloobinates[0][2] = y1;
-            bloobinates[0][3] = y2;
+            bloobinates[0][0][0] = tempRegion->cen_x;
+            bloobinates[0][0][1] = tempRegion->cen_y;
             tempRegion = tempRegion->next;
+            circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,0), -1);
         }
-
+        if(segm.colors[BLUE].list!=NULL){
+            tempRegion = segm.colors[BLUE].list;
+            bloobinates[1][0][0] = tempRegion->cen_x;
+            bloobinates[1][0][1] = tempRegion->cen_y;
+            tempRegion = tempRegion->next;
+            rectangle(img, Point(tempRegion->x1, tempRegion->x2), Point(tempRegion->y1, tempRegion->y2), Scalar(255,0,0));
+        }
+        if (getBall()-'0') {
+            findBall(bloobinates[0][0][0], bloobinates[0][0][1]);
+        }
+        else{
+            // TODO if
+            rel_pos_gate = (bloobinates[1][0][0]-320)/320;
+            last_gate_pos= (bloobinates[1][0][0]-320)/320;
+            findGate(rel_pos_gate);
+        }
         imshow("aken", img);
-
-        findBall(bloobinates[0][1]-bloobinates[0][0], bloobinates[0][3]-bloobinates[0][2]);
-
-
         if (waitKey(10) == 27) break;
-
     }
-
-
     close_serial();
     return 0;
 }
 
-void findBall(double x, double y){
+void findBall(float x, float y){
 
     int max_spd = 40, slower_by = 20;
 
     rel_pos = (x-320)/320;
 
     if (rel_pos > 0) { //blob right of center
-        write_spd(max_spd - (int)(rel_pos*slower_by), -max_spd);
+        write_spd(max_spd - (int)(rel_pos*slower_by), max_spd);
     }
     else if (rel_pos < 0) { //blob left of center
-        write_spd(max_spd, -max_spd - (int)(rel_pos*slower_by));
+        write_spd(max_spd, max_spd - (int)(rel_pos*slower_by));
     }
     else { //blob exactly in the middle
-        write_spd(max_spd, -max_spd);
+        write_spd(max_spd, max_spd);
     }
-
-    /*
-    if (x >= 310 && x <= 330){
-        RS232_cputs(motor1, "sd30\n");
-        RS232_cputs(motor2, "sd-30\n");
-    }
-    if (x < 310){
-        RS232_cputs(motor1, "sd30\n");
-        RS232_cputs(motor2, "sd0\n");
-    }
-    if (x >330){
-        RS232_cputs(motor1, "sd0\n");
-        RS232_cputs(motor2, "sd-30\n");
-    }*/
-
 }
 
+void findGate(double rel_pos_gate){
+    int max_spd = 40, slower_by=20;
+    if(rel_pos_gate==0){
+        if (last_gate_pos && last_gate_pos > 0) { //blob last seen right of center
+            write_spd(-max_spd, max_spd);
+        }
+        else { //blob last seen left of center or not seen at all
+            write_spd(max_spd, -max_spd);
+        }
+    }
+    else {
+        if (rel_pos_gate > 0.05) { //blob right of center
+            write_spd(max_spd - (int)(rel_pos_gate*slower_by), -max_spd);
+        }
+        else if (rel_pos_gate < 0.05) { //blob left of center
+            write_spd(max_spd, -max_spd - (int)(rel_pos_gate*slower_by));
+        }
+        else { //blob in the middle 10% of vision
+            usleep(100);
+            coil_boom();
+        }
+    }
+}
 void write_spd(int write1, int write2){
     stringstream ss1, ss2;
 
     ss1 << "sd" << write1 << "\n";
-    ss2 << "sd" << write2 << "\n";
+    ss2 << "sd" << -write2 << "\n";
 
     RS232_cputs(motor1, ss1.str().c_str());
     RS232_cputs(motor2, ss2.str().c_str());
@@ -156,6 +165,8 @@ char getBall(){
     unsigned char buf[11];
     RS232_PollComport(motor2, buf, 10);
     RS232_cputs(motor2, "gb\n");
+    if (buf[3]) ball_in = true;
+    else ball_in = false;
     return buf[3];
 }
 
@@ -171,7 +182,7 @@ unsigned char *serial_read(int id){
     }
     else{
         //cout << "NEIN NEIN NEIN!";
-        return 0;
+        return NULL;
     }
 }
 
@@ -200,14 +211,9 @@ bool init_serial_dev(){
 	RS232_cputs(motor2, "?\n");
     unsigned char *m2 = NULL;
 	m2 = (unsigned char*)malloc(15);
-	memset(m1, '\0', 15);
+	memset(m2, '\0', 15);
 	m2 = serial_read(motor2);
 
-    RS232_cputs(coil, "?\n");
-    unsigned char *c0 = NULL;
-	c0 = (unsigned char*)malloc(15);
-	memset(m1, '\0', 15);
-	c0 = serial_read(coil);
     //RS232_cputs(motor2, "?\n");
     //unsigned char *m2 = serial_read(motor2);
 
@@ -215,37 +221,37 @@ bool init_serial_dev(){
 
     bool out_status = true;
 
-    if(m1 && m2 && c0){
+    if(m1 && m2){
         if(m1[4]=='0'){
             if(m2[4]=='1'){
                 coil = 2;
             }
             else{
-                coil = 1;
+                coil = 25;
                 motor2 = 2;
             }
         }
         else if(m1[4] == '1'){
             if(m2[4] == '0'){
-                motor1 = 1;
-                motor2 = 0;
+                motor1 = 25;
+                motor2 = 24;
                 coil = 2;
             }
             else{
                 motor1 = 2;
-                motor2 = 0;
-                coil = 1;
+                motor2 = 24;
+                coil = 25;
             }
         }
         else{
             if(m2[4] == '1'){
                 motor1 = 2;
-                coil = 0;
+                coil = 24;
             }
             else{
                 motor1 = 2;
-                motor2 = 1;
-                coil = 0;
+                motor2 = 25;
+                coil = 24;
             }
         }
     }

@@ -4,4 +4,4 @@ Kõigepealt tuleb muutuja GITDIR muuta selliseks, et see näitaks repo root kaus
 
 * make - kompileerib koodi
 * make run - käivitab programmi
-* make push - tõmbab gitist uusima koodi (eeldusel, et git on õigesti seadistatud)
+* make pull - tõmbab gitist uusima koodi (eeldusel, et git on õigesti seadistatud)

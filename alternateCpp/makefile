@@ -15,7 +15,7 @@ clean:
 run:
 	./bin/main
 
-push:
+pull:
 	cd $(GITDIR); \
 	git pull; \
 	cd alternateCpp; \

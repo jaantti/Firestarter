@@ -7,7 +7,7 @@ static int fd = -1;
 
 int g_width, g_height;
 
-BUFFER *buffers;
+BUFFER *buffers = NULL;
 int xset = 0;
 int yset = 0;
 
@@ -17,7 +17,7 @@ uchar last_thres[3][256];
 
 IMAGE_CONTEXT *new_window( const char *wnd_name, int x, int y, int width, int height )
 {
-    IMAGE_CONTEXT *img_ctx;
+    IMAGE_CONTEXT *img_ctx = NULL;
     img_ctx = new IMAGE_CONTEXT;
 
     g_width = width;
@@ -111,7 +111,7 @@ void show_video( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], i
                 if( *halt == false ) *halt = true;
                 else *halt = false;
 		    } else
-                memcpy( thres, last_thres, 768 );
+                memcpy( thres, lahgast_thres, 768 );
 		}
 
         if( event.type == ButtonPress ) {

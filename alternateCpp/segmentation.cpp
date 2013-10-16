@@ -90,7 +90,7 @@ void SEGMENTATION::EncodeRuns()
 // only have to look at the points where values change.
 {
   unsigned char m, save;
-  unsigned char *row;
+  unsigned char *row = NULL;
   int x, y, j, l;
   run r;
   unsigned char *map = this->th_data;
@@ -301,7 +301,7 @@ void SEGMENTATION::SeparateRegions()
 // region's 'next' field.  Returns the maximal area of the regions,
 // which can be used later to speed up sorting.
 {
-  region *p;
+  region *p = NULL;
   int i;
   int c;
   int area;
@@ -362,7 +362,7 @@ region* SEGMENTATION::SortRegionListByArea( region *list, int passes )
 // Sorts a list of regions by their area field.
 // Uses a linked list based radix sort to process the list.
 {
-  region *tbl[CMV_RADIX], *p, *pn;
+  region *tbl[CMV_RADIX]=NULL , *p=NULL, *pn=NULL;
   int slot, shift;
   int i, j;
 

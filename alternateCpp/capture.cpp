@@ -111,7 +111,7 @@ void show_video( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], i
                 if( *halt == false ) *halt = true;
                 else *halt = false;
 		    } else
-                memcpy( thres, lahgast_thres, 768 );
+                memcpy( thres, last_thres, 768 );
 		}
 
         if( event.type == ButtonPress ) {

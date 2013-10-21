@@ -8,6 +8,10 @@
 #include <cstdlib>
 #include "capture.h"
 #include "segmentation.h"
+#include <sys/time.h>
+
+#define MIN_AREA 10000
+#define CURRENT_GATE 1
 
 using namespace cv;
 using namespace std;
@@ -26,11 +30,16 @@ int count_goal = 0;
 int c = 0;
 int switch_ = 0;
 bool was_close = false;
+bool ball_timeout_f = false;
 //fb_list = [(255, 255), (255, 255), (255, 255), (255, 255)]
 int fb[] = {0, 0};
 int spd1 = 0;
 int spd2 = 0;
 bool ball_in = false;
+
+struct timeval start, end;
+long mtime, seconds, useconds, fps;
+
 
 void coil_charge();
 void coil_ping();
@@ -44,11 +53,17 @@ bool compareContourAreas (vector<Point>, vector<Point>);
 void findBall(float, float);
 void findGate(double rel_pos_gate);
 void write_spd(int write1, int write2);
+void ball_timeout(SEGMENTATION segm);
+void drive_ball_timeout(SEGMENTATION segm, bool gate_select, bool last_drive);
+void back_off();
 char getBall();
 
 
 int main(){
-
+    int last_yellow_size=0, last_blue_size=0; // for timeout function (ball)
+    // last_drive determines which way the robot last turned during timeout. false for left, true for right.
+    bool y_set=false, b_set=false, last_drive=false; //for timeout function (ball)
+    int count = 0;
     init_serial_dev();
 
 	namedWindow("aken");
@@ -60,13 +75,15 @@ int main(){
     unsigned char *data = NULL;
 
     coil_charge();
-
+    Mat frame;
     while (true){
-
+        count = count+1;
+        gettimeofday(&start, NULL);
         coil_ping();
 
         capture >> img;
-        data = img.data;
+        cvtColor(img, frame, CV_BGR2YUV);
+        data = frame.data;
         segm.readThresholds("conf");
 
         segm.thresholdImage(data);
@@ -75,26 +92,32 @@ int main(){
     	segm.ExtractRegions();
     	segm.SeparateRegions();
     	segm.SortRegions();
-
+        gettimeofday(&end, NULL);
 		RS232_cputs(motor1, "gb\n");
         double rel_pos_gate=0;
 		int x1, x2, y1, y2;
         struct region *tempRegion=NULL;
         int bloobinates[2][5][2];
-        if(segm.colors[ORANGE].list!=NULL){
-            tempRegion = segm.colors[ORANGE].list;
+        //GREEN=ORANGE
+        //ORANGE=GREEN
+        //YELLOW=BLUE
+        //BLUE=YELLOW
+        if(segm.colors[GREEN].list!=NULL){
+            tempRegion = segm.colors[GREEN].list;
             bloobinates[0][0][0] = tempRegion->cen_x;
             bloobinates[0][0][1] = tempRegion->cen_y;
             tempRegion = tempRegion->next;
-            circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,0), -1);
+            rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+            //cout << tempRegion->area << endl;
+            circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
         }
-        if(segm.colors[BLUE].list!=NULL){
+        /*if(segm.colors[BLUE].list!=NULL){
             tempRegion = segm.colors[BLUE].list;
             bloobinates[1][0][0] = tempRegion->cen_x;
             bloobinates[1][0][1] = tempRegion->cen_y;
-            tempRegion = tempRegion->next;
-            rectangle(img, Point(tempRegion->x1, tempRegion->x2), Point(tempRegion->y1, tempRegion->y2), Scalar(255,0,0));
-        }
+            //tempRegion = tempRegion->next;
+            rectangle(img, Point(tempRegion->x1, tempRegion->x2), Point(tempRegion->y1, tempRegion->y2), Scalar(0,0,255));
+        }*/
         if (getBall()-'0') {
             findBall(bloobinates[0][0][0], bloobinates[0][0][1]);
         }
@@ -104,8 +127,20 @@ int main(){
             last_gate_pos= (bloobinates[1][0][0]-320)/320;
             findGate(rel_pos_gate);
         }
+
+
         imshow("aken", img);
         if (waitKey(10) == 27) break;
+        //gettimeofday(&end, NULL);
+        seconds  = end.tv_sec  - start.tv_sec;
+        useconds = end.tv_usec - start.tv_usec;
+
+        mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+        if(count==10){
+            count = 0;
+            fps = 1000/mtime;
+            printf("FPS: %ld\n", fps);
+        }
     }
     close_serial();
     return 0;
@@ -116,7 +151,7 @@ void findBall(float x, float y){
     int max_spd = 40, slower_by = 20;
 
     rel_pos = (x-320)/320;
-
+    cout << rel_pos << endl;
     if (rel_pos > 0) { //blob right of center
         write_spd(max_spd - (int)(rel_pos*slower_by), max_spd);
     }
@@ -160,7 +195,108 @@ void write_spd(int write1, int write2){
     RS232_cputs(motor1, ss1.str().c_str());
     RS232_cputs(motor2, ss2.str().c_str());
 }
+//For determining the gate that is further away and driving towards it.
+void ball_timeout(SEGMENTATION segm, int last_y_size, int last_b_size, bool b_set, bool y_set, bool last_drive){
+    struct region *blue_gate, *yellow_gate;
+    bool drive_towards = false; // false for yellow, true for blue
+    int max_spd = 40;
+    if(segm.colors[ORANGE].list!=NULL){
+        ball_timeout_f=false;
+        return;
+    }
+    if(segm.colors[BLUE].list!=NULL && !b_set){
+        blue_gate = segm.colors[BLUE].list;
+        if(blue_gate->cen_x>320){
+            write_spd(max_spd, -max_spd);
+            if(last_b_size<blue_gate->area){
+                last_b_size = blue_gate->area;
+                last_drive = true;
+            } else {
+                b_set = true;
+                last_drive = true;
+            }
+        } else {
+            write_spd(-max_spd, max_spd);
+            if(last_b_size<blue_gate->area){
+                last_b_size = blue_gate->area;
+                last_drive = false;
+            } else {
+                b_set = true;
+                last_drive = false;
+            }
+        }
+    } else if(segm.colors[YELLOW].list!=NULL && !y_set){
+        yellow_gate = segm.colors[YELLOW].list;
+        if(yellow_gate->cen_x>320){
+            write_spd(max_spd, -max_spd);
+            if(last_y_size<yellow_gate->area){
+                last_y_size = yellow_gate->area;
+                last_drive = true;
+            } else {
+                y_set = true;
+                last_drive = true;
+            }
+        } else {
+            write_spd(-max_spd, max_spd);
+            if(last_y_size<yellow_gate->area){
+                last_y_size = yellow_gate->area;
+                last_drive = false;
+            } else {
+                y_set = true;
+                last_drive = false;
+            }
+        }
+    }
+    if(b_set && y_set){
+        if(last_y_size<last_b_size){
+            drive_towards = true; // blue = true, yellow = false
+        }
+        drive_ball_timeout(segm, drive_towards, last_drive);
+    }
 
+}
+//drives the robot towards the gate that is further away. last_drive is used to determine which way the robot was turning
+// to ensure a smooth transition.
+void drive_ball_timeout(SEGMENTATION segm, bool gate_select, bool last_drive){
+    int gate = 2, real_gate_pos=0, area = 0;
+    int max_spd = 80, slower_by = 20;
+    struct region *gate_reg;
+    if(gate_select){
+        gate = 1;
+    }
+    if(segm.colors[gate].list!=NULL){
+        gate_reg = segm.colors[gate].list;
+        area = gate_reg->area;
+        float x = gate_reg->cen_x;
+        real_gate_pos = (x-320)/320;
+        if (real_gate_pos > 0.05) { //blob right of center
+            write_spd(max_spd - (int)(real_gate_pos*slower_by), max_spd);
+        }
+        else if (real_gate_pos < 0.05) { //blob left of center
+            write_spd(max_spd, max_spd - (int)(real_gate_pos*slower_by));
+        }
+        else { //blob in the middle
+            write_spd(max_spd, max_spd);
+        }
+        if(area>MIN_AREA){
+            ball_timeout_f = false;
+        }
+    } else {
+        //False left, true right
+        if(last_drive){
+            write_spd(max_spd, -max_spd);
+        } else {
+            write_spd(-max_spd, max_spd);
+        }
+    }
+
+}
+
+void back_off(){
+    for(int i=0; i<2; i++){
+        write_spd(-10,-10);
+    }
+}
 char getBall(){
     unsigned char buf[11];
     RS232_PollComport(motor2, buf, 10);
@@ -169,7 +305,6 @@ char getBall(){
     else ball_in = false;
     return buf[3];
 }
-
 
 unsigned char *serial_read(int id){
     unsigned char *buf = NULL;

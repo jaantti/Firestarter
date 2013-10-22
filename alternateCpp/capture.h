@@ -25,13 +25,12 @@
 #define N_BUFFERS 4
 
 #define BLACK 0
-#define BLUE 1
-#define YELLOW 2
-#define ORANGE 3
+#define BLUE 2
+#define YELLOW 1
+#define ORANGE 5
 #define WHITE 4
-#define GREEN 5
+#define GREEN 3
 #define NOCOLOR 6
-
 
 
 typedef unsigned char uchar;

@@ -7,7 +7,7 @@ static int fd = -1;
 
 int g_width, g_height;
 
-BUFFER *buffers = NULL;
+BUFFER *buffers;
 int xset = 0;
 int yset = 0;
 
@@ -17,7 +17,7 @@ uchar last_thres[3][256];
 
 IMAGE_CONTEXT *new_window( const char *wnd_name, int x, int y, int width, int height )
 {
-    IMAGE_CONTEXT *img_ctx = NULL;
+    IMAGE_CONTEXT *img_ctx;
     img_ctx = new IMAGE_CONTEXT;
 
     g_width = width;

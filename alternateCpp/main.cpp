@@ -9,14 +9,11 @@
 #include "capture.h"
 #include "segmentation.h"
 #include <sys/time.h>
-
-#define MIN_AREA 10000
-#define CURRENT_GATE 1
+#include "main.h"
 
 using namespace cv;
 using namespace std;
 
-int baudrate = 115200;
 int motor1 = 24; //parem
 int motor2 = 25; //vasak   24 /dev/ttyACM0, 25 /dev/ttyACM1
 int coil = 2; // /dev/ttyACM2
@@ -24,39 +21,17 @@ int coil = 2; // /dev/ttyACM2
 double rel_pos = 0;
 double last_gate_pos = 0;
 int rel_pos_ball = 0;
-int count_ = 0;
-int count_goal_find = 0;
-int count_goal = 0;
-int c = 0;
-int switch_ = 0;
+
 bool was_close = false;
 bool ball_timeout_f = false;
-//fb_list = [(255, 255), (255, 255), (255, 255), (255, 255)]
-int fb[] = {0, 0};
-int spd1 = 0;
-int spd2 = 0;
+
 bool ball_in = false;
+
+VideoCapture capture(1);
 
 struct timeval start, end;
 long mtime, seconds, useconds, fps;
 
-
-void coil_charge();
-void coil_ping();
-void coil_boom();
-bool init_serial_dev();
-void close_serial();
-unsigned char *serial_read(int);
-Mat thresholdedImg(Mat, int*);
-vector<Point2f> findBlobCenter(Mat, double);
-bool compareContourAreas (vector<Point>, vector<Point>);
-void findBall(float, float);
-void findGate(double rel_pos_gate);
-void write_spd(int write1, int write2);
-void ball_timeout(SEGMENTATION * segm, int last_y_size, int last_b_size, bool b_set, bool y_set, bool last_drive);
-void drive_ball_timeout(SEGMENTATION * segm, bool gate_select, bool last_drive);
-void back_off();
-char getBall();
 
 
 int main(){
@@ -66,51 +41,28 @@ int main(){
     int count = 0;
     init_serial_dev();
 
-	namedWindow("aken");
-    SEGMENTATION segm(640, 480);
-    SEGMENTATION * segment = &segm;
-    VideoCapture capture(0);
-	capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-	capture.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
-    Mat img;
-    unsigned char *data = NULL;
     gettimeofday(&start, NULL);
     coil_charge();
-    Mat frame;
+
+    SEGMENTATION segm(640, 480);
+    init_video();
+
     while (true){
         count = count+1;
         coil_ping();
 
-        capture >> img;
-        cvtColor(img, frame, CV_BGR2YUV);
-        data = frame.data;
-        segm.readThresholds("conf");
-
-        segm.thresholdImage(data);
-    	segm.EncodeRuns();
-    	segm.ConnectComponents();
-    	segm.ExtractRegions();
-    	segm.SeparateRegions();
-    	segm.SortRegions();
         gettimeofday(&end, NULL);
 		RS232_cputs(motor1, "gb\n");
         double rel_pos_gate=0;
-		int x1, x2, y1, y2;
-        struct region *tempRegion=NULL;
-        int bloobinates[2][5][2];
+
+        blobs blob_data = get_blobs(&segm);
+
         if(!ball_timeout_f){
             if(b_set && y_set){
                 b_set = false;
                 y_set = false;
             }
-            if(segm.colors[ORANGE].list!=NULL){
-                tempRegion = segm.colors[ORANGE].list;
-                bloobinates[0][0][0] = tempRegion->cen_x;
-                bloobinates[0][0][1] = tempRegion->cen_y;
-            //tempRegion = tempRegion->next;
-                rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-            //cout << tempRegion->area << endl;
-                circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
+            if(!blob_data.orange_area){
                 gettimeofday(&start, NULL);
             } else {
                 gettimeofday(&end, NULL);
@@ -126,19 +78,17 @@ int main(){
                 }
             }
             if (getBall()-'0') {
-                findBall(bloobinates[0][0][0], bloobinates[0][0][1]);
+                findBall(blob_data.orange_cen_x, blob_data.orange_cen_y);
             } else {
                 // TODO if
-                rel_pos_gate = (bloobinates[1][0][0]-320)/320;
-                last_gate_pos= (bloobinates[1][0][0]-320)/320;
+                rel_pos_gate = (blob_data.blue_cen_x-320)/320;
+                last_gate_pos= (blob_data.blue_cen_x-320)/320;
                 findGate(rel_pos_gate);
             }
         } else {
-            ball_timeout(segment, last_yellow_size, last_blue_size, b_set, y_set, last_drive);
+            ball_timeout(&segm, last_yellow_size, last_blue_size, b_set, y_set, last_drive);
         }
 
-
-        imshow("aken", img);
         if (waitKey(10) == 27) break;
     }
     close_serial();
@@ -325,16 +275,16 @@ unsigned char *serial_read(int id){
 
 bool init_serial_dev(){
 
-    if(RS232_OpenComport(motor1, baudrate))
+    if(RS232_OpenComport(motor1, BAUDRATE))
     {
         cout << "Can not open /dev/ttyACM0\n";
         return(false);
     }
-    if(RS232_OpenComport(motor2, baudrate)){
+    if(RS232_OpenComport(motor2, BAUDRATE)){
         cout << "Can not open /dev/ttyACM1\n";
         return(false);
     }
-    if(RS232_OpenComport(coil, baudrate)){
+    if(RS232_OpenComport(coil, BAUDRATE)){
         cout << "Can not open /dev/ttyACM2\n";
         return(false);
     }
@@ -416,3 +366,88 @@ void coil_charge(){
     RS232_cputs(coil, "c\n");
 }
 
+void init_video(){
+
+    namedWindow("aken");
+	capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+	capture.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+
+}
+
+blobs get_blobs(SEGMENTATION * segm){
+    unsigned char *data = NULL;
+    Mat img, frame;
+
+    capture >> img;
+    cvtColor(img, frame, CV_BGR2YUV);
+    data = frame.data;
+    segm->readThresholds("conf");
+
+    segm->thresholdImage(data);
+    segm->EncodeRuns();
+    segm->ConnectComponents();
+    segm->ExtractRegions();
+    segm->SeparateRegions();
+    segm->SortRegions();
+
+    struct region *tempRegion=NULL;
+    blobs blob_data;
+    if(segm->colors[ORANGE].list!=NULL){
+        tempRegion = segm->colors[ORANGE].list;
+        blob_data.orange_area = tempRegion->area;
+        blob_data.orange_cen_x = tempRegion->cen_x;
+        blob_data.orange_cen_y = tempRegion->cen_y;
+        //tempRegion = tempRegion->next;
+        //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+        //circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
+    }
+    else {
+        blob_data.orange_area = 0;
+        blob_data.orange_cen_x = 0;
+        blob_data.orange_cen_y = 0;
+    }
+    if(segm->colors[BLUE].list!=NULL){
+        tempRegion = segm->colors[BLUE].list;
+        blob_data.blue_area = tempRegion->area;
+        blob_data.blue_cen_x = tempRegion->cen_x;
+        blob_data.blue_cen_y = tempRegion->cen_y;
+        //tempRegion = tempRegion->next;
+        //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+        //circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
+    }
+    else {
+        blob_data.blue_area = 0;
+        blob_data.blue_cen_x = 0;
+        blob_data.blue_cen_y = 0;
+    }
+    if(segm->colors[YELLOW].list!=NULL){
+        tempRegion = segm->colors[YELLOW].list;
+        blob_data.yellow_area = tempRegion->area;
+        blob_data.yellow_cen_x = tempRegion->cen_x;
+        blob_data.yellow_cen_y = tempRegion->cen_y;
+        //tempRegion = tempRegion->next;
+        //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+        //circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
+    }
+    else {
+        blob_data.yellow_area = 0;
+        blob_data.yellow_cen_x = 0;
+        blob_data.yellow_cen_y = 0;
+    }
+    if(segm->colors[GREEN].list!=NULL){
+        tempRegion = segm->colors[GREEN].list;
+        blob_data.green_area = tempRegion->area;
+        blob_data.green_cen_x = tempRegion->cen_x;
+        blob_data.green_cen_y = tempRegion->cen_y;
+        //tempRegion = tempRegion->next;
+        //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+        //circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
+    }
+    else {
+        blob_data.green_area = 0;
+        blob_data.green_cen_x = 0;
+        blob_data.green_cen_y = 0;
+    }
+    imshow("aken", img);
+    return(blob_data);
+}

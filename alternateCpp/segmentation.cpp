@@ -66,7 +66,7 @@ void SEGMENTATION::thresholdImage( unsigned char *data )
 	this->data = data;
 
 	for( int i = 0; i < 3 * this->width * this->height; i += 3 ) {
-		
+
 		col = thres[0][data[i]] & thres[1][data[i + 1]] & thres[2][data[i + 2]];
 
 		if( col > 31 ) c = GREEN;
@@ -122,7 +122,7 @@ void SEGMENTATION::EncodeRuns()
       while(row[x] == m) x++;
 
       if( m != NOCOLOR || x >= this->width ) {
-		r.color = m; 
+		r.color = m;
 		r.width = x - l;
 		r.parent = j;
 		rle[j++] = r;
@@ -362,7 +362,7 @@ region* SEGMENTATION::SortRegionListByArea( region *list, int passes )
 // Sorts a list of regions by their area field.
 // Uses a linked list based radix sort to process the list.
 {
-  region *tbl[CMV_RADIX]=NULL , *p=NULL, *pn=NULL;
+  region *tbl[CMV_RADIX]={NULL}, *p=NULL, *pn=NULL;
   int slot, shift;
   int i, j;
 

@@ -1,7 +1,7 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
 
-#define MIN_AREA 10000
+#define MIN_AREA 5000
 #define CURRENT_GATE 1
 #define BAUDRATE 115200
 
@@ -19,6 +19,12 @@ struct blobs{
     int green_area;
     int green_cen_x;
     int green_cen_y;
+    int black_area;
+    int black_cen_x;
+    int black_cen_y;
+    int white_area;
+    int white_cen_x;
+    int white_cen_y;
 };
 
 void coil_charge();

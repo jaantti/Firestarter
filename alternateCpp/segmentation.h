@@ -1,12 +1,12 @@
 #ifndef SEGMENTATION_H_INCLUDED
 #define SEGMENTATION_H_INCLUDED
 
-#define BLACK 0
-#define BLUE 2
-#define YELLOW 1
-#define ORANGE 5
-#define WHITE 4
+#define ORANGE 0
+#define YELLOW 2
+#define BLUE 1
 #define GREEN 3
+#define WHITE 4
+#define BLACK 5
 #define NOCOLOR 6
 
 #define COLOR_COUNT 6

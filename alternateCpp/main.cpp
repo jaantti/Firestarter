@@ -27,7 +27,7 @@ bool ball_timeout_f = false;
 
 bool ball_in = false;
 
-VideoCapture capture(1);
+VideoCapture capture(0);
 
 struct timeval start, end;
 long mtime, seconds, useconds, fps;
@@ -38,7 +38,6 @@ int main(){
     int last_yellow_size=0, last_blue_size=0; // for timeout function (ball)
     // last_drive determines which way the robot last turned during timeout. false for left, true for right.
     bool y_set=false, b_set=false, last_drive=false; //for timeout function (ball)
-    int count = 0;
     init_serial_dev();
 
     gettimeofday(&start, NULL);
@@ -48,8 +47,8 @@ int main(){
     init_video();
 
     while (true){
-        count = count+1;
         coil_ping();
+        getBall();
 
         gettimeofday(&end, NULL);
 		RS232_cputs(motor1, "gb\n");
@@ -62,7 +61,7 @@ int main(){
                 b_set = false;
                 y_set = false;
             }
-            if(!blob_data.orange_area){
+            if(blob_data.orange_area!=0){
                 gettimeofday(&start, NULL);
             } else {
                 gettimeofday(&end, NULL);
@@ -71,13 +70,14 @@ int main(){
 
                 mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
                 if(mtime>2500){
+                    cout<<"Timeout!"<<mtime<<endl;
                     ball_timeout_f = true;
                     b_set = false;
                     y_set = false;
                     last_drive = false;
                 }
             }
-            if (getBall()-'0') {
+            if (ball_in) {
                 findBall(blob_data.orange_cen_x, blob_data.orange_cen_y);
             } else {
                 // TODO if
@@ -97,14 +97,14 @@ int main(){
 
 void findBall(float x, float y){
 
-    int max_spd = 40, slower_by = 20;
+    int max_spd = 20, slower_by = 10;
 
     rel_pos = (x-320)/320;
-    cout << rel_pos << endl;
-    if (rel_pos > 0) { //blob right of center
+    //cout << rel_pos << endl;
+    if (rel_pos > 0.05) { //blob right of center
         write_spd(max_spd - (int)(rel_pos*slower_by), max_spd);
     }
-    else if (rel_pos < 0) { //blob left of center
+    else if (rel_pos < -0.05) { //blob left of center
         write_spd(max_spd, max_spd - (int)(rel_pos*slower_by));
     }
     else { //blob exactly in the middle
@@ -146,16 +146,16 @@ void write_spd(int write1, int write2){
 }
 //For determining the gate that is further away and driving towards it.
 void ball_timeout(SEGMENTATION * segm, int last_y_size, int last_b_size, bool b_set, bool y_set, bool last_drive){
-    cout<< "STOP, TIMEOUTTIME" << endl;
+    //cout<< "STOP, TIMEOUTTIME" << endl;
     struct region *blue_gate, *yellow_gate;
     bool drive_towards = false; // false for yellow, true for blue
-    int max_spd = 40;
-    if(segm->colors[ORANGE].list!=NULL){
+    int max_spd = 20;
+    if(segm->colors[BLACK].list!=NULL){
         ball_timeout_f=false;
         return;
     }
-    if(segm->colors[BLUE].list!=NULL && !b_set){
-        blue_gate = segm->colors[BLUE].list;
+    if(segm->colors[YELLOW].list!=NULL && !b_set){
+        blue_gate = segm->colors[YELLOW].list;
         if(blue_gate->cen_x>320){
             write_spd(max_spd, -max_spd);
             if(last_b_size<blue_gate->area){
@@ -175,8 +175,8 @@ void ball_timeout(SEGMENTATION * segm, int last_y_size, int last_b_size, bool b_
                 last_drive = false;
             }
         }
-    } else if(segm->colors[YELLOW].list!=NULL && !y_set){
-        yellow_gate = segm->colors[YELLOW].list;
+    } else if(segm->colors[BLUE].list!=NULL && !y_set){
+        yellow_gate = segm->colors[BLUE].list;
         if(yellow_gate->cen_x>320){
             write_spd(max_spd, -max_spd);
             if(last_y_size<yellow_gate->area){
@@ -253,6 +253,8 @@ char getBall(){
     unsigned char buf[11];
     RS232_PollComport(motor2, buf, 10);
     RS232_cputs(motor2, "gb\n");
+    cout<<buf<<endl;
+
     if (buf[3]) ball_in = true;
     else ball_in = false;
     return buf[3];
@@ -392,61 +394,89 @@ blobs get_blobs(SEGMENTATION * segm){
 
     struct region *tempRegion=NULL;
     blobs blob_data;
-    if(segm->colors[ORANGE].list!=NULL){
-        tempRegion = segm->colors[ORANGE].list;
+    if(segm->colors[BLACK].list!=NULL){
+        tempRegion = segm->colors[BLACK].list;
         blob_data.orange_area = tempRegion->area;
         blob_data.orange_cen_x = tempRegion->cen_x;
         blob_data.orange_cen_y = tempRegion->cen_y;
         //tempRegion = tempRegion->next;
         //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-        //circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
+        //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
     }
     else {
         blob_data.orange_area = 0;
         blob_data.orange_cen_x = 0;
         blob_data.orange_cen_y = 0;
     }
-    if(segm->colors[BLUE].list!=NULL){
-        tempRegion = segm->colors[BLUE].list;
+    if(segm->colors[YELLOW].list!=NULL){
+        tempRegion = segm->colors[YELLOW].list;
         blob_data.blue_area = tempRegion->area;
         blob_data.blue_cen_x = tempRegion->cen_x;
         blob_data.blue_cen_y = tempRegion->cen_y;
         //tempRegion = tempRegion->next;
         //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-        //circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
+        //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(255,0,0), -1);
     }
     else {
         blob_data.blue_area = 0;
         blob_data.blue_cen_x = 0;
         blob_data.blue_cen_y = 0;
     }
-    if(segm->colors[YELLOW].list!=NULL){
-        tempRegion = segm->colors[YELLOW].list;
+    if(segm->colors[BLUE].list!=NULL){
+        tempRegion = segm->colors[BLUE].list;
         blob_data.yellow_area = tempRegion->area;
         blob_data.yellow_cen_x = tempRegion->cen_x;
         blob_data.yellow_cen_y = tempRegion->cen_y;
         //tempRegion = tempRegion->next;
         //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-        //circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
+        //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,255,255), -1);
     }
     else {
         blob_data.yellow_area = 0;
         blob_data.yellow_cen_x = 0;
         blob_data.yellow_cen_y = 0;
     }
-    if(segm->colors[GREEN].list!=NULL){
-        tempRegion = segm->colors[GREEN].list;
+    if(segm->colors[ORANGE].list!=NULL){
+        tempRegion = segm->colors[ORANGE].list;
         blob_data.green_area = tempRegion->area;
         blob_data.green_cen_x = tempRegion->cen_x;
         blob_data.green_cen_y = tempRegion->cen_y;
         //tempRegion = tempRegion->next;
         //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-        //circle(img, Point(bloobinates[0][0][0], bloobinates[0][0][1]), 5, Scalar(255,0,255), -1);
+        //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0, 255, 0), -1);
     }
     else {
         blob_data.green_area = 0;
         blob_data.green_cen_x = 0;
         blob_data.green_cen_y = 0;
+    }
+    if(segm->colors[GREEN].list!=NULL){
+        tempRegion = segm->colors[GREEN].list;
+        blob_data.black_area = tempRegion->area;
+        blob_data.black_cen_x = tempRegion->cen_x;
+        blob_data.black_cen_y = tempRegion->cen_y;
+        //tempRegion = tempRegion->next;
+        //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+        //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0, 0, 0), -1);
+    }
+    else {
+        blob_data.black_area = 0;
+        blob_data.black_cen_x = 0;
+        blob_data.black_cen_y = 0;
+    }
+    if(segm->colors[WHITE].list!=NULL){
+        tempRegion = segm->colors[WHITE].list;
+        blob_data.white_area = tempRegion->area;
+        blob_data.white_cen_x = tempRegion->cen_x;
+        blob_data.white_cen_y = tempRegion->cen_y;
+        //tempRegion = tempRegion->next;
+        //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+        //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(255, 255, 255), -1);
+    }
+    else {
+        blob_data.white_area = 0;
+        blob_data.white_cen_x = 0;
+        blob_data.white_cen_y = 0;
     }
     imshow("aken", img);
     return(blob_data);

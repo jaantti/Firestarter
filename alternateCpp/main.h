@@ -4,7 +4,8 @@
 #define MIN_AREA 5000
 #define CURRENT_GATE 1
 #define BAUDRATE 115200
-
+#define VASAK motor1
+#define PAREM motor2
 
 struct blobs{
     int orange_area;

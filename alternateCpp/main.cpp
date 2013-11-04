@@ -14,8 +14,8 @@
 using namespace cv;
 using namespace std;
 
-int motor1 = 24; //parem
-int motor2 = 25; //vasak   24 /dev/ttyACM0, 25 /dev/ttyACM1
+int motor1 = 24; //vasak
+int motor2 = 25; //parem   24 /dev/ttyACM0, 25 /dev/ttyACM1
 int coil = 2; // /dev/ttyACM2
 
 double rel_pos = 0;
@@ -51,7 +51,6 @@ int main(){
         getBall();
 
         gettimeofday(&end, NULL);
-		RS232_cputs(motor1, "gb\n");
         double rel_pos_gate=0;
 
         blobs blob_data = get_blobs(&segm);
@@ -77,12 +76,12 @@ int main(){
                     last_drive = false;
                 }
             }
-            if (ball_in) {
+            if (!ball_in) {
                 findBall(blob_data.orange_cen_x, blob_data.orange_cen_y);
             } else {
                 // TODO if
-                rel_pos_gate = (blob_data.blue_cen_x-320)/320;
-                last_gate_pos= (blob_data.blue_cen_x-320)/320;
+                rel_pos_gate = (blob_data.blue_cen_x-320)/320.0;
+                last_gate_pos= (blob_data.blue_cen_x-320)/320.0;
                 findGate(rel_pos_gate);
             }
         } else {
@@ -101,36 +100,37 @@ void findBall(float x, float y){
 
     rel_pos = (x-320)/320;
     //cout << rel_pos << endl;
-    if (rel_pos > 0.05) { //blob right of center
+    if (rel_pos > 0) { //blob right of center
         write_spd(max_spd - (int)(rel_pos*slower_by), max_spd);
     }
-    else if (rel_pos < -0.05) { //blob left of center
-        write_spd(max_spd, max_spd - (int)(rel_pos*slower_by));
+    else if (rel_pos < 0) { //blob left of center
+        write_spd(max_spd, max_spd + (int)(rel_pos*slower_by));
     }
     else { //blob exactly in the middle
         write_spd(max_spd, max_spd);
     }
 }
-
 void findGate(double rel_pos_gate){
-    int max_spd = 40, slower_by=20;
+    int max_spd = 20, slower_by=10;
+    cout << rel_pos_gate << endl;
     if(rel_pos_gate==0){
         if (last_gate_pos && last_gate_pos > 0) { //blob last seen right of center
-            write_spd(-max_spd, max_spd);
+            write_spd(0, max_spd);
         }
         else { //blob last seen left of center or not seen at all
-            write_spd(max_spd, -max_spd);
+            write_spd(max_spd, 0);
         }
     }
     else {
         if (rel_pos_gate > 0.05) { //blob right of center
-            write_spd(max_spd - (int)(rel_pos_gate*slower_by), -max_spd);
+            write_spd(max_spd - (int)(rel_pos_gate*slower_by), max_spd);
         }
-        else if (rel_pos_gate < 0.05) { //blob left of center
-            write_spd(max_spd, -max_spd - (int)(rel_pos_gate*slower_by));
+        else if (rel_pos_gate < -0.05) { //blob left of center
+            write_spd(max_spd, max_spd + (int)(rel_pos_gate*slower_by));
         }
         else { //blob in the middle 10% of vision
             usleep(100);
+            cout << "BOOM!" << endl;
             coil_boom();
         }
     }
@@ -141,8 +141,8 @@ void write_spd(int write1, int write2){
     ss1 << "sd" << write1 << "\n";
     ss2 << "sd" << -write2 << "\n";
 
-    RS232_cputs(motor1, ss1.str().c_str());
-    RS232_cputs(motor2, ss2.str().c_str());
+    RS232_cputs(PAREM, ss1.str().c_str());
+    RS232_cputs(VASAK, ss2.str().c_str());
 }
 //For determining the gate that is further away and driving towards it.
 void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, bool y_set, bool last_drive){
@@ -154,9 +154,9 @@ void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, b
         return;
     }
     if(blobber.blue_area!=0 && !b_set){
-        if(blobber.blue_cen_x>320){
-            write_spd(max_spd, -max_spd);
-            if(last_b_size<blobber.blue_area){
+        if(blobber.blue_cen_x > 320){
+            write_spd(max_spd, 0);
+            if(last_b_size < blobber.blue_area){
                 last_b_size = blobber.blue_area;
                 last_drive = true;
             } else {
@@ -164,7 +164,7 @@ void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, b
                 last_drive = true;
             }
         } else {
-            write_spd(-max_spd, max_spd);
+            write_spd(0, max_spd);
             if(last_b_size<blobber.blue_area){
                 last_b_size = blobber.blue_area;
                 last_drive = false;
@@ -175,7 +175,7 @@ void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, b
         }
     } else if(blobber.yellow_area!=0 && !y_set){
         if(blobber.yellow_cen_x>320){
-            write_spd(max_spd, -max_spd);
+            write_spd(max_spd, 0);
             if(last_y_size<blobber.yellow_area){
                 last_y_size = blobber.yellow_area;
                 last_drive = true;
@@ -184,7 +184,7 @@ void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, b
                 last_drive = true;
             }
         } else {
-            write_spd(-max_spd, max_spd);
+            write_spd(0, max_spd);
             if(last_y_size<blobber.yellow_area){
                 last_y_size = blobber.yellow_area;
                 last_drive = false;
@@ -216,8 +216,8 @@ void drive_ball_timeout(blobs blobber, bool gate_select, bool last_drive){
             if (real_gate_pos > 0.05) { //blob right of center
                 write_spd(max_spd - (int)(real_gate_pos*slower_by), max_spd);
             }
-            else if (real_gate_pos < 0.05) { //blob left of center
-                write_spd(max_spd, max_spd - (int)(real_gate_pos*slower_by));
+            else if (real_gate_pos < -0.05) { //blob left of center
+                write_spd(max_spd, max_spd + (int)(real_gate_pos*slower_by));
             }
             else { //blob in the middle
                 write_spd(max_spd, max_spd);
@@ -228,9 +228,9 @@ void drive_ball_timeout(blobs blobber, bool gate_select, bool last_drive){
         } else {
             //False left, true right
             if(last_drive){
-                write_spd(max_spd, -max_spd);
+                write_spd(max_spd, 0);
             } else {
-                write_spd(-max_spd, max_spd);
+                write_spd(0, max_spd);
             }
         }
 
@@ -242,8 +242,8 @@ void drive_ball_timeout(blobs blobber, bool gate_select, bool last_drive){
             if (real_gate_pos > 0.05) { //blob right of center
                 write_spd(max_spd - (int)(real_gate_pos*slower_by), max_spd);
             }
-            else if (real_gate_pos < 0.05) { //blob left of center
-                write_spd(max_spd, max_spd - (int)(real_gate_pos*slower_by));
+            else if (real_gate_pos < -0.05) { //blob left of center
+                write_spd(max_spd, max_spd + (int)(real_gate_pos*slower_by));
             }
             else { //blob in the middle
                 write_spd(max_spd, max_spd);
@@ -254,9 +254,9 @@ void drive_ball_timeout(blobs blobber, bool gate_select, bool last_drive){
         } else {
             //False left, true right
             if(last_drive){
-                write_spd(max_spd, -max_spd);
+                write_spd(max_spd, 0);
             } else {
-                write_spd(-max_spd, max_spd);
+                write_spd(0, max_spd);
             }
         }
     }
@@ -271,12 +271,12 @@ void back_off(){
 }
 char getBall(){
     unsigned char buf[11];
-    int n = RS232_PollComport(motor1, buf, 10);
-    RS232_cputs(motor1, "gb\n");
-
+    int n = RS232_PollComport(motor2, buf, 10);
+    RS232_cputs(motor2, "gb\n");
+    //cout << buf << endl;
     if (buf[3]=='1'){
         ball_in = true;
-        cout<<"Ball in"<<endl;
+        //cout<<"Ball in"<<endl;
     } else{
         ball_in = false;
     }
@@ -318,12 +318,14 @@ bool init_serial_dev(){
     unsigned char *m1 = NULL;
 	m1 = (unsigned char*)malloc(15);
 	memset(m1, '\0', 15);
+	sleep(0.5);
 	m1 = serial_read(motor1);
 
 	RS232_cputs(motor2, "?\n");
     unsigned char *m2 = NULL;
 	m2 = (unsigned char*)malloc(15);
 	memset(m2, '\0', 15);
+	sleep(0.5);
 	m2 = serial_read(motor2);
 
     //RS232_cputs(motor2, "?\n");
@@ -424,7 +426,7 @@ blobs get_blobs(SEGMENTATION * segm){
         blob_data.orange_cen_y = tempRegion->cen_y;
         //tempRegion = tempRegion->next;
         //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-        //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
+        circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
     }
     else {
         blob_data.orange_area = 0;
@@ -438,7 +440,7 @@ blobs get_blobs(SEGMENTATION * segm){
         blob_data.blue_cen_y = tempRegion->cen_y;
         //tempRegion = tempRegion->next;
         //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-        //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(255,0,0), -1);
+        circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(255,0,0), -1);
     }
     else {
         blob_data.blue_area = 0;

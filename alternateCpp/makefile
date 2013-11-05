@@ -6,7 +6,7 @@ WORKINGDIR := $(shell pwd)
 GITDIR = ~/Firestarter
 
 all: clean
-	g++ $(CFLAGS) -o $(OUT) $(FILES) $(LIBS)
+	g++ -std=c++0x $(CFLAGS) -o $(OUT) $(FILES) $(LIBS) -pthread
 
 clean:
 	mkdir bin

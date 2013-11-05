@@ -1,11 +1,14 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
 
-#define MIN_AREA 5000
+#define MIN_AREA 100
 #define CURRENT_GATE 1
 #define BAUDRATE 115200
 #define VASAK motor1
 #define PAREM motor2
+#define MINGREEN 92160
+#define MAX_SPD 50
+#define SLOWER_BY 30
 
 struct blobs{
     int orange_area;
@@ -26,6 +29,8 @@ struct blobs{
     int white_area;
     int white_cen_x;
     int white_cen_y;
+
+    int total_green;
 };
 
 void coil_charge();
@@ -35,13 +40,14 @@ bool init_serial_dev();
 void close_serial();
 unsigned char *serial_read(int);
 void findBall(float, float);
-void findGate(double rel_pos_gate);
+void findBigBall(float x, float y);
+bool findGate(double rel_pos_gate);
 void write_spd(int write1, int write2);
 void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, bool y_set, bool last_drive);
 void drive_ball_timeout(blobs blobber, bool gate_select, bool last_drive);
 void back_off();
 char getBall();
-blobs get_blobs(SEGMENTATION * segm);
+int get_blobs(SEGMENTATION * segm);
 void init_video();
 
 #endif

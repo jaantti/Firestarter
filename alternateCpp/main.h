@@ -4,11 +4,13 @@
 #define MIN_AREA 100
 #define CURRENT_GATE 1
 #define BAUDRATE 115200
-#define VASAK motor1
-#define PAREM motor2
+#define VASAK motor2
+#define PAREM motor1
+#define GOAL_COLOUR
 #define MINGREEN 92160
-#define MINBALL 10
-#define MINGOAL 50
+#define MINBALL 20
+#define MINGOAL_YELLOW 1000
+#define MINGOAL_BLUE 300
 #define MAX_SPD 50
 #define SLOWER_BY 30
 

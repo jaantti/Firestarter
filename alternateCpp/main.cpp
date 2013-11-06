@@ -25,7 +25,10 @@ int rel_pos_ball = 0;
 
 bool was_close = false;
 bool ball_timeout_f = false;
-bool ball_in = false;
+
+bool ours = false;
+bool theirs = false;
+volatile bool ball_in = false;
 
 blobs blob_data;
 
@@ -46,10 +49,12 @@ int main(){
 
     SEGMENTATION segm(640, 480);
     thread t1(get_blobs, &segm);
+    thread t2(getBall);
 
     while (true){
         coil_ping();
-        getBall();
+        usleep(1000);
+        //cout << ball_in << endl;
 
         gettimeofday(&end_time, NULL);
         double rel_pos_gate=0;
@@ -69,7 +74,7 @@ int main(){
 
                     mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
                     if(mtime>2500){
-                        cout<<"Timeout!"<<mtime<<endl;
+                        //cout<<"Timeout!"<<mtime<<endl;
                         ball_timeout_f = true;
                         b_set = false;
                         y_set = false;
@@ -77,19 +82,17 @@ int main(){
                     }
                 }
                 if (!ball_in) {
-                    if (blob_data.orange_area > 3000 && blob_data.green_cen_y > 300) findBigBall(blob_data.orange_cen_x, blob_data.orange_cen_y);
+                    if (blob_data.orange_cen_x)
+                    //cout << blob_data.orange_area << endl;
+                    if (blob_data.orange_cen_y > 300) findBigBall(blob_data.orange_cen_x, blob_data.orange_cen_y);
                     else findBall(blob_data.orange_cen_x, blob_data.orange_cen_y);
                 } else {
                     // TODO if
-                    rel_pos_gate = (blob_data.yellow_cen_x-320)/320.0;
-                    last_gate_pos= (blob_data.yellow_cen_x-320)/320.0;
+                    rel_pos_gate = (blob_data.blue_cen_x-320)/320.0;
+                    last_gate_pos= (blob_data.blue_cen_x-320)/320.0;
                     findGate(rel_pos_gate);
                         /*blob_data = get_blobs(&segm);
-                        rel_pos_gate = (blob_data.blue_cen_x-320)/320.0;
-                        if (rel_pos_gate < 0.05 && rel_pos_gate > -0.05) {
-                            coil_boom();
-                            cout << "BOOM!" << endl;
-                        }*/
+                        */
 
                 }
             } else {
@@ -100,7 +103,11 @@ int main(){
             cout << "not green" << endl;
             back_off();
         }
-
+        // Last gate directions, true is right, false is left
+        if (blob_data.blue_cen_x != 0 && blob_data.blue_cen_x < 320) theirs = false;
+        else if (blob_data.blue_cen_x != 0 && blob_data.blue_cen_x > 320) theirs = true;
+        if (blob_data.yellow_cen_x != 0 && blob_data.yellow_cen_x < 320) ours = false;
+        else if (blob_data.yellow_cen_x != 0 && blob_data.yellow_cen_x > 320) ours = true;
     }
     close_serial();
     return 0;
@@ -135,10 +142,11 @@ void findBigBall(float x, float y){
     }
 }
 bool findGate(double rel_pos_gate){
-    cout << rel_pos_gate << endl;
+    //cout << rel_pos_gate << endl;
     if(rel_pos_gate == -1){
-        if (last_gate_pos && last_gate_pos > 0) { //blob last seen right of center
+        if (ours == false) { //Own gate was last left vision on the left side of the screen
             write_spd(-(int)(MAX_SPD*0.5),(int)(MAX_SPD*0.5));
+            //cout << "going right" << endl;
         }
         else { //blob last seen left of center or not seen at all
             write_spd((int)(MAX_SPD*0.5), -(int)(MAX_SPD*0.5));
@@ -146,17 +154,20 @@ bool findGate(double rel_pos_gate){
     }
     else {
         if (rel_pos_gate > 0.05) { //blob right of center
-            write_spd(5+(int)(MAX_SPD*0.4*rel_pos_gate), -5-(int)(MAX_SPD*0.4*rel_pos_gate));
+            write_spd((int)(-MAX_SPD*0.4*rel_pos_gate-5), (int)(MAX_SPD*0.4*rel_pos_gate+5));
         }
         else if (rel_pos_gate < -0.05) { //blob left of center
-            write_spd(-5-(int)(MAX_SPD*0.4*rel_pos_gate), 5+(int)(MAX_SPD*0.4*rel_pos_gate));
+            write_spd((int)(-MAX_SPD*0.4*rel_pos_gate+5), (int)(MAX_SPD*0.4*rel_pos_gate-5));
         }
         else { //blob in the middle 10% of vision
             write_spd(0, 0);
-            sleep(0.5);
-            coil_boom();
-            cout << "BOOM" << endl;
-            return true;
+            usleep(100000);
+            rel_pos_gate = (blob_data.blue_cen_x-320)/320.0;
+            if (rel_pos_gate < 0.05 && rel_pos_gate > -0.05) {
+                coil_boom();
+                cout << "BOOM!" << endl;
+                return true;
+            }
         }
     }
     return false;
@@ -169,8 +180,12 @@ void write_spd(int write1, int write2){
     ss1 << "sd" << write1 << "\n";
     ss2 << "sd" << -write2 << "\n";
 
-    RS232_cputs(VASAK, ss1.str().c_str());
-    RS232_cputs(PAREM, ss2.str().c_str());
+    //cout << (unsigned char *)ss1.str().c_str() << " " << (unsigned char *)ss2.str().c_str() << endl;
+    //RS232_SendBuf(VASAK, (unsigned char *)ss2.str().c_str(), sizeof(ss2.str()));
+    //RS232_SendBuf(PAREM, (unsigned char *)ss1.str().c_str(), sizeof(ss1.str()));
+
+    RS232_cputs(PAREM, ss1.str().c_str());
+    RS232_cputs(VASAK, ss2.str().c_str());
 }
 //For determining the gate that is further away and driving towards it.
 void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, bool y_set, bool last_drive){
@@ -291,33 +306,43 @@ void drive_ball_timeout(blobs blobber, bool gate_select, bool last_drive){
 void back_off(){
 
     write_spd(0, 0);
-    sleep(0.1);
+    usleep(100000);
     write_spd(-MAX_SPD, -MAX_SPD);
-    sleep(2);
+    usleep(2000000);
     write_spd(MAX_SPD, -MAX_SPD);
-    sleep(0.5);
+    usleep(750000);
 }
 
 char getBall(){
-    unsigned char buf[11];
-    int n = RS232_PollComport(motor1, buf, 10);
-    RS232_cputs(motor1, "gb\n");
-    //cout << buf << endl;
-    if (buf[3]=='1'){
-        ball_in = true;
-        //cout<<"Ball in"<<endl;
-    } else{
-        ball_in = false;
+    unsigned char read_buf[6];
+    unsigned char write_buf[4] = "gb\n";
+    while(true) {
+
+        RS232_SendBuf(PAREM, write_buf, sizeof(write_buf));
+        usleep(50000);
+        int n = RS232_PollComport(PAREM, read_buf, sizeof(read_buf));
+
+        if (read_buf[0]=='<' && read_buf[3]=='1'){
+            ball_in = true;
+            //cout<<"Ball in"<<endl;
+        }
+        else if (read_buf[0]=='<' && read_buf[3]=='0') {
+            ball_in = false;
+        }
+        else {
+            cout << read_buf << endl;
+            RS232_PollComport(PAREM, read_buf, sizeof(read_buf));
+        }
     }
-    return buf[3];
+    //return buf[3];
 }
 
 unsigned char *serial_read(int id){
     unsigned char *buf = NULL;
-    buf = (unsigned char*)malloc(15);
+    buf = (unsigned char*)malloc(50);
     memset(buf, '\0', 15);
-    int n = RS232_PollComport(id, buf, 14);
-    printf("%s %d\n",buf,n);
+    int n = RS232_PollComport(id, buf, 49);
+    //printf("%s %d\n",buf,n);
     if (n) {
         return buf;
     }
@@ -343,18 +368,28 @@ bool init_serial_dev(){
         return(false);
     }
 
+    //clear buffer
+    RS232_cputs(motor1, "?\n");
+    RS232_cputs(motor2, "?\n");
+    RS232_cputs(coil, "?\n");
+    unsigned char temp[200];
+    usleep(500000);
+    RS232_PollComport(motor1, temp, 200);
+    RS232_PollComport(motor2, temp, 200);
+    RS232_PollComport(coil, temp, 200);
+
     RS232_cputs(motor1, "?\n");
     unsigned char *m1 = NULL;
 	m1 = (unsigned char*)malloc(15);
 	memset(m1, '\0', 15);
-	sleep(0.5);
+	usleep(500000);
 	m1 = serial_read(motor1);
 
 	RS232_cputs(motor2, "?\n");
     unsigned char *m2 = NULL;
 	m2 = (unsigned char*)malloc(15);
 	memset(m2, '\0', 15);
-	sleep(0.5);
+	usleep(500000);
 	m2 = serial_read(motor2);
 
     //RS232_cputs(motor2, "?\n");
@@ -410,7 +445,7 @@ void close_serial(){
 
 void coil_boom(){
     RS232_cputs(coil, "k1000\n");
-    sleep(0.1);
+    usleep(100000);
 
 }
 
@@ -475,10 +510,11 @@ int get_blobs(SEGMENTATION * segm){
             tempRegion = segm->colors[YELLOW].list;
             x = tempRegion->area;
             //cout << x << endl;
-            if (x > MINGOAL) {
+            if (x > MINGOAL_BLUE) {
                 blob_data.blue_area = x;
                 blob_data.blue_cen_x = tempRegion->cen_x;
                 blob_data.blue_cen_y = tempRegion->cen_y;
+                rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(0, 255, 255), 2);
             }
             else {
                 blob_data.blue_area = 0;
@@ -486,7 +522,7 @@ int get_blobs(SEGMENTATION * segm){
                 blob_data.blue_cen_y = 0;
             }
             //tempRegion = tempRegion->next;
-            rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(0, 255, 255), 2);
+
             //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(255,0,0), -1);
         }
         else {
@@ -497,10 +533,11 @@ int get_blobs(SEGMENTATION * segm){
         if(segm->colors[BLUE].list!=NULL){
             tempRegion = segm->colors[BLUE].list;
             x = tempRegion->area;
-            if (x > MINGOAL){
+            if (x > MINGOAL_YELLOW){
                 blob_data.yellow_area = x;
                 blob_data.yellow_cen_x = tempRegion->cen_x;
                 blob_data.yellow_cen_y = tempRegion->cen_y;
+                rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
             }
             else {
                 blob_data.yellow_area = 0;
@@ -508,7 +545,7 @@ int get_blobs(SEGMENTATION * segm){
                 blob_data.yellow_cen_y = 0;
             }
             //tempRegion = tempRegion->next;
-            rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+
             //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,255,255), -1);
         }
         else {
@@ -566,5 +603,7 @@ int get_blobs(SEGMENTATION * segm){
         imshow("aken", img);
         if (waitKey(10) == 27) break;
     }
+    close_serial();
+    exit(0);
     return(0);
 }

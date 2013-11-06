@@ -422,12 +422,6 @@ void coil_charge(){
     RS232_cputs(coil, "c\n");
 }
 
-void init_video(){
-
-
-
-}
-
 int get_blobs(SEGMENTATION * segm){
     namedWindow("aken");
 
@@ -454,7 +448,7 @@ int get_blobs(SEGMENTATION * segm){
         struct region *tempRegion=NULL;
         if(segm->colors[BLACK].list!=NULL){
             tempRegion = segm->colors[BLACK].list;
-            if (tempRegion->area > 10) {
+            if (tempRegion->area > MINBALL) {
                 blob_data.orange_area = tempRegion->area;
                 blob_data.orange_cen_x = tempRegion->cen_x;
                 blob_data.orange_cen_y = tempRegion->cen_y;
@@ -467,7 +461,7 @@ int get_blobs(SEGMENTATION * segm){
             //tempRegion = tempRegion->next;
             //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
             //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
-            while (tempRegion != NULL && tempRegion->area > 10) {
+            while (tempRegion != NULL && tempRegion->area > MINBALL) {
                 circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
                 tempRegion = tempRegion->next;
             }
@@ -481,7 +475,7 @@ int get_blobs(SEGMENTATION * segm){
             tempRegion = segm->colors[YELLOW].list;
             x = tempRegion->area;
             //cout << x << endl;
-            if (x > 50) {
+            if (x > MINGOAL) {
                 blob_data.blue_area = x;
                 blob_data.blue_cen_x = tempRegion->cen_x;
                 blob_data.blue_cen_y = tempRegion->cen_y;
@@ -503,7 +497,7 @@ int get_blobs(SEGMENTATION * segm){
         if(segm->colors[BLUE].list!=NULL){
             tempRegion = segm->colors[BLUE].list;
             x = tempRegion->area;
-            if (x > 50){
+            if (x > MINGOAL){
                 blob_data.yellow_area = x;
                 blob_data.yellow_cen_x = tempRegion->cen_x;
                 blob_data.yellow_cen_y = tempRegion->cen_y;

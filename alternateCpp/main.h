@@ -7,6 +7,8 @@
 #define VASAK motor1
 #define PAREM motor2
 #define MINGREEN 92160
+#define MINBALL 10
+#define MINGOAL 50
 #define MAX_SPD 50
 #define SLOWER_BY 30
 
@@ -48,6 +50,5 @@ void drive_ball_timeout(blobs blobber, bool gate_select, bool last_drive);
 void back_off();
 char getBall();
 int get_blobs(SEGMENTATION * segm);
-void init_video();
 
 #endif

@@ -6,11 +6,12 @@
 #define BAUDRATE 115200
 #define VASAK motor2
 #define PAREM motor1
-#define GOAL_COLOUR
+#define DEFEND(TOKEN) yellow ## _ ## TOKEN
+#define ATTACK(TOKEN) blue ## _ ## TOKEN
 #define MINGREEN 92160
-#define MINBALL 20
+#define MINBALL 2000
 #define MINGOAL_YELLOW 1000
-#define MINGOAL_BLUE 300
+#define MINGOAL_BLUE 1000
 #define MAX_SPD 50
 #define SLOWER_BY 30
 
@@ -47,8 +48,8 @@ void findBall(float, float);
 void findBigBall(float x, float y);
 bool findGate(double rel_pos_gate);
 void write_spd(int write1, int write2);
-void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, bool y_set, bool last_drive);
-void drive_ball_timeout(blobs blobber, bool gate_select, bool last_drive);
+void ball_timeout();
+void drive_ball_timeout(bool gate_select);
 void back_off();
 char getBall();
 int get_blobs(SEGMENTATION * segm);

@@ -18,6 +18,7 @@ using namespace std;
 int motor1 = 24; //vasak
 int motor2 = 25; //parem   24 /dev/ttyACM0, 25 /dev/ttyACM1
 int coil = 2; // /dev/ttyACM2
+int last_yellow_size=0, last_blue_size=0; // for timeout function (ball)
 
 double rel_pos = 0;
 double last_gate_pos = 0;
@@ -25,6 +26,8 @@ int rel_pos_ball = 0;
 
 bool was_close = false;
 bool ball_timeout_f = false;
+// last_drive determines which way the robot last turned during timeout. false for left, true for right.
+bool y_set=false, b_set=false, last_drive=false; //for timeout function (ball)
 
 bool ours = false;
 bool theirs = false;
@@ -39,9 +42,6 @@ long mtime, seconds, useconds, fps;
 
 int main(){
 
-    int last_yellow_size=0, last_blue_size=0; // for timeout function (ball)
-    // last_drive determines which way the robot last turned during timeout. false for left, true for right.
-    bool y_set=false, b_set=false, last_drive=false; //for timeout function (ball)
     init_serial_dev();
 
     gettimeofday(&start, NULL);
@@ -96,7 +96,7 @@ int main(){
 
                 }
             } else {
-                ball_timeout(blob_data, last_yellow_size, last_blue_size, b_set, y_set, last_drive);
+                ball_timeout(blob_data, &last_yellow_size, &last_blue_size, &b_set, &y_set, &last_drive);
             }
         }
         else {
@@ -188,7 +188,7 @@ void write_spd(int write1, int write2){
     RS232_cputs(VASAK, ss2.str().c_str());
 }
 //For determining the gate that is further away and driving towards it.
-void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, bool y_set, bool last_drive){
+void ball_timeout(blobs blobber, int *last_y_size, int *last_b_size, bool *b_set, bool *y_set, bool *last_drive){
     //cout<< "STOP, TIMEOUTTIME" << endl;
     bool drive_towards = false; // false for yellow, true for blue
     if(blobber.orange_area!=0){
@@ -240,13 +240,13 @@ void ball_timeout(blobs blobber, int last_y_size, int last_b_size, bool b_set, b
         if(last_y_size<last_b_size){
             drive_towards = true; // blue = true, yellow = false
         }
-        drive_ball_timeout(blobber , drive_towards, last_drive);
+        drive_ball_timeout(blobber , &drive_towards, last_drive);
     }
 
 }
 //drives the robot towards the gate that is further away. last_drive is used to determine which way the robot was turning
 // to ensure a smooth transition.
-void drive_ball_timeout(blobs blobber, bool gate_select, bool last_drive){
+void drive_ball_timeout(blobs blobber, bool *gate_select, bool *last_drive){
     int real_gate_pos=0, area = 0;
     struct region *gate_reg;
     if(gate_select){

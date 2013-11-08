@@ -5,8 +5,8 @@
 #define BAUDRATE 115200
 #define VASAK motor2
 #define PAREM motor1
-#define DEFEND(TOKEN) blue ## _ ## TOKEN
-#define ATTACK(TOKEN) yellow ## _ ## TOKEN
+#define DEFEND(TOKEN) yellow ## _ ## TOKEN
+#define ATTACK(TOKEN) blue ## _ ## TOKEN
 #define MINGREEN 76800
 #define MINBALL 30
 #define MINGOAL_YELLOW 1000
@@ -43,12 +43,12 @@ void coil_boom();
 bool init_serial_dev();
 void close_serial();
 unsigned char *serial_read(int);
-void findBall(float, float);
-void findBigBall(float x, float y);
-bool findGate(double rel_pos_gate);
+void findBall(int max_spd, int slower_by);
+bool findGate();
 void write_spd(int write1, int write2);
 void ball_timeout();
 void drive_ball_timeout();
+void goal_timeout();
 void back_off();
 char getBall();
 int get_blobs(SEGMENTATION * segm);

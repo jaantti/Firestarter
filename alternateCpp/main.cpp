@@ -29,13 +29,16 @@ bool ball_timeout_f = false;
 // last_drive determines which way the robot last turned during timeout. false for left, true for right.
 bool y_set=false, b_set=false, last_drive=false; //for timeout function (ball)
 bool gate_select = false; // false for yellow, true for blue;
+
+bool goal_timeout_f = false;
+
 bool ours = false;
 bool theirs = false;
 volatile bool ball_in = false;
 
 blobs blob_data;
 
-struct timeval start, end_time;
+struct timeval start, end_time, start_goal;
 long mtime, seconds, useconds, fps;
 
 
@@ -45,6 +48,7 @@ int main(){
     init_serial_dev();
 
     gettimeofday(&start, NULL);
+    gettimeofday(&start_goal, NULL);
     coil_charge();
 
     SEGMENTATION segm(640, 480);
@@ -54,58 +58,69 @@ int main(){
 
     while (true){
         coil_ping();
-        usleep(1000);
+        usleep(100000);
 
         gettimeofday(&end_time, NULL);
-        double rel_pos_gate=0;
-        //cout << blob_data.ATTACK(area) << endl;
+        //cout << ours << " " << theirs << endl;
         if (blob_data.total_green > MINGREEN && blob_data.ATTACK(area) < 40000 && blob_data.DEFEND(area) < 40000) {
-            if(!ball_timeout_f){
-                if(b_set && y_set){
-                    b_set = false;
-                    y_set = false;
-                    last_y_size=0;
-                    last_b_size=0;
-                    cout<<"END TIMEOUT!"<<endl;
-                    gettimeofday(&start, NULL);
-                }
-                if(blob_data.orange_area!=0){
-                    gettimeofday(&start, NULL);
-                } else {
-                    gettimeofday(&end_time, NULL);
-                    seconds  = end_time.tv_sec  - start.tv_sec;
-                    useconds = end_time.tv_usec - start.tv_usec;
-
-                    mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
-                    if(mtime>4000){
-                        cout<< "STOP, TIMEOUTTIME" << endl;
-                        //cout<<"Timeout!"<<mtime<<endl;
-                        ball_timeout_f = true;
+            if(!ball_in) {
+                if(!ball_timeout_f){
+                    if(b_set && y_set){
                         b_set = false;
                         y_set = false;
-                        last_drive = false;
+                        last_y_size=0;
+                        last_b_size=0;
+                        cout<<"END TIMEOUT!"<<endl;
+                        gettimeofday(&start, NULL);
                     }
-                }
-                if (!ball_in) {
-                    if (blob_data.orange_cen_x)
-                    //cout << blob_data.orange_area << endl;
-                    if (blob_data.orange_cen_y > 300) findBigBall(blob_data.orange_cen_x, blob_data.orange_cen_y);
-                    else findBall(blob_data.orange_cen_x, blob_data.orange_cen_y);
-                } else {
-                    // TODO if
-                    rel_pos_gate = (blob_data.ATTACK(cen_x)-320)/320.0;
-                    last_gate_pos= (blob_data.ATTACK(cen_x)-320)/320.0;
-                    findGate(rel_pos_gate);
-                        /*blob_data = get_blobs(&segm);
-                        */
+                    if(blob_data.orange_area!=0){
+                        gettimeofday(&start, NULL);
+                    }
+                    else { // No balls currently visible
+                        seconds  = end_time.tv_sec  - start.tv_sec;
+                        useconds = end_time.tv_usec - start.tv_usec;
 
+                        mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+                        if(mtime>4000){
+                            cout<< "STOP, TIMEOUTTIME" << endl;
+                            //cout<<"Timeout!"<<mtime<<endl;
+                            ball_timeout_f = true;
+                            b_set = false;
+                            y_set = false;
+                            last_drive = false;
+                        }
+                    }
+                    //cout << blob_data.orange_area << endl;
+                    if (blob_data.orange_cen_y < 300) findBall(MAX_SPD, SLOWER_BY);
+                    else findBall(MAX_SPD*0.4, SLOWER_BY*0.5);
                 }
-            } else {
-                ball_timeout();
+                else ball_timeout();
+                gettimeofday(&start_goal, NULL); // Keep resetting goal_timeout when no ball in dribbler
+            }
+            else { // Ball in dribbler
+                if(!goal_timeout_f){
+                    //cout<<"Timeout!"<<mtime<<endl;
+                    if (blob_data.ATTACK(area) != 0) {
+                        gettimeofday(&start_goal, NULL);
+                    }
+                    else { // Own goal not in vision
+                        seconds  = end_time.tv_sec  - start_goal.tv_sec;
+                        useconds = end_time.tv_usec - start_goal.tv_usec;
+
+                        mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+                        if(mtime>4000){
+                            cout<< "goalfinding timeout" << endl;
+                            goal_timeout_f = true;
+                        }
+                    }
+                    findGate();
+                }
+                else goal_timeout();
+                gettimeofday(&start, NULL); // Keep resetting ball_timeout when ball is in dribbler
             }
         }
         else {
-            cout << "not green" << endl;
+            cout << "Back off!" << endl;
             back_off();
         }
         // Last gate directions, true is right, false is left
@@ -113,49 +128,28 @@ int main(){
         else if (blob_data.ATTACK(cen_x)!= 0 && blob_data.ATTACK(cen_x)> 320) theirs = true;
         if (blob_data.DEFEND(cen_x) != 0 && blob_data.DEFEND(cen_x) < 320) ours = false;
         else if (blob_data.DEFEND(cen_x) != 0 && blob_data.DEFEND(cen_x) > 320) ours = true;
-
-        if (blob_data.ATTACK(area) != 0){
-            if (blob_data.ATTACK(cen_x) < 320){
-                theirs = true;
-            }
-            else{
-                theirs = false;
-            }
-        }
     }
     close_serial();
     return 0;
 }
 
-void findBall(float x, float y){
+void findBall(int max_spd, int slower_by){
 
-    rel_pos = (x-320)/320;
+    rel_pos = (blob_data.orange_cen_x-320)/320.0;
     //cout << rel_pos << endl;
     if (rel_pos > 0) { //blob right of center
-        write_spd(MAX_SPD - (int)(rel_pos*SLOWER_BY), MAX_SPD);
+        write_spd(max_spd - (int)(rel_pos*slower_by), max_spd);
     }
     else if (rel_pos < 0) { //blob left of center
-        write_spd(MAX_SPD, MAX_SPD + (int)(rel_pos*SLOWER_BY));
+        write_spd(max_spd, max_spd + (int)(rel_pos*slower_by));
     }
     else { //blob exactly in the middle
-        write_spd(MAX_SPD, MAX_SPD);
+        write_spd(max_spd, max_spd);
     }
 }
-void findBigBall(float x, float y){
 
-    rel_pos = (x-320)/320;
-    //cout << rel_pos << endl;
-    if (rel_pos > 0) { //blob right of center
-        write_spd((int)(MAX_SPD*0.4) - (int)(rel_pos*SLOWER_BY*0.6), (int)(MAX_SPD*0.4));
-    }
-    else if (rel_pos < 0) { //blob left of center
-        write_spd((int)(MAX_SPD*0.4), (int)(MAX_SPD*0.4) + (int)(rel_pos*SLOWER_BY*0.6));
-    }
-    else { //blob exactly in the middle
-        write_spd((int)(MAX_SPD*0.4), (int)(MAX_SPD*0.4));
-    }
-}
-bool findGate(double rel_pos_gate){
+bool findGate(){
+    double rel_pos_gate = (blob_data.ATTACK(cen_x)-320)/320.0;
     //cout << rel_pos_gate << endl;
     if(rel_pos_gate == -1){
         if (ours == false) { //Own gate was last left vision on the left side of the screen
@@ -318,6 +312,36 @@ void drive_ball_timeout(){
                 write_spd(-MAX_SPD, MAX_SPD);
             }
         }
+    }
+}
+
+void goal_timeout(){
+    double rel_pos_gate = (blob_data.DEFEND(cen_x)-320)/320.0;
+    //cout << rel_pos_gate << endl;
+
+    if(rel_pos_gate == -1){
+        if (theirs == false) { //Their gate last left vision on the left side of the screen
+            write_spd(-(int)(25),(int)(25));
+            //cout << "going right" << endl;
+        }
+        else {
+            write_spd((int)(25), -(int)(25));
+        }
+    }
+    else {
+        if (rel_pos_gate > 0) { //blob right of center
+            write_spd(MAX_SPD - (int)(rel_pos_gate*SLOWER_BY), MAX_SPD);
+        }
+        else if (rel_pos_gate < 0) { //blob left of center
+            write_spd(MAX_SPD, MAX_SPD + (int)(rel_pos_gate*SLOWER_BY));
+        }
+        else { //blob exactly in the middle
+            write_spd(MAX_SPD, MAX_SPD);
+        }
+    }
+    if (blob_data.DEFEND(area) > 15000){
+        goal_timeout_f = false;
+        gettimeofday(&start_goal, NULL);
     }
 }
 
@@ -484,10 +508,11 @@ int get_blobs(SEGMENTATION * segm){
     namedWindow("aken");
 
     VideoCapture capture(0);
-	capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-	capture.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+	//capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
+	//capture.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
+	//capture.set(CV_CAP_PROP_FPS, 60);
 
-    unsigned char *data = NULL;
+	unsigned char *data = NULL;
     Mat img, frame;
     int x;
 

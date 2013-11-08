@@ -28,7 +28,7 @@ bool was_close = false;
 bool ball_timeout_f = false;
 // last_drive determines which way the robot last turned during timeout. false for left, true for right.
 bool y_set=false, b_set=false, last_drive=false; //for timeout function (ball)
-
+bool gate_select = false; // false for yellow, true for blue;
 bool ours = false;
 bool theirs = false;
 volatile bool ball_in = false;
@@ -51,19 +51,23 @@ int main(){
     thread t1(get_blobs, &segm);
     thread t2(getBall);
 
+
     while (true){
         coil_ping();
         usleep(1000);
-        //cout << ball_in << endl;
 
         gettimeofday(&end_time, NULL);
         double rel_pos_gate=0;
         //cout << blob_data.ATTACK(area) << endl;
-        if (blob_data.total_green > MINGREEN) {
+        if (blob_data.total_green > MINGREEN && blob_data.ATTACK(area) < 40000 && blob_data.DEFEND(area) < 40000) {
             if(!ball_timeout_f){
                 if(b_set && y_set){
                     b_set = false;
                     y_set = false;
+                    last_y_size=0;
+                    last_b_size=0;
+                    cout<<"END TIMEOUT!"<<endl;
+                    gettimeofday(&start, NULL);
                 }
                 if(blob_data.orange_area!=0){
                     gettimeofday(&start, NULL);
@@ -73,7 +77,8 @@ int main(){
                     useconds = end_time.tv_usec - start.tv_usec;
 
                     mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
-                    if(mtime>2500){
+                    if(mtime>4000){
+                        cout<< "STOP, TIMEOUTTIME" << endl;
                         //cout<<"Timeout!"<<mtime<<endl;
                         ball_timeout_f = true;
                         b_set = false;
@@ -108,6 +113,15 @@ int main(){
         else if (blob_data.ATTACK(cen_x)!= 0 && blob_data.ATTACK(cen_x)> 320) theirs = true;
         if (blob_data.DEFEND(cen_x) != 0 && blob_data.DEFEND(cen_x) < 320) ours = false;
         else if (blob_data.DEFEND(cen_x) != 0 && blob_data.DEFEND(cen_x) > 320) ours = true;
+
+        if (blob_data.ATTACK(area) != 0){
+            if (blob_data.ATTACK(cen_x) < 320){
+                theirs = true;
+            }
+            else{
+                theirs = false;
+            }
+        }
     }
     close_serial();
     return 0;
@@ -145,19 +159,19 @@ bool findGate(double rel_pos_gate){
     //cout << rel_pos_gate << endl;
     if(rel_pos_gate == -1){
         if (ours == false) { //Own gate was last left vision on the left side of the screen
-            write_spd(-(int)(MAX_SPD*0.5),(int)(MAX_SPD*0.5));
+            write_spd(-(int)(25),(int)(25));
             //cout << "going right" << endl;
         }
         else { //blob last seen left of center or not seen at all
-            write_spd((int)(MAX_SPD*0.5), -(int)(MAX_SPD*0.5));
+            write_spd((int)(25), -(int)(25));
         }
     }
     else {
         if (rel_pos_gate > 0.05) { //blob right of center
-            write_spd((int)(-MAX_SPD*0.4*rel_pos_gate-5), (int)(MAX_SPD*0.4*rel_pos_gate+5));
+            write_spd((int)(-20*rel_pos_gate-5), (int)(20*rel_pos_gate+5));
         }
         else if (rel_pos_gate < -0.05) { //blob left of center
-            write_spd((int)(-MAX_SPD*0.4*rel_pos_gate+5), (int)(MAX_SPD*0.4*rel_pos_gate-5));
+            write_spd((int)(-20*rel_pos_gate+5), (int)(20*rel_pos_gate-5));
         }
         else { //blob in the middle 10% of vision
             write_spd(0, 0);
@@ -189,7 +203,6 @@ void write_spd(int write1, int write2){
 }
 //For determining the gate that is further away and driving towards it.
 void ball_timeout(){
-    cout<< "STOP, TIMEOUTTIME" << endl;
     bool drive_towards = false; // false for yellow, true for blue
     if(blob_data.orange_area!=0){
         ball_timeout_f=false;
@@ -197,58 +210,62 @@ void ball_timeout(){
     }
     if(blob_data.blue_area!=0 && !b_set){
         if(blob_data.blue_cen_x > 320){
-            write_spd(MAX_SPD, 0);
+            write_spd(-MAX_SPD, MAX_SPD);
             if(last_b_size < blob_data.blue_area){
                 last_b_size = blob_data.blue_area;
                 last_drive = true;
             } else {
                 b_set = true;
+                cout<<"B SET!"<<endl;
                 last_drive = true;
             }
         } else {
-            write_spd(0, MAX_SPD);
+            write_spd(MAX_SPD, -MAX_SPD);
             if(last_b_size<blob_data.blue_area){
                 last_b_size = blob_data.blue_area;
                 last_drive = false;
             } else {
                 b_set = true;
+                cout<<"B SET!"<<endl;
                 last_drive = false;
             }
         }
     } else if(blob_data.yellow_area!=0 && !y_set){
         if(blob_data.yellow_cen_x>320){
-            write_spd(MAX_SPD, 0);
+            write_spd(-MAX_SPD, MAX_SPD);
             if(last_y_size<blob_data.yellow_area){
                 last_y_size = blob_data.yellow_area;
                 last_drive = true;
             } else {
                 y_set = true;
+                cout<<"Y SET!"<<endl;
                 last_drive = true;
             }
         } else {
-            write_spd(0, MAX_SPD);
+            write_spd(MAX_SPD, -MAX_SPD);
             if(last_y_size<blob_data.yellow_area){
                 last_y_size = blob_data.yellow_area;
                 last_drive = false;
             } else {
                 y_set = true;
+                cout<<"Y SET!"<<endl;
                 last_drive = false;
             }
         }
     }
     if(b_set && y_set){
         if(last_y_size<last_b_size){
-            drive_towards = true; // blue = true, yellow = false
+            gate_select = true; // blue = true, yellow = false
         }
-        drive_ball_timeout(drive_towards);
+        drive_ball_timeout();
     }
 
 }
 //drives the robot towards the gate that is further away. last_drive is used to determine which way the robot was turning
 // to ensure a smooth transition.
-void drive_ball_timeout(bool gate_select){
-    int real_gate_pos=0, area = 0;
-    struct region *gate_reg;
+void drive_ball_timeout(){
+    int area = 0;
+    double real_gate_pos=0;
     if(gate_select){
         if(blob_data.blue_area!=0){
             area = blob_data.blue_area;
@@ -261,6 +278,7 @@ void drive_ball_timeout(bool gate_select){
                 write_spd(MAX_SPD, MAX_SPD + (int)(real_gate_pos*SLOWER_BY));
             }
             else { //blob in the middle
+
                 write_spd(MAX_SPD, MAX_SPD);
             }
             if(area>MIN_AREA){
@@ -295,9 +313,9 @@ void drive_ball_timeout(bool gate_select){
         } else {
             //False left, true right
             if(last_drive){
-                write_spd(MAX_SPD, 0);
+                write_spd(MAX_SPD, -MAX_SPD);
             } else {
-                write_spd(0, MAX_SPD);
+                write_spd(-MAX_SPD, MAX_SPD);
             }
         }
     }
@@ -308,9 +326,12 @@ void back_off(){
     write_spd(0, 0);
     usleep(100000);
     write_spd(-MAX_SPD, -MAX_SPD);
-    usleep(2000000);
-    write_spd(MAX_SPD, -MAX_SPD);
-    usleep(750000);
+    usleep(500000);
+    if (!ball_in){
+        write_spd(50, -50);
+        usleep(500000);
+        //while (blob_data.orange_area == 0 && blob_data.DEFEND(area) == 0 && blob_data.ATTACK(area) == 0);
+    }
 }
 
 char getBall(){
@@ -411,8 +432,8 @@ bool init_serial_dev(){
         }
         else if(m1[4] == '1'){
             if(m2[4] == '0'){
-                motor1 = 25;
-                motor2 = 24;
+                motor1 = 24;
+                motor2 = 25;
                 coil = 2;
             }
             else{
@@ -427,8 +448,8 @@ bool init_serial_dev(){
                 coil = 24;
             }
             else{
-                motor1 = 2;
-                motor2 = 25;
+                motor1 = 25;
+                motor2 = 2;
                 coil = 24;
             }
         }
@@ -438,6 +459,8 @@ bool init_serial_dev(){
 }
 
 void close_serial(){
+    write_spd(0, 0);
+    usleep(500000);
     RS232_CloseComport(motor1);
     RS232_CloseComport(motor2);
     RS232_CloseComport(coil);
@@ -467,7 +490,12 @@ int get_blobs(SEGMENTATION * segm){
     unsigned char *data = NULL;
     Mat img, frame;
     int x;
+
+    //int test = 0;
     while (true) {
+        //test++;
+        //cout << test << endl;
+
         capture >> img;
         cvtColor(img, frame, CV_BGR2YUV);
         data = frame.data;
@@ -559,13 +587,14 @@ int get_blobs(SEGMENTATION * segm){
             blob_data.green_cen_x = tempRegion->cen_x;
             blob_data.green_cen_y = tempRegion->cen_y;
             blob_data.total_green = 0;
+
+            //tempRegion = tempRegion->next;
+            //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(0,0,0), 2);
+            //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0, 255, 0), -1);
             while (tempRegion != NULL) {
                 blob_data.total_green += tempRegion->area;
                 tempRegion = tempRegion->next;
             }
-            //tempRegion = tempRegion->next;
-            //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-            //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0, 255, 0), -1);
         }
         else {
             blob_data.green_area = 0;

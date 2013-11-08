@@ -1,19 +1,18 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
 
-#define MIN_AREA 100
-#define CURRENT_GATE 1
+#define MIN_AREA 8000
 #define BAUDRATE 115200
 #define VASAK motor2
 #define PAREM motor1
-#define DEFEND(TOKEN) yellow ## _ ## TOKEN
-#define ATTACK(TOKEN) blue ## _ ## TOKEN
-#define MINGREEN 92160
-#define MINBALL 2000
+#define DEFEND(TOKEN) blue ## _ ## TOKEN
+#define ATTACK(TOKEN) yellow ## _ ## TOKEN
+#define MINGREEN 76800
+#define MINBALL 30
 #define MINGOAL_YELLOW 1000
 #define MINGOAL_BLUE 1000
-#define MAX_SPD 50
-#define SLOWER_BY 30
+#define MAX_SPD 70
+#define SLOWER_BY 60
 
 struct blobs{
     int orange_area;
@@ -49,7 +48,7 @@ void findBigBall(float x, float y);
 bool findGate(double rel_pos_gate);
 void write_spd(int write1, int write2);
 void ball_timeout();
-void drive_ball_timeout(bool gate_select);
+void drive_ball_timeout();
 void back_off();
 char getBall();
 int get_blobs(SEGMENTATION * segm);

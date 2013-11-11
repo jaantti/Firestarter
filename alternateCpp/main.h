@@ -11,8 +11,8 @@
 #define MINBALL 30
 #define MINGOAL_YELLOW 1000
 #define MINGOAL_BLUE 1000
-#define MAX_SPD 70
-#define SLOWER_BY 60
+#define MAX_SPD 75
+#define SLOWER_BY 40
 
 struct blobs{
     int orange_area;
@@ -21,9 +21,13 @@ struct blobs{
     int blue_area;
     int blue_cen_x;
     int blue_cen_y;
+    int blue_x1;
+    int blue_x2;
     int yellow_area;
     int yellow_cen_x;
     int yellow_cen_y;
+    int yellow_x1;
+    int yellow_x2;
     int green_area;
     int green_cen_x;
     int green_cen_y;

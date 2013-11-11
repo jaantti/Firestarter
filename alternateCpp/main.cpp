@@ -12,6 +12,7 @@
 #include "main.h"
 #include <thread>
 
+
 using namespace cv;
 using namespace std;
 
@@ -22,14 +23,14 @@ int last_y_size=0, last_b_size=0; // for timeout function (ball)
 
 double rel_pos = 0;
 double last_gate_pos = 0;
-int rel_pos_ball = 0;
+bool last_ball_pos = false; // false for left
 
 bool was_close = false;
 bool ball_timeout_f = false;
 // last_drive determines which way the robot last turned during timeout. false for left, true for right.
 bool y_set=false, b_set=false, last_drive=false; //for timeout function (ball)
 bool gate_select = false; // false for yellow, true for blue;
-
+bool ball_lost = false; //For experimental ball-lost-from-dribbler code
 bool goal_timeout_f = false;
 
 bool ours = false;
@@ -61,8 +62,9 @@ int main(){
         usleep(100000);
 
         gettimeofday(&end_time, NULL);
-        //cout << ours << " " << theirs << endl;
-        if (blob_data.total_green > MINGREEN && blob_data.ATTACK(area) < 40000 && blob_data.DEFEND(area) < 40000) {
+        //cout << "Ball in " << ball_in << endl;
+        if (
+            blob_data.total_green > MINGREEN && blob_data.ATTACK(area) < 40000 && blob_data.DEFEND(area) < 40000) {
             if(!ball_in) {
                 if(!ball_timeout_f){
                     if(b_set && y_set){
@@ -75,12 +77,15 @@ int main(){
                     }
                     if(blob_data.orange_area!=0){
                         gettimeofday(&start, NULL);
+                        //cout<<"AREAZERO"<<endl;
                     }
                     else { // No balls currently visible
                         seconds  = end_time.tv_sec  - start.tv_sec;
                         useconds = end_time.tv_usec - start.tv_usec;
 
+
                         mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
+                        cout<<mtime<<endl;
                         if(mtime>4000){
                             cout<< "STOP, TIMEOUTTIME" << endl;
                             //cout<<"Timeout!"<<mtime<<endl;
@@ -102,11 +107,13 @@ int main(){
                     //cout<<"Timeout!"<<mtime<<endl;
                     if (blob_data.ATTACK(area) != 0) {
                         gettimeofday(&start_goal, NULL);
+                        goal_timeout_f = false;
                     }
                     else { // Own goal not in vision
                         seconds  = end_time.tv_sec  - start_goal.tv_sec;
                         useconds = end_time.tv_usec - start_goal.tv_usec;
 
+                        cout<<mtime<<endl;
                         mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
                         if(mtime>4000){
                             cout<< "goalfinding timeout" << endl;
@@ -137,20 +144,35 @@ void findBall(int max_spd, int slower_by){
 
     rel_pos = (blob_data.orange_cen_x-320)/320.0;
     //cout << rel_pos << endl;
-    if (rel_pos > 0) { //blob right of center
-        write_spd(max_spd - (int)(rel_pos*slower_by), max_spd);
+    if (rel_pos == -1) {
+        if (last_ball_pos == true) {
+            write_spd(-(int)(25),(int)(25));
+            //cout << "going right" << endl;
+        }
+        else { //blob last seen left of center or not seen at all
+            write_spd((int)(25), -(int)(25));
+        }
     }
-    else if (rel_pos < 0) { //blob left of center
-        write_spd(max_spd, max_spd + (int)(rel_pos*slower_by));
-    }
-    else { //blob exactly in the middle
-        write_spd(max_spd, max_spd);
+    else {
+        if (rel_pos > 0) { //blob right of center
+            write_spd(max_spd - (int)(rel_pos*slower_by), max_spd);
+            last_ball_pos = true;
+        }
+        else if (rel_pos < 0) { //blob left of center
+            write_spd(max_spd, max_spd + (int)(rel_pos*slower_by));
+            last_ball_pos = false;
+        }
+        else { //blob exactly in the middle
+            write_spd(max_spd, max_spd);
+        }
     }
 }
 
 bool findGate(){
     double rel_pos_gate = (blob_data.ATTACK(cen_x)-320)/320.0;
-    //cout << rel_pos_gate << endl;
+    double left_edge = (blob_data.ATTACK(x1)-320)/320.0;
+    double right_edge = (blob_data.ATTACK(x2)-320)/320.0;
+    cout << left_edge << " " << right_edge << endl;
     if(rel_pos_gate == -1){
         if (ours == false) { //Own gate was last left vision on the left side of the screen
             write_spd(-(int)(25),(int)(25));
@@ -161,17 +183,18 @@ bool findGate(){
         }
     }
     else {
-        if (rel_pos_gate > 0.05) { //blob right of center
+        if (left_edge > -0.1) { //blob right of center
             write_spd((int)(-20*rel_pos_gate-5), (int)(20*rel_pos_gate+5));
         }
-        else if (rel_pos_gate < -0.05) { //blob left of center
+        else if (right_edge < 0.1) { //blob left of center
             write_spd((int)(-20*rel_pos_gate+5), (int)(20*rel_pos_gate-5));
         }
         else { //blob in the middle 10% of vision
             write_spd(0, 0);
             usleep(100000);
-            rel_pos_gate = (blob_data.ATTACK(cen_x)-320)/320.0;
-            if (rel_pos_gate < 0.05 && rel_pos_gate > -0.05) {
+            double left_edge = (blob_data.ATTACK(x1)-320)/320.0;
+            double right_edge = (blob_data.ATTACK(x2)-320)/320.0;
+            if (left_edge < -0.1 && right_edge > 0.1) {
                 coil_boom();
                 cout << "BOOM!" << endl;
                 return true;
@@ -250,6 +273,8 @@ void ball_timeout(){
     if(b_set && y_set){
         if(last_y_size<last_b_size){
             gate_select = true; // blue = true, yellow = false
+        } else {
+            gate_select = false;
         }
         drive_ball_timeout();
     }
@@ -339,7 +364,7 @@ void goal_timeout(){
             write_spd(MAX_SPD, MAX_SPD);
         }
     }
-    if (blob_data.DEFEND(area) > 15000){
+    if (blob_data.DEFEND(area) > 10000 || blob_data.ATTACK(area) != 0){
         goal_timeout_f = false;
         gettimeofday(&start_goal, NULL);
     }
@@ -365,7 +390,7 @@ char getBall(){
 
         RS232_SendBuf(PAREM, write_buf, sizeof(write_buf));
         usleep(50000);
-        int n = RS232_PollComport(PAREM, read_buf, sizeof(read_buf));
+        RS232_PollComport(PAREM, read_buf, sizeof(read_buf));
 
         if (read_buf[0]=='<' && read_buf[3]=='1'){
             ball_in = true;
@@ -567,6 +592,8 @@ int get_blobs(SEGMENTATION * segm){
                 blob_data.blue_area = x;
                 blob_data.blue_cen_x = tempRegion->cen_x;
                 blob_data.blue_cen_y = tempRegion->cen_y;
+                blob_data.blue_x1 = tempRegion->x1;
+                blob_data.blue_x2 = tempRegion->x2;
                 rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(0, 255, 255), 2);
             }
             else {
@@ -590,6 +617,8 @@ int get_blobs(SEGMENTATION * segm){
                 blob_data.yellow_area = x;
                 blob_data.yellow_cen_x = tempRegion->cen_x;
                 blob_data.yellow_cen_y = tempRegion->cen_y;
+                blob_data.yellow_x1 = tempRegion->x1;
+                blob_data.yellow_x2 = tempRegion->x2;
                 rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
             }
             else {

@@ -30,9 +30,9 @@ bool ball_timeout_f = false;
 // last_drive determines which way the robot last turned during timeout. false for left, true for right.
 bool y_set=false, b_set=false, last_drive=false; //for timeout function (ball)
 bool gate_select = false; // false for yellow, true for blue;
-bool ball_lost = false; //For experimental ball-lost-from-dribbler code
+bool ball_kicked = false; //For experimental ball-lost-from-dribbler code
 bool goal_timeout_f = false;
-
+volatile bool last_ball_in = false;
 bool ours = false;
 bool theirs = false;
 volatile bool ball_in = false;
@@ -66,6 +66,17 @@ int main(){
         if (
             blob_data.total_green > MINGREEN && blob_data.ATTACK(area) < 40000 && blob_data.DEFEND(area) < 40000) {
             if(!ball_in) {
+                if(last_ball_in && ball_kicked ){
+                    last_ball_in = false;
+                    ball_kicked = false;
+                } else if (last_ball_in) {
+                    //backoffcodegoeshere
+                    write_spd(0, 0);
+                    usleep(10000);
+                    write_spd(-30, -30);
+                    usleep(500000);
+                    last_ball_in = false;
+                }
                 if(!ball_timeout_f){
                     if(b_set && y_set){
                         b_set = false;
@@ -97,7 +108,7 @@ int main(){
                     }
                     //cout << blob_data.orange_area << endl;
                     if (blob_data.orange_cen_y < 300) findBall(MAX_SPD, SLOWER_BY);
-                    else findBall(MAX_SPD*0.4, SLOWER_BY*0.5);
+                    else findBall(30, 20);
                 }
                 else ball_timeout();
                 gettimeofday(&start_goal, NULL); // Keep resetting goal_timeout when no ball in dribbler
@@ -227,7 +238,7 @@ void ball_timeout(){
     }
     if(blob_data.blue_area!=0 && !b_set){
         if(blob_data.blue_cen_x > 320){
-            write_spd(-MAX_SPD, MAX_SPD);
+            write_spd(-25, 25);
             if(last_b_size < blob_data.blue_area){
                 last_b_size = blob_data.blue_area;
                 last_drive = true;
@@ -237,7 +248,7 @@ void ball_timeout(){
                 last_drive = true;
             }
         } else {
-            write_spd(MAX_SPD, -MAX_SPD);
+            write_spd(25, -25);
             if(last_b_size<blob_data.blue_area){
                 last_b_size = blob_data.blue_area;
                 last_drive = false;
@@ -249,7 +260,7 @@ void ball_timeout(){
         }
     } else if(blob_data.yellow_area!=0 && !y_set){
         if(blob_data.yellow_cen_x>320){
-            write_spd(-MAX_SPD, MAX_SPD);
+            write_spd(-25, 25);
             if(last_y_size<blob_data.yellow_area){
                 last_y_size = blob_data.yellow_area;
                 last_drive = true;
@@ -259,7 +270,7 @@ void ball_timeout(){
                 last_drive = true;
             }
         } else {
-            write_spd(MAX_SPD, -MAX_SPD);
+            write_spd(25, -25);
             if(last_y_size<blob_data.yellow_area){
                 last_y_size = blob_data.yellow_area;
                 last_drive = false;
@@ -394,6 +405,7 @@ char getBall(){
 
         if (read_buf[0]=='<' && read_buf[3]=='1'){
             ball_in = true;
+            last_ball_in = true;
             //cout<<"Ball in"<<endl;
         }
         else if (read_buf[0]=='<' && read_buf[3]=='0') {
@@ -517,6 +529,7 @@ void close_serial(){
 
 void coil_boom(){
     RS232_cputs(coil, "k1000\n");
+    ball_kicked = true;
     usleep(100000);
 
 }

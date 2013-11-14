@@ -11,11 +11,23 @@
 #include <sys/time.h>
 #include "main.h"
 #include <thread>
+#include "r_video.h"
 
-
-using namespace cv;
 using namespace std;
+///
 
+    IMAGE_CONTEXT *video, *thresh;
+    IMAGE_CONTEXT *thresholds;
+
+    CAM_SETTINGS cs;
+    SUPPORTED_SETTINGS ss;
+    CAMERA_CONTROLS cam_ctl[100];
+    char menu_names[32][100];
+    int cam_ctl_c = 0;
+    int menu_c = 0;
+
+    uchar *yuv_frame = new uchar[3*640*480];
+///
 int motor1 = 24; //vasak
 int motor2 = 25; //parem   24 /dev/ttyACM0, 25 /dev/ttyACM1
 int coil = 2; // /dev/ttyACM2
@@ -38,6 +50,7 @@ bool theirs = false;
 volatile bool ball_in = false;
 
 blobs blob_data;
+int ball_list[10][2] = {{0}};
 
 struct timeval start, end_time, start_goal;
 long mtime, seconds, useconds, fps;
@@ -59,12 +72,15 @@ int main(){
 
     while (true){
         coil_ping();
-        usleep(100000);
+        usleep(1000);
 
         gettimeofday(&end_time, NULL);
         //cout << "Ball in " << ball_in << endl;
+        //cout << "Green area : " <<blob_data.total_green << endl;
+        //cout << ball_list[2][0] << endl;
+
         if (
-            blob_data.total_green > MINGREEN && blob_data.ATTACK(area) < 40000 && blob_data.DEFEND(area) < 40000) {
+            blob_data.total_green > MINGREEN && blob_data.ATTACK(area) < 50000 && blob_data.DEFEND(area) < 50000) {
             if(!ball_in) {
                 if(last_ball_in && ball_kicked ){
                     last_ball_in = false;
@@ -96,7 +112,7 @@ int main(){
 
 
                         mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
-                        cout<<mtime<<endl;
+                        //cout<<mtime<<endl;
                         if(mtime>4000){
                             cout<< "STOP, TIMEOUTTIME" << endl;
                             //cout<<"Timeout!"<<mtime<<endl;
@@ -107,8 +123,7 @@ int main(){
                         }
                     }
                     //cout << blob_data.orange_area << endl;
-                    if (blob_data.orange_cen_y < 300) findBall(MAX_SPD, SLOWER_BY);
-                    else findBall(30, 20);
+                    findBall(MAX_SPD, SLOWER_BY);
                 }
                 else ball_timeout();
                 gettimeofday(&start_goal, NULL); // Keep resetting goal_timeout when no ball in dribbler
@@ -124,7 +139,7 @@ int main(){
                         seconds  = end_time.tv_sec  - start_goal.tv_sec;
                         useconds = end_time.tv_usec - start_goal.tv_usec;
 
-                        cout<<mtime<<endl;
+                        //cout<<mtime<<endl;
                         mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
                         if(mtime>4000){
                             cout<< "goalfinding timeout" << endl;
@@ -153,8 +168,21 @@ int main(){
 
 void findBall(int max_spd, int slower_by){
 
+    int spd;
+    int slwb;
     rel_pos = (blob_data.orange_cen_x-320)/320.0;
-    //cout << rel_pos << endl;
+
+    if (blob_data.orange_cen_y < 150){
+        spd = max_spd;
+        slwb = slower_by;
+    }
+    else {
+        //cout << (240-(blob_data.orange_cen_y-240))/240*0.85+0.15 << endl;
+        spd = ((330-(blob_data.orange_cen_y-150))/330.0*0.85+0.15)*max_spd;
+        slwb = ((330-(blob_data.orange_cen_y-150))/330.0*0.56+0.44)*slower_by;
+    }
+
+
     if (rel_pos == -1) {
         if (last_ball_pos == true) {
             write_spd(-(int)(25),(int)(25));
@@ -166,15 +194,15 @@ void findBall(int max_spd, int slower_by){
     }
     else {
         if (rel_pos > 0) { //blob right of center
-            write_spd(max_spd - (int)(rel_pos*slower_by), max_spd);
+            write_spd(spd - (int)(rel_pos*slwb), spd);
             last_ball_pos = true;
         }
         else if (rel_pos < 0) { //blob left of center
-            write_spd(max_spd, max_spd + (int)(rel_pos*slower_by));
+            write_spd(spd, spd + (int)(rel_pos*slwb));
             last_ball_pos = false;
         }
         else { //blob exactly in the middle
-            write_spd(max_spd, max_spd);
+            write_spd(spd, spd);
         }
     }
 }
@@ -183,7 +211,9 @@ bool findGate(){
     double rel_pos_gate = (blob_data.ATTACK(cen_x)-320)/320.0;
     double left_edge = (blob_data.ATTACK(x1)-320)/320.0;
     double right_edge = (blob_data.ATTACK(x2)-320)/320.0;
-    cout << left_edge << " " << right_edge << endl;
+    double gate_width = abs(right_edge - left_edge);
+    //cout << left_edge << " " << right_edge << endl;
+    //cout << rel_pos_gate << " " << gate_width << endl;
     if(rel_pos_gate == -1){
         if (ours == false) { //Own gate was last left vision on the left side of the screen
             write_spd(-(int)(25),(int)(25));
@@ -194,18 +224,28 @@ bool findGate(){
         }
     }
     else {
-        if (left_edge > -0.1) { //blob right of center
-            write_spd((int)(-20*rel_pos_gate-5), (int)(20*rel_pos_gate+5));
-        }
-        else if (right_edge < 0.1) { //blob left of center
+        if (rel_pos_gate < -gate_width*0.25){// || rel_pos_gate < -0.05) { //blob right of center
             write_spd((int)(-20*rel_pos_gate+5), (int)(20*rel_pos_gate-5));
+        }
+        else if (rel_pos_gate > gate_width*0.25){// || rel_pos_gate > 0.05) { //blob left of center
+            write_spd((int)(-20*rel_pos_gate-5), (int)(20*rel_pos_gate+5));
         }
         else { //blob in the middle 10% of vision
             write_spd(0, 0);
             usleep(100000);
+            double rel_pos_gate = (blob_data.ATTACK(cen_x)-320)/320.0;
             double left_edge = (blob_data.ATTACK(x1)-320)/320.0;
             double right_edge = (blob_data.ATTACK(x2)-320)/320.0;
-            if (left_edge < -0.1 && right_edge > 0.1) {
+            double gate_width = abs(right_edge - left_edge);
+            if ((rel_pos_gate > -gate_width*0.25) && (rel_pos_gate < gate_width*0.25)) {
+                for (int i = 0; i < 10; i++){
+                    if (ball_list[i][0] == 0) break;
+                    if (ball_list[i][0] < 320 && ball_list[i][1] > 320) {
+                        cout << "Ball in the way" << endl;
+                        // ADD MANUVER
+                        return true;
+                    }
+                }
                 coil_boom();
                 cout << "BOOM!" << endl;
                 return true;
@@ -217,7 +257,7 @@ bool findGate(){
 void write_spd(int write1, int write2){
     stringstream ss1, ss2;
 
-    //cout << write1 << " " << write2 << endl;
+    cout << write1 << " " << write2 << endl;
 
     ss1 << "sd" << write1 << "\n";
     ss2 << "sd" << -write2 << "\n";
@@ -543,162 +583,172 @@ void coil_charge(){
 }
 
 int get_blobs(SEGMENTATION * segm){
-    namedWindow("aken");
+    struct timeval fps_start, fps_end;
+    long sec_passed, fps_video;
+    FILE *in;
+    in = fopen( "conf", "r" );
+    uchar thres[3][256];
+    uchar ad_thres[3][256];
+    if( in ) {
+        for( int i = 0; i < 3; i++ ) {
+            for( int j = 0; j < 256; j++ ) fscanf( in, "%c", &thres[i][j] );
+            for( int j = 0; j < 256; j++ ) fscanf( in, "%c", &ad_thres[i][j] );
+        }
 
-    VideoCapture capture(0);
-	//capture.set(CV_CAP_PROP_FRAME_WIDTH, 640);
-	//capture.set(CV_CAP_PROP_FRAME_HEIGHT, 480);
-	//capture.set(CV_CAP_PROP_FPS, 60);
+        fclose(in);
+    } else {
+        printf("Error. Can't open the threshold file\n");
+        exit(0);
+    }
+    int vx = 627, vy = 282, tx = 1279, ty = 298;
+    open_device( "/dev/video0" );
+    init_device( "/dev/video0" );
+    uchar **fr;
+    uchar *frame = NULL;
+    get_camera_settings( &cs );
+    get_camera_controls( cam_ctl, menu_names, &cam_ctl_c, &menu_c );
+    get_supported_settings( cs, &ss );
+    int gw = cs.width;
+    //cout<<ss.height<<"  "<<ss.width<<endl;
+    int gh = cs.height;
+    start_capturing();
+    segm->readThresholds("conf");
+    video = new_window( "Video", vx, vy, gw, gh );
+    thresh = new_window( "Threshold", vx, vy, gw, gh);
+    int count = 0;
+    gettimeofday(&fps_start, NULL);
+    while(true) {
+        frame = read_frame();
+        if( frame ) {
+            //count++;
+            if( strcmp( "YUYV", cs.pix_fmt ) == 0 ) set_working_frame_yuyv( frame, gw, gh);
+            fr = get_working_frame();
+            show_video(video, fr);
+            show_threshold(thresh, fr, thres, GREEN);
 
-	unsigned char *data = NULL;
-    Mat img, frame;
-    int x;
 
-    //int test = 0;
-    while (true) {
-        //test++;
-        //cout << test << endl;
+        //if (waitKey(10) == 27) break;
+            segm->thresholdImage(frame);
+            segm->EncodeRuns();
+            segm->ConnectComponents();
+            segm->ExtractRegions();
+            segm->SeparateRegions();
+            segm->SortRegions();
 
-        capture >> img;
-        cvtColor(img, frame, CV_BGR2YUV);
-        data = frame.data;
-        segm->readThresholds("conf");
+            struct region *tempRegion=NULL;
+            if(segm->colors[ORANGE].list!=NULL){
+                tempRegion = segm->colors[ORANGE].list;
+                if (tempRegion->area > MINBALL) {
+                    blob_data.orange_area = tempRegion->area;
+                    blob_data.orange_cen_x = tempRegion->cen_x;
+                    blob_data.orange_cen_y = tempRegion->cen_y;
+                    //cout<<"ORANGE:"<<blob_data.orange_cen_x<<";"<<blob_data.orange_cen_y<<endl;
+                }
+                else {
+                    blob_data.orange_area = 0;
+                    blob_data.orange_cen_x = 0;
+                    blob_data.orange_cen_y = 0;
+                }
+                //tempRegion = tempRegion->next;
+                //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+                //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
 
-        segm->thresholdImage(data);
-        segm->EncodeRuns();
-        segm->ConnectComponents();
-        segm->ExtractRegions();
-        segm->SeparateRegions();
-        segm->SortRegions();
-
-        struct region *tempRegion=NULL;
-        if(segm->colors[BLACK].list!=NULL){
-            tempRegion = segm->colors[BLACK].list;
-            if (tempRegion->area > MINBALL) {
-                blob_data.orange_area = tempRegion->area;
-                blob_data.orange_cen_x = tempRegion->cen_x;
-                blob_data.orange_cen_y = tempRegion->cen_y;
+                for (int i = 0; i < 10; i++){
+                    if (tempRegion == NULL || tempRegion->area < MINBALL){
+                        break;
+                    }
+                    ball_list[i][0] = tempRegion->x1;
+                    ball_list[i][1] = tempRegion->x2;
+                    //cout << ball_list[i][0] << endl;
+                    tempRegion = tempRegion->next;
+                }
+                while (tempRegion != NULL && tempRegion->area > MINBALL) {
+                    //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
+                    tempRegion = tempRegion->next;
+                }
             }
             else {
                 blob_data.orange_area = 0;
                 blob_data.orange_cen_x = 0;
                 blob_data.orange_cen_y = 0;
             }
-            //tempRegion = tempRegion->next;
-            //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-            //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
-            while (tempRegion != NULL && tempRegion->area > MINBALL) {
-                circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
-                tempRegion = tempRegion->next;
-            }
-        }
-        else {
-            blob_data.orange_area = 0;
-            blob_data.orange_cen_x = 0;
-            blob_data.orange_cen_y = 0;
-        }
-        if(segm->colors[YELLOW].list!=NULL){
-            tempRegion = segm->colors[YELLOW].list;
-            x = tempRegion->area;
-            //cout << x << endl;
-            if (x > MINGOAL_BLUE) {
-                blob_data.blue_area = x;
-                blob_data.blue_cen_x = tempRegion->cen_x;
-                blob_data.blue_cen_y = tempRegion->cen_y;
-                blob_data.blue_x1 = tempRegion->x1;
-                blob_data.blue_x2 = tempRegion->x2;
-                rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(0, 255, 255), 2);
+            if(segm->colors[BLUE].list!=NULL){
+                tempRegion = segm->colors[BLUE].list;
+                if (tempRegion->area > MINGOAL_BLUE) {
+                    blob_data.blue_area = tempRegion->area;
+                    blob_data.blue_cen_x = tempRegion->cen_x;
+                    blob_data.blue_cen_y = tempRegion->cen_y;
+                    blob_data.blue_x1 = tempRegion->x1;
+                    blob_data.blue_x2 = tempRegion->x2;
+                    //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(0, 255, 255), 2);
+                }
+                else {
+                    blob_data.blue_area = 0;
+                    blob_data.blue_cen_x = 0;
+                    blob_data.blue_cen_y = 0;
+                }
+                //tempRegion = tempRegion->next;
+
+                //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(255,0,0), -1);
             }
             else {
                 blob_data.blue_area = 0;
                 blob_data.blue_cen_x = 0;
                 blob_data.blue_cen_y = 0;
             }
-            //tempRegion = tempRegion->next;
+            if(segm->colors[YELLOW].list!=NULL){
+                tempRegion = segm->colors[YELLOW].list;
+                if (tempRegion->area > MINGOAL_YELLOW){
+                    blob_data.yellow_area = tempRegion->area;
+                    blob_data.yellow_cen_x = tempRegion->cen_x;
+                    blob_data.yellow_cen_y = tempRegion->cen_y;
+                    blob_data.yellow_x1 = tempRegion->x1;
+                    blob_data.yellow_x2 = tempRegion->x2;
+                    //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+                }
+                else {
+                    blob_data.yellow_area = 0;
+                    blob_data.yellow_cen_x = 0;
+                    blob_data.yellow_cen_y = 0;
+                }
+                //tempRegion = tempRegion->next;
 
-            //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(255,0,0), -1);
-        }
-        else {
-            blob_data.blue_area = 0;
-            blob_data.blue_cen_x = 0;
-            blob_data.blue_cen_y = 0;
-        }
-        if(segm->colors[BLUE].list!=NULL){
-            tempRegion = segm->colors[BLUE].list;
-            x = tempRegion->area;
-            if (x > MINGOAL_YELLOW){
-                blob_data.yellow_area = x;
-                blob_data.yellow_cen_x = tempRegion->cen_x;
-                blob_data.yellow_cen_y = tempRegion->cen_y;
-                blob_data.yellow_x1 = tempRegion->x1;
-                blob_data.yellow_x2 = tempRegion->x2;
-                rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
+                //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,255,255), -1);
             }
             else {
                 blob_data.yellow_area = 0;
                 blob_data.yellow_cen_x = 0;
                 blob_data.yellow_cen_y = 0;
             }
-            //tempRegion = tempRegion->next;
+            if(segm->colors[GREEN].list!=NULL){
+                tempRegion = segm->colors[GREEN].list;
+                blob_data.green_area = tempRegion->area;
+                blob_data.green_cen_x = tempRegion->cen_x;
+                blob_data.green_cen_y = tempRegion->cen_y;
+                blob_data.total_green = 0;
 
-            //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,255,255), -1);
-        }
-        else {
-            blob_data.yellow_area = 0;
-            blob_data.yellow_cen_x = 0;
-            blob_data.yellow_cen_y = 0;
-        }
-        if(segm->colors[ORANGE].list!=NULL){
-            tempRegion = segm->colors[ORANGE].list;
-            blob_data.green_area = tempRegion->area;
-            blob_data.green_cen_x = tempRegion->cen_x;
-            blob_data.green_cen_y = tempRegion->cen_y;
-            blob_data.total_green = 0;
-
-            //tempRegion = tempRegion->next;
-            //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(0,0,0), 2);
-            //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0, 255, 0), -1);
-            while (tempRegion != NULL) {
-                blob_data.total_green += tempRegion->area;
-                tempRegion = tempRegion->next;
+                //draw_dot(blob_data.green_cen_x,blob_data.green_cen_y);
+                //tempRegion = tempRegion->next;
+                //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(0,0,0), 2);
+                //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0, 255, 0), -1);
+                while (tempRegion != NULL) {
+                    blob_data.total_green += tempRegion->area;
+                    tempRegion = tempRegion->next;
+                }
             }
+            else {
+                blob_data.green_area = 0;
+                blob_data.green_cen_x = 0;
+                blob_data.green_cen_y = 0;
+            }
+            /*
+            gettimeofday(&fps_end, NULL);
+            sec_passed = fps_end.tv_sec - fps_start.tv_sec;
+            cout<<count/sec_passed<<endl;*/
         }
-        else {
-            blob_data.green_area = 0;
-            blob_data.green_cen_x = 0;
-            blob_data.green_cen_y = 0;
-        }
-        if(segm->colors[GREEN].list!=NULL){
-            tempRegion = segm->colors[GREEN].list;
-            blob_data.black_area = tempRegion->area;
-            blob_data.black_cen_x = tempRegion->cen_x;
-            blob_data.black_cen_y = tempRegion->cen_y;
-            //tempRegion = tempRegion->next;
-            //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-            //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0, 0, 0), -1);
-        }
-        else {
-            blob_data.black_area = 0;
-            blob_data.black_cen_x = 0;
-            blob_data.black_cen_y = 0;
-        }
-        if(segm->colors[WHITE].list!=NULL){
-            tempRegion = segm->colors[WHITE].list;
-            blob_data.white_area = tempRegion->area;
-            blob_data.white_cen_x = tempRegion->cen_x;
-            blob_data.white_cen_y = tempRegion->cen_y;
-            //tempRegion = tempRegion->next;
-            //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
-            //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(255, 255, 255), -1);
-        }
-        else {
-            blob_data.white_area = 0;
-            blob_data.white_cen_x = 0;
-            blob_data.white_cen_y = 0;
-        }
-        imshow("aken", img);
-        if (waitKey(10) == 27) break;
+
     }
+
     close_serial();
     exit(0);
     return(0);

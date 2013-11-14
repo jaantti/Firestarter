@@ -15,7 +15,7 @@ uchar last_thres[3][256];
 
 
 
-IMAGE_CONTEXT *new_window( const char *wnd_name, int x, int y, int width, int height )
+IMAGE_CONTEXT *new_window( char *wnd_name, int x, int y, int width, int height )
 {
     IMAGE_CONTEXT *img_ctx;
     img_ctx = new IMAGE_CONTEXT;
@@ -68,7 +68,7 @@ IMAGE_CONTEXT *new_window( const char *wnd_name, int x, int y, int width, int he
 
 
 // Reading the data from memory, converting it to RGB, and then showing the picture
-void show_video( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color, int bf, int bc, bool *halt )
+void show_video( IMAGE_CONTEXT *image_ctx, uchar **frame)
 {
 	XImage *xImage1 = image_ctx->xImage;
 	XEvent event;
@@ -76,7 +76,6 @@ void show_video( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], i
 	uchar Y, U, V;
 	uchar R, G, B;
 	int pix_c = 0;
-	int by_s, by_e, bx_s, bx_e, ys, ye, us, ue, vs, ve;
 
 
 	uchar *imageLine1 = (uchar*) xImage1 -> data;
@@ -102,59 +101,12 @@ void show_video( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], i
 
 	image_put( image_ctx );
 
-	if ( XPending( image_ctx->display ) > 0 ) {
-		XNextEvent( image_ctx->display, &event );
-
-
-		if( event.type == KeyPress ) {
-		    if( event.xkey.keycode == 65 ) {     // if SPACE is pressed
-                if( *halt == false ) *halt = true;
-                else *halt = false;
-		    } else
-                memcpy( thres, last_thres, 768 );
-		}
-
-        if( event.type == ButtonPress ) {
-
-            memcpy( last_thres, thres, 768 );
-            by_s = 0; by_e = g_height; bx_s = 0; bx_e = g_width;
-
-            if( event.xbutton.y - bf + 1 >= 0 ) by_s = event.xbutton.y - bf + 1;
-            if( event.xbutton.y + bf <= g_height ) by_e = event.xbutton.y + bf;
-            if( event.xbutton.x - bf + 1 >= 0 ) bx_s = event.xbutton.x - bf + 1;
-            if( event.xbutton.x + bf <= g_width ) bx_e = event.xbutton.x + bf;
-
-            for( int i = by_s; i < by_e; i++ ) for( int j = bx_s; j < bx_e; j++ ) {
-
-                Y = frame[i][ 3*j + 0 ];
-                U = frame[i][ 3*j + 1 ];
-                V = frame[i][ 3*j + 2 ];
-
-                ys = 0;
-                ye = 256;
-                us = 0;
-                ue = 256;
-                vs = 0;
-                ve = 256;
-                if( Y - bc + 1 >= 0 ) ys = Y - bc + 1;
-                if( Y + bc <= 256 ) ye = Y + bc;
-                if( U - bc + 1 >= 0 ) us = U - bc + 1;
-                if( U + bc <= 256 ) ue = U + bc;
-                if( V - bc + 1 >= 0 ) vs = V - bc + 1;
-                if( V + bc <= 256 ) ve = V + bc;
-
-
-                for( int k = ys; k < ye; k++ ) thres[0][k] |= 1 << color;
-                for( int k = us; k < ue; k++ ) thres[1][k] |= 1 << color;
-                for( int k = vs; k < ve; k++ ) thres[2][k] |= 1 << color;
-            }
-        }
-	}
+	XPending( image_ctx->display);
 }
 
 
 
-void show_threshold( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color, int bf, int bc )
+void show_threshold( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color)
 {
     XImage *xImage1 = image_ctx->xImage;
     XEvent event;
@@ -188,51 +140,7 @@ void show_threshold( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256
 
 
 
-	if ( XPending( image_ctx->display ) > 0 ) {
-
-	    XNextEvent( image_ctx->display, &event );
-
-	    if( event.type == KeyPress ) {
-	        memcpy( thres, last_thres, 768 );
-	    }
-
-	    if( event.type == ButtonPress ) {
-
-            memcpy( last_thres, thres, 768 );
-
-            by_s = 0; by_e = g_height; bx_s = 0; bx_e = g_width;
-
-            if( event.xbutton.y - bf + 1 >= 0 ) by_s = event.xbutton.y - bf + 1;
-            if( event.xbutton.y + bf <= g_height ) by_e = event.xbutton.y + bf;
-            if( event.xbutton.x - bf + 1 >= 0 ) bx_s = event.xbutton.x - bf + 1;
-            if( event.xbutton.x + bf <= g_width ) bx_e = event.xbutton.x + bf;
-
-            for( int i = by_s; i < by_e; i++ ) for( int j = bx_s; j < bx_e; j++ ) {
-
-                Y = frame[i][ 3*j + 0 ];
-                U = frame[i][ 3*j + 1 ];
-                V = frame[i][ 3*j + 2 ];
-
-                ys = 0;
-                ye = 256;
-                us = 0;
-                ue = 256;
-                vs = 0;
-                ve = 256;
-                if( Y - bc + 1 >= 0 ) ys = Y - bc + 1;
-                if( Y + bc <= 256 ) ye = Y + bc;
-                if( U - bc + 1 >= 0 ) us = U - bc + 1;
-                if( U + bc <= 256 ) ue = U + bc;
-                if( V - bc + 1 >= 0 ) vs = V - bc + 1;
-                if( V + bc <= 256 ) ve = V + bc;
-
-
-                for( int k = ys; k < ye; k++ ) thres[0][k] &= ~( 1 << color );
-                for( int k = us; k < ue; k++ ) thres[1][k] &= ~( 1 << color );
-                for( int k = vs; k < ve; k++ ) thres[2][k] &= ~( 1 << color );
-            }
-	    }
-	}
+    XPending( image_ctx->display );
 }
 
 

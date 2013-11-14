@@ -23,7 +23,7 @@
 
 
 #define N_BUFFERS 4
-
+/*
 #define ORANGE 0
 #define YELLOW 2
 #define BLUE 1
@@ -31,6 +31,14 @@
 #define WHITE 4
 #define BLACK 5
 #define NOCOLOR 6
+*/
+#define ORANGE 0
+#define YELLOW 1
+#define BLUE 2
+#define GREEN 3
+#define WHITE 4
+#define BLACK 5
+
 
 
 typedef unsigned char uchar;
@@ -100,9 +108,9 @@ struct SUPPORTED_SETTINGS
 
 
 
-IMAGE_CONTEXT *new_window(const char *wnd_name, int x, int y, int width, int height);
-void show_video(IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color, int bf, int bc, bool *halt);
-void show_threshold(IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color, int bf, int bc);
+IMAGE_CONTEXT *new_window(char *wnd_name, int x, int y, int width, int height);
+void show_video(IMAGE_CONTEXT *image_ctx, uchar **frame);
+void show_threshold(IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color);
 bool isColor(uchar thres[3][256], uchar Y, uchar U, uchar V, int color);
 void yuv_to_rgb(uchar y, uchar u, uchar v, uchar *r, uchar *g, uchar *b);
 int image_put(IMAGE_CONTEXT *img_ctx);

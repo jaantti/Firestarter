@@ -5,15 +5,15 @@
 #define BAUDRATE 115200
 #define VASAK motor2
 #define PAREM motor1
-#define DEFEND(TOKEN) yellow ## _ ## TOKEN
-#define ATTACK(TOKEN) blue ## _ ## TOKEN
+#define DEFEND(TOKEN) blue ## _ ## TOKEN
+#define ATTACK(TOKEN) yellow ## _ ## TOKEN
 #define MINGREEN 76800
-#define MINBALL 30
+#define MINBALL 1
 #define MINGOAL_YELLOW 1000
 #define MINGOAL_BLUE 1000
 #define MAX_SPD 75
 #define SLOWER_BY 40
-
+typedef unsigned char uchar;
 struct blobs{
     int orange_area;
     int orange_cen_x;

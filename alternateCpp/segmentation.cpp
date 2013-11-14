@@ -3,7 +3,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <algorithm>
-
+#include <cv.h>
+#include <highgui.h>
+#include <unistd.h>
+#include <sstream>
+#include <cstdlib>
+#include <sys/time.h>
+#include <thread>
 unsigned char thres[3][256];
 unsigned char ad_thres[3][256];
 
@@ -11,8 +17,8 @@ unsigned char ad_thres[3][256];
 SEGMENTATION::SEGMENTATION( int width, int height ) {
 	this->width = width;
 	this->height = height;
-	this->max_runs = width*height/6;
-	this->max_reg = width*height/16;
+	this->max_runs = width*height/1;
+	this->max_reg = width*height;
 
 	this->data = NULL;
 	this->th_data = new unsigned char[ width*height ];
@@ -61,25 +67,51 @@ void SEGMENTATION::readThresholds( const char path[100] )
 void SEGMENTATION::thresholdImage( unsigned char *data )
 {
 	int pix_c = 0;
-	unsigned char col;
-	unsigned char c;
+	unsigned char col1, col2, col3;
+	unsigned char c1, c2;
+	unsigned char Y, Y2, U, V;
 	this->data = data;
+    bool T1, T2, T3, T4, T5, T6;
+	for( int i = 0; i < 2 * this->width * this->height; i += 4 ) {
+        Y = data[i];
+        U = data[i+1];
+        Y2 = data[i+2];
+        V = data[i+3];
+        //std::cout<<"Y:"<<(int)Y<<";U:"<<(int)U<<";V:"<<(int)V<<";Y2:"<<(int)Y2<<std::endl;
+		col1 = thres[0][Y] & thres[1][U] & thres[2][V] ;
 
-	for( int i = 0; i < 3 * this->width * this->height; i += 3 ) {
+		//std::cout<<thres[0][10]<<std::endl;
+		col2 = thres[0][Y2] & thres[1][U] & thres[2][V];
+        T1 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << GREEN );
+        T2 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << WHITE );
+        T3 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << ORANGE );
+        T4 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << YELLOW );
+        T5 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << BLUE );
+        T6 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << BLACK );
+		if(T1) c1 = GREEN;
+		else if(T2) c1 = WHITE;
+		else if(T3) c1 = ORANGE;
+		else if(T4) c1 = YELLOW;
+		else if(T5) c1 = BLUE;
+		else if(T6) c1 = BLACK;
+		else c1 = NOCOLOR;
+        T1 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << GREEN );
+        T2 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << WHITE );
+        T3 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << ORANGE );
+        T4 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << YELLOW );
+        T5 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << BLUE );
+        T6 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << BLACK );
+        if(T1) c2 = GREEN;
+		else if(T2) c2 = WHITE;
+		else if(T3) c2 = ORANGE;
+		else if(T4) c2 = YELLOW;
+		else if(T5) c2 = BLUE;
+		else if(T6) c2 = BLACK;
+		else c2 = NOCOLOR;
 
-		col = thres[0][data[i]] & thres[1][data[i + 1]] & thres[2][data[i + 2]];
-
-		if( col > 31 ) c = GREEN;
-		else if( col > 15 ) c = WHITE;
-		else if( col > 7 ) c = ORANGE;
-		else if( col > 3 ) c = YELLOW;
-		else if( col > 1 ) c = BLUE;
-		else if( col > 0 ) c = BLACK;
-		else c = NOCOLOR;
-
-
-		this->th_data[ pix_c ] = c;
-		pix_c++;
+		this->th_data[ pix_c ] = c1;
+		this->th_data[ pix_c +1 ] = c2;
+		pix_c+=2;
 	}
 }
 
@@ -400,6 +432,5 @@ region* SEGMENTATION::SortRegionListByArea( region *list, int passes )
 
   return(list);
 }
-
 
 

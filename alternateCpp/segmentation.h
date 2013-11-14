@@ -1,9 +1,19 @@
+
 #ifndef SEGMENTATION_H_INCLUDED
 #define SEGMENTATION_H_INCLUDED
 
+/*
 #define ORANGE 0
 #define YELLOW 2
 #define BLUE 1
+#define GREEN 3
+#define WHITE 4
+#define BLACK 5
+#define NOCOLOR 6
+*/
+#define ORANGE 0
+#define YELLOW 1
+#define BLUE 2
 #define GREEN 3
 #define WHITE 4
 #define BLACK 5

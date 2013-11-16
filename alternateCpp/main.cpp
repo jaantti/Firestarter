@@ -47,17 +47,20 @@ bool goal_timeout_f = false;
 volatile bool last_ball_in = false;
 bool ours = false;
 bool theirs = false;
+bool random_turn = false;
 volatile bool ball_in = false;
-
+volatile bool shutdown = false;
 blobs blob_data;
-int ball_list[10][2] = {{0}};
+int ball_list[10][4] = {{0}};
+
+int attack_clr, defend_clr;
 
 struct timeval start, end_time, start_goal;
 long mtime, seconds, useconds, fps;
 
 
 
-int main(){
+int main(int argc, char* argv[]){
 
     init_serial_dev();
 
@@ -65,10 +68,24 @@ int main(){
     gettimeofday(&start_goal, NULL);
     coil_charge();
 
+    //YELLOW and BLUE seem to be switched. Is magic
+    if (argc > 0 && strcmp(argv[1], "yellow")) {
+        attack_clr = BLUE;
+        defend_clr = YELLOW;
+    }
+    else if (argc > 0 && strcmp(argv[1], "blue")){
+        attack_clr = YELLOW;
+        defend_clr = BLUE;
+    }
+    else {
+        cout << "Your dumb ass made a typo. Fix it!" << endl;
+        return 0;
+    }
+
     SEGMENTATION segm(640, 480);
     thread t1(get_blobs, &segm);
     thread t2(getBall);
-
+    thread t3(codeEndListener);
 
     while (true){
         coil_ping();
@@ -80,7 +97,7 @@ int main(){
         //cout << ball_list[2][0] << endl;
 
         if (
-            blob_data.total_green > MINGREEN && blob_data.ATTACK(area) < 50000 && blob_data.DEFEND(area) < 50000) {
+            blob_data.total_green > MINGREEN && blob_data.attack_area < 50000 && blob_data.defend_area < 50000) {
             if(!ball_in) {
                 if(last_ball_in && ball_kicked ){
                     last_ball_in = false;
@@ -103,6 +120,7 @@ int main(){
                         gettimeofday(&start, NULL);
                     }
                     if(blob_data.orange_area!=0){
+                        if(check_for_line(blob_data.orange_cen_x, blob_data.orange_cen_y, ball_list[0][0], ball_list[0][1])) back_off(1);
                         gettimeofday(&start, NULL);
                         //cout<<"AREAZERO"<<endl;
                     }
@@ -122,7 +140,9 @@ int main(){
                             last_drive = false;
                         }
                     }
-                    //cout << blob_data.orange_area << endl;
+                    //check_for_line(blob_data.orange_cen_x, blob_data.orange_cen_y, ball_list[0][0], ball_list[0][1]);
+                    //cout << check_for_line(blob_data.orange_cen_x, blob_data.orange_cen_y, ball_list[0][0], ball_list[0][1]) << endl;
+                    //cout << ball_list[0][1] - ball_list[0][0] << " " << ball_list[0][3] << endl;
                     findBall(MAX_SPD, SLOWER_BY);
                 }
                 else ball_timeout();
@@ -131,7 +151,7 @@ int main(){
             else { // Ball in dribbler
                 if(!goal_timeout_f){
                     //cout<<"Timeout!"<<mtime<<endl;
-                    if (blob_data.ATTACK(area) != 0) {
+                    if (blob_data.attack_area != 0) {
                         gettimeofday(&start_goal, NULL);
                         goal_timeout_f = false;
                     }
@@ -154,14 +174,18 @@ int main(){
         }
         else {
             cout << "Back off!" << endl;
-            back_off();
+            back_off(0);
         }
         // Last gate directions, true is right, false is left
-        if (blob_data.ATTACK(cen_x) != 0 && blob_data.ATTACK(cen_x) < 320) theirs = false;
-        else if (blob_data.ATTACK(cen_x)!= 0 && blob_data.ATTACK(cen_x)> 320) theirs = true;
-        if (blob_data.DEFEND(cen_x) != 0 && blob_data.DEFEND(cen_x) < 320) ours = false;
-        else if (blob_data.DEFEND(cen_x) != 0 && blob_data.DEFEND(cen_x) > 320) ours = true;
+        if (blob_data.attack_cen_x != 0 && blob_data.attack_cen_x < 320) theirs = false;
+        else if (blob_data.attack_cen_x!= 0 && blob_data.attack_cen_x> 320) theirs = true;
+        if (blob_data.defend_cen_x != 0 && blob_data.defend_cen_x < 320) ours = false;
+        else if (blob_data.defend_cen_x != 0 && blob_data.defend_cen_x > 320) ours = true;
+    if(shutdown) break;
     }
+    t1.join();
+    t2.join();
+    t3.join();
     close_serial();
     return 0;
 }
@@ -208,14 +232,16 @@ void findBall(int max_spd, int slower_by){
 }
 
 bool findGate(){
-    double rel_pos_gate = (blob_data.ATTACK(cen_x)-320)/320.0;
-    double left_edge = (blob_data.ATTACK(x1)-320)/320.0;
-    double right_edge = (blob_data.ATTACK(x2)-320)/320.0;
+    double rel_pos_gate = (blob_data.attack_cen_x-320)/320.0;
+    double left_edge = (blob_data.attack_x1-320)/320.0;
+    double right_edge = (blob_data.attack_x2-320)/320.0;
     double gate_width = abs(right_edge - left_edge);
     //cout << left_edge << " " << right_edge << endl;
     //cout << rel_pos_gate << " " << gate_width << endl;
     if(rel_pos_gate == -1){
-        if (ours == false) { //Own gate was last left vision on the left side of the screen
+        if ((!ours&& theirs) || (ours &&
+
+                                 theirs)) { //Own gate was last left vision on the left side of the screen
             write_spd(-(int)(25),(int)(25));
             //cout << "going right" << endl;
         }
@@ -233,13 +259,30 @@ bool findGate(){
         else { //blob in the middle 10% of vision
             write_spd(0, 0);
             usleep(100000);
-            double rel_pos_gate = (blob_data.ATTACK(cen_x)-320)/320.0;
-            double left_edge = (blob_data.ATTACK(x1)-320)/320.0;
-            double right_edge = (blob_data.ATTACK(x2)-320)/320.0;
+            double rel_pos_gate = (blob_data.attack_cen_x-320)/320.0;
+            double left_edge = (blob_data.attack_x1-320)/320.0;
+            double right_edge = (blob_data.attack_x2-320)/320.0;
             double gate_width = abs(right_edge - left_edge);
             if ((rel_pos_gate > -gate_width*0.25) && (rel_pos_gate < gate_width*0.25)) {
-                for (int i = 0; i < 10; i++){
+                for (int i = 0; i < 50; i++){
                     if (ball_list[i][0] == 0) break;
+                    int x1, x2;
+                    x1 = ball_list[i][0];
+                    x2 = ball_list[i][1];
+                    int b_w = x2-x1;
+                    float diameter_mult = b_w*0.7;
+                    //cout<<"diam:" <<diameter_mult <<"area: "<<ball_list[i][2];
+                    if(x2<320){
+                        if(diameter_mult > (320 - x2)) {
+                            cout<<"BALL_LEFT_GODDDAMNIT"<<endl;
+                            return true;
+                        }
+                    } else if (x1>320){
+                        if(diameter_mult > (x1-320)) {
+                            cout<<"BALL_RIGHT_GODDAMNIT"<<endl;
+                            return true;
+                        }
+                    }
                     if (ball_list[i][0] < 320 && ball_list[i][1] > 320) {
                         cout << "Ball in the way" << endl;
                         // ADD MANUVER
@@ -271,60 +314,63 @@ void write_spd(int write1, int write2){
 }
 //For determining the gate that is further away and driving towards it.
 void ball_timeout(){
-    bool drive_towards = false; // false for yellow, true for blue
+    bool drive_towards = false; // false for attack, true for defend
     if(blob_data.orange_area!=0){
         ball_timeout_f=false;
+        cout<<"BALL TIMEOUT CANCEL"<<endl;
         return;
     }
-    if(blob_data.blue_area!=0 && !b_set){
-        if(blob_data.blue_cen_x > 320){
+    if(blob_data.defend_area!=0 && !b_set){
+        if(blob_data.defend_cen_x > 320){
             write_spd(-25, 25);
-            if(last_b_size < blob_data.blue_area){
-                last_b_size = blob_data.blue_area;
+            if(last_b_size < blob_data.defend_area){
+                last_b_size = blob_data.defend_area;
                 last_drive = true;
             } else {
                 b_set = true;
-                cout<<"B SET!"<<endl;
+                cout<<"DEFEND SET!"<<endl;
                 last_drive = true;
             }
         } else {
             write_spd(25, -25);
-            if(last_b_size<blob_data.blue_area){
-                last_b_size = blob_data.blue_area;
+            if(last_b_size<blob_data.defend_area){
+                last_b_size = blob_data.defend_area;
                 last_drive = false;
             } else {
                 b_set = true;
-                cout<<"B SET!"<<endl;
+                cout<<"DEFEND SET!"<<endl;
                 last_drive = false;
             }
         }
-    } else if(blob_data.yellow_area!=0 && !y_set){
-        if(blob_data.yellow_cen_x>320){
+    } else if(blob_data.attack_area!=0 && !y_set){
+        if(blob_data.attack_cen_x>320){
             write_spd(-25, 25);
-            if(last_y_size<blob_data.yellow_area){
-                last_y_size = blob_data.yellow_area;
+            if(last_y_size<blob_data.attack_area){
+                last_y_size = blob_data.attack_area;
                 last_drive = true;
             } else {
                 y_set = true;
-                cout<<"Y SET!"<<endl;
+                cout<<"ATTACK SET!"<<endl;
                 last_drive = true;
             }
         } else {
             write_spd(25, -25);
-            if(last_y_size<blob_data.yellow_area){
-                last_y_size = blob_data.yellow_area;
+            if(last_y_size<blob_data.attack_area){
+                last_y_size = blob_data.attack_area;
                 last_drive = false;
             } else {
                 y_set = true;
-                cout<<"Y SET!"<<endl;
+                cout<<"ATTACK SET!"<<endl;
                 last_drive = false;
             }
         }
     }
     if(b_set && y_set){
         if(last_y_size<last_b_size){
-            gate_select = true; // blue = true, yellow = false
+            cout<<"DRIVE DEFEND"<<endl;
+            gate_select = true; // defend = true, attack = false
         } else {
+            cout<<"DRIVE ATTACK"<<endl;
             gate_select = false;
         }
         drive_ball_timeout();
@@ -337,9 +383,9 @@ void drive_ball_timeout(){
     int area = 0;
     double real_gate_pos=0;
     if(gate_select){
-        if(blob_data.blue_area!=0){
-            area = blob_data.blue_area;
-            float x = blob_data.blue_cen_x;
+        if(blob_data.defend_area!=0){
+            area = blob_data.defend_area;
+            float x = blob_data.defend_cen_x;
             real_gate_pos = (x-320)/320.0;
             if (real_gate_pos > 0.05) { //blob right of center
                 write_spd(MAX_SPD - (int)(real_gate_pos*SLOWER_BY), MAX_SPD);
@@ -364,9 +410,9 @@ void drive_ball_timeout(){
         }
 
     } else {
-        if(blob_data.yellow_area!=0){
-            area = blob_data.yellow_area;
-            float x = blob_data.yellow_cen_x;
+        if(blob_data.attack_area!=0){
+            area = blob_data.attack_area;
+            float x = blob_data.attack_cen_x;
             real_gate_pos = (x-320)/320.0;
             if (real_gate_pos > 0.05) { //blob right of center
                 write_spd(MAX_SPD - (int)(real_gate_pos*SLOWER_BY), MAX_SPD);
@@ -392,7 +438,7 @@ void drive_ball_timeout(){
 }
 
 void goal_timeout(){
-    double rel_pos_gate = (blob_data.DEFEND(cen_x)-320)/320.0;
+    double rel_pos_gate = (blob_data.defend_cen_x-320)/320.0;
     //cout << rel_pos_gate << endl;
 
     if(rel_pos_gate == -1){
@@ -415,22 +461,36 @@ void goal_timeout(){
             write_spd(MAX_SPD, MAX_SPD);
         }
     }
-    if (blob_data.DEFEND(area) > 10000 || blob_data.ATTACK(area) != 0){
+    if (blob_data.defend_area > 10000 || blob_data.attack_area != 0){
         goal_timeout_f = false;
         gettimeofday(&start_goal, NULL);
     }
 }
 
-void back_off(){
-
-    write_spd(0, 0);
-    usleep(100000);
-    write_spd(-MAX_SPD, -MAX_SPD);
-    usleep(500000);
-    if (!ball_in){
-        write_spd(50, -50);
-        usleep(500000);
-        //while (blob_data.orange_area == 0 && blob_data.DEFEND(area) == 0 && blob_data.ATTACK(area) == 0);
+void back_off(int mode){
+    switch(mode){
+        case(0):
+            write_spd(0, 0);
+            usleep(100000);
+            write_spd(-MAX_SPD, -MAX_SPD);
+            usleep(500000);
+            if (!ball_in){
+                if(random_turn) write_spd(50, -50);
+                else write_spd(50, -50);
+                usleep(750000);
+                random_turn = !random_turn;
+                //while (blob_data.orange_area == 0 && blob_data.defend_area == 0 && blob_data.attack_area == 0);
+            }
+            break;
+        case(1):
+            cout<<"LINE IN WAY"<<endl;
+            write_spd(0, 0);
+            usleep(100000);
+            if(random_turn) write_spd(45, -45);
+            else write_spd(-45, 45);
+            usleep(750000);
+            random_turn = !random_turn;
+            break;
     }
 }
 
@@ -455,6 +515,7 @@ char getBall(){
             cout << read_buf << endl;
             RS232_PollComport(PAREM, read_buf, sizeof(read_buf));
         }
+        if(shutdown) break;
     }
     //return buf[3];
 }
@@ -570,7 +631,7 @@ void close_serial(){
 void coil_boom(){
     RS232_cputs(coil, "k1000\n");
     ball_kicked = true;
-    usleep(100000);
+    usleep(200000);
 
 }
 
@@ -608,13 +669,14 @@ int get_blobs(SEGMENTATION * segm){
     get_camera_settings( &cs );
     get_camera_controls( cam_ctl, menu_names, &cam_ctl_c, &menu_c );
     get_supported_settings( cs, &ss );
+    readThresholds("conf");
     int gw = cs.width;
     //cout<<ss.height<<"  "<<ss.width<<endl;
     int gh = cs.height;
     start_capturing();
     segm->readThresholds("conf");
-    video = new_window( "Video", vx, vy, gw, gh );
-    thresh = new_window( "Threshold", vx, vy, gw, gh);
+    //video = new_window( "Video", vx, vy, gw, gh );
+    //thresh = new_window( "Threshold", vx, vy, gw, gh);
     int count = 0;
     gettimeofday(&fps_start, NULL);
     while(true) {
@@ -623,8 +685,8 @@ int get_blobs(SEGMENTATION * segm){
             //count++;
             if( strcmp( "YUYV", cs.pix_fmt ) == 0 ) set_working_frame_yuyv( frame, gw, gh);
             fr = get_working_frame();
-            show_video(video, fr);
-            show_threshold(thresh, fr, thres, GREEN);
+            //show_video(video, fr);
+            //show_threshold(thresh, fr, thres, ORANGE);
 
 
         //if (waitKey(10) == 27) break;
@@ -638,11 +700,12 @@ int get_blobs(SEGMENTATION * segm){
             struct region *tempRegion=NULL;
             if(segm->colors[ORANGE].list!=NULL){
                 tempRegion = segm->colors[ORANGE].list;
-                if (tempRegion->area > MINBALL) {
+                if (tempRegion->area > MINBALL && tempRegion->cen_y > 40) {
                     blob_data.orange_area = tempRegion->area;
+                    //cout << "Orange area: " << tempRegion->area << endl;
                     blob_data.orange_cen_x = tempRegion->cen_x;
                     blob_data.orange_cen_y = tempRegion->cen_y;
-                    //cout<<"ORANGE:"<<blob_data.orange_cen_x<<";"<<blob_data.orange_cen_y<<endl;
+                    //cout << "ORANGE: " << tempRegion->x1 << "; " << tempRegion->x2 << "; " << tempRegion->y1 << "; " << tempRegion->y2 << endl;
                 }
                 else {
                     blob_data.orange_area = 0;
@@ -653,12 +716,15 @@ int get_blobs(SEGMENTATION * segm){
                 //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
                 //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,140,255), -1);
 
-                for (int i = 0; i < 10; i++){
-                    if (tempRegion == NULL || tempRegion->area < MINBALL){
+                for (int i = 0; i < 10 ; i++){
+                    if (tempRegion == NULL || tempRegion->area < MINBALL
+                         && tempRegion->cen_y > 40){
                         break;
                     }
                     ball_list[i][0] = tempRegion->x1;
                     ball_list[i][1] = tempRegion->x2;
+                    ball_list[i][2] = tempRegion->cen_y;
+                    ball_list[i][3] = tempRegion->area;
                     //cout << ball_list[i][0] << endl;
                     tempRegion = tempRegion->next;
                 }
@@ -672,53 +738,57 @@ int get_blobs(SEGMENTATION * segm){
                 blob_data.orange_cen_x = 0;
                 blob_data.orange_cen_y = 0;
             }
-            if(segm->colors[BLUE].list!=NULL){
-                tempRegion = segm->colors[BLUE].list;
-                if (tempRegion->area > MINGOAL_BLUE) {
-                    blob_data.blue_area = tempRegion->area;
-                    blob_data.blue_cen_x = tempRegion->cen_x;
-                    blob_data.blue_cen_y = tempRegion->cen_y;
-                    blob_data.blue_x1 = tempRegion->x1;
-                    blob_data.blue_x2 = tempRegion->x2;
+
+
+            if(segm->colors[defend_clr].list!=NULL){
+                tempRegion = segm->colors[defend_clr].list;
+                if (tempRegion->area > MINGOAL) {
+                    blob_data.defend_area = tempRegion->area;
+                    blob_data.defend_cen_x = tempRegion->cen_x;
+                    blob_data.defend_cen_y = tempRegion->cen_y;
+                    blob_data.defend_x1 = tempRegion->x1;
+                    blob_data.defend_x2 = tempRegion->x2;
+                    //cout << "DEFEND: " << tempRegion->x1 << "; " << tempRegion->x2 << "; " << tempRegion->y1 << "; " << tempRegion->y2 << endl;
                     //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(0, 255, 255), 2);
                 }
                 else {
-                    blob_data.blue_area = 0;
-                    blob_data.blue_cen_x = 0;
-                    blob_data.blue_cen_y = 0;
+                    blob_data.defend_area = 0;
+                    blob_data.defend_cen_x = 0;
+                    blob_data.defend_cen_y = 0;
                 }
                 //tempRegion = tempRegion->next;
 
                 //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(255,0,0), -1);
             }
             else {
-                blob_data.blue_area = 0;
-                blob_data.blue_cen_x = 0;
-                blob_data.blue_cen_y = 0;
+                blob_data.defend_area = 0;
+                blob_data.defend_cen_x = 0;
+                blob_data.defend_cen_y = 0;
             }
-            if(segm->colors[YELLOW].list!=NULL){
-                tempRegion = segm->colors[YELLOW].list;
-                if (tempRegion->area > MINGOAL_YELLOW){
-                    blob_data.yellow_area = tempRegion->area;
-                    blob_data.yellow_cen_x = tempRegion->cen_x;
-                    blob_data.yellow_cen_y = tempRegion->cen_y;
-                    blob_data.yellow_x1 = tempRegion->x1;
-                    blob_data.yellow_x2 = tempRegion->x2;
+            if(segm->colors[attack_clr].list!=NULL){
+                tempRegion = segm->colors[attack_clr].list;
+                if (tempRegion->area > MINGOAL){
+                    blob_data.attack_area = tempRegion->area;
+                    //cout<<blob_data.attack_area<<endl;
+                    blob_data.attack_cen_x = tempRegion->cen_x;
+                    blob_data.attack_cen_y = tempRegion->cen_y;
+                    blob_data.attack_x1 = tempRegion->x1;
+                    blob_data.attack_x2 = tempRegion->x2;
                     //rectangle(img, Point(tempRegion->x1, tempRegion->y1), Point(tempRegion->x2, tempRegion->y2), Scalar(255,0,0), 2);
                 }
                 else {
-                    blob_data.yellow_area = 0;
-                    blob_data.yellow_cen_x = 0;
-                    blob_data.yellow_cen_y = 0;
+                    blob_data.attack_area = 0;
+                    blob_data.attack_cen_x = 0;
+                    blob_data.attack_cen_y = 0;
                 }
                 //tempRegion = tempRegion->next;
 
                 //circle(img, Point(tempRegion->cen_x, tempRegion->cen_y), 5, Scalar(0,255,255), -1);
             }
             else {
-                blob_data.yellow_area = 0;
-                blob_data.yellow_cen_x = 0;
-                blob_data.yellow_cen_y = 0;
+                blob_data.attack_area = 0;
+                blob_data.attack_cen_x = 0;
+                blob_data.attack_cen_y = 0;
             }
             if(segm->colors[GREEN].list!=NULL){
                 tempRegion = segm->colors[GREEN].list;
@@ -746,10 +816,17 @@ int get_blobs(SEGMENTATION * segm){
             sec_passed = fps_end.tv_sec - fps_start.tv_sec;
             cout<<count/sec_passed<<endl;*/
         }
+        if(shutdown) break;
 
     }
 
-    close_serial();
-    exit(0);
+    //close_serial();
+    //exit(0);
     return(0);
+}
+
+void codeEndListener(){
+    int j;
+    cin>>j;
+    shutdown = true;
 }

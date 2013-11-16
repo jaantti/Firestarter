@@ -78,9 +78,10 @@ void SEGMENTATION::thresholdImage( unsigned char *data )
         Y2 = data[i+2];
         V = data[i+3];
         //std::cout<<"Y:"<<(int)Y<<";U:"<<(int)U<<";V:"<<(int)V<<";Y2:"<<(int)Y2<<std::endl;
-		col1 = thres[0][Y] & thres[1][U] & thres[2][V] ;
+		//col1 = thres[0][Y] & thres[1][U] & thres[2][V] ;
 
 		//std::cout<<thres[0][10]<<std::endl;
+
 		col2 = thres[0][Y2] & thres[1][U] & thres[2][V];
         T1 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << GREEN );
         T2 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << WHITE );
@@ -108,6 +109,25 @@ void SEGMENTATION::thresholdImage( unsigned char *data )
 		else if(T5) c2 = BLUE;
 		else if(T6) c2 = BLACK;
 		else c2 = NOCOLOR;
+		/*
+		col1 = thres[0][Y] & thres[1][U] & thres[2][V];
+        col2 = thres[0][Y2] & thres[1][U] & thres[2][V];
+		if( col1 > 31 ) c1 = GREEN;
+		else if( col1 > 15 ) c1 = WHITE;
+		else if( col1 > 7 ) c1 = ORANGE;
+		else if( col1 > 3 ) c1 = YELLOW;
+		else if( col1 > 1 ) c1 = BLUE;
+		else if( col1 > 0 ) c1 = BLACK;
+		else c1 = NOCOLOR;
+
+        if( col2> 31 ) c2 = GREEN;
+		else if( col2 > 15 ) c2 = WHITE;
+		else if( col2 > 7 ) c2 = ORANGE;
+		else if( col2 > 3 ) c2 = YELLOW;
+		else if( col2 > 1 ) c2 = BLUE;
+		else if( col2 > 0 ) c2 = BLACK;
+		else c2 = NOCOLOR;
+        */
 
 		this->th_data[ pix_c ] = c1;
 		this->th_data[ pix_c +1 ] = c2;

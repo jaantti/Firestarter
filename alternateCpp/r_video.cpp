@@ -190,7 +190,7 @@ void draw_dot( int x, int y )
 
 
 
-bool check_for_line( int x, int y )
+bool check_for_line( int x, int y, int b_min_x, int b_max_x )
 {
 	float m;
 	float b;
@@ -199,7 +199,7 @@ bool check_for_line( int x, int y )
 	int cur = 0;
 	int white_c, black_c;
 	int cur_x;
-	int line_c = 0;
+	bool gr_chk = false;
 
 
 
@@ -214,6 +214,8 @@ bool check_for_line( int x, int y )
         m = (float) ( gwidth/2 - cur_x ) / (float) ( gheight - y );
         b = (float) cur_x - m*(float)y;
 
+        gr_chk = false;
+
         for( int i = y; i < gheight; i++ ) {
 
             black_c = 0;
@@ -222,21 +224,25 @@ bool check_for_line( int x, int y )
             new_y = i;
             new_x = int ( m*i + b );
 
-
-            if( IS_COLOR( 3*new_x, new_y, WHITE ) ) last[cur] = WHITE;
-            else if( IS_COLOR( 3*new_x, new_y, BLACK ) ) last[cur] = BLACK;
-            else last[cur] = 0;
-
-            if( cur < 4 ) cur++;
-            else cur = 0;
-
-
-            for( int j = 0; j < 5; j++ ) {
-                if( last[j] == WHITE ) white_c++;
-                else if( last[j] == BLACK ) black_c++;
+            if( !gr_chk ){
+                if ( IS_COLOR( 3*new_x, new_y, GREEN ) ) gr_chk = true;
             }
+            else {
 
-            if( black_c > 0 && white_c > 0 ) return true;
+                if( IS_COLOR( 3*new_x, new_y, WHITE ) ) last[cur] = WHITE;
+                else if( IS_COLOR( 3*new_x, new_y, BLACK ) ) last[cur] = BLACK;
+                else last[cur] = 0;
+
+                if( cur < 4 ) cur++;
+                else cur = 0;
+
+                for( int j = 0; j < 5; j++ ) {
+                    if( last[j] == WHITE ) white_c++;
+                    else if( last[j] == BLACK ) black_c++;
+                }
+
+                if( black_c > 0 && white_c > 0 ) return true;
+            }
         }
     }
 
@@ -347,7 +353,7 @@ void detect_ball( int *x, int *y )
 
                 if( area >= MIN_BALL_AREA  && green_c > 2 && ( (double)correct_c / (double)area ) > 0.4 ) {
 
-                    if( check_for_line( j, i ) ) {
+                    if( check_for_line( j, i, b_min_x, b_max_x ) ) {
                         printf("Line detected\n");
                         continue;
                     } else

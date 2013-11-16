@@ -33,7 +33,7 @@ void detect_gate(int *x, int *y, int *x1, int *y1, int *x2, int *y2, int color);
 void draw_gate_lines(void);
 void draw_rect(int x, int y, int width, int height);
 void draw_dot(int x, int y);
-bool check_for_line(int x, int y);
+bool check_for_line(int x, int y, int b_min_x, int b_max_x);
 void detect_ball(int *x, int *y);
 int find_ball_area(int x, int y, int *green_c);
 int find_gate_area(int x, int y, int color );

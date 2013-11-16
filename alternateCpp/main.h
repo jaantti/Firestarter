@@ -5,29 +5,26 @@
 #define BAUDRATE 115200
 #define VASAK motor2
 #define PAREM motor1
-#define DEFEND(TOKEN) blue ## _ ## TOKEN
-#define ATTACK(TOKEN) yellow ## _ ## TOKEN
 #define MINGREEN 76800
-#define MINBALL 1
-#define MINGOAL_YELLOW 1000
-#define MINGOAL_BLUE 1000
-#define MAX_SPD 75
-#define SLOWER_BY 40
+#define MINBALL 10
+#define MINGOAL 1000
+#define MAX_SPD 100
+#define SLOWER_BY 55
 typedef unsigned char uchar;
 struct blobs{
     int orange_area;
     int orange_cen_x;
     int orange_cen_y;
-    int blue_area;
-    int blue_cen_x;
-    int blue_cen_y;
-    int blue_x1;
-    int blue_x2;
-    int yellow_area;
-    int yellow_cen_x;
-    int yellow_cen_y;
-    int yellow_x1;
-    int yellow_x2;
+    int defend_area;
+    int defend_cen_x;
+    int defend_cen_y;
+    int defend_x1;
+    int defend_x2;
+    int attack_area;
+    int attack_cen_x;
+    int attack_cen_y;
+    int attack_x1;
+    int attack_x2;
     int green_area;
     int green_cen_x;
     int green_cen_y;
@@ -53,8 +50,8 @@ void write_spd(int write1, int write2);
 void ball_timeout();
 void drive_ball_timeout();
 void goal_timeout();
-void back_off();
+void back_off(int mode);
 char getBall();
 int get_blobs(SEGMENTATION * segm);
-
+void codeEndListener();
 #endif

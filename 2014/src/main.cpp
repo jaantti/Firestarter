@@ -662,8 +662,8 @@ int get_blobs(SEGMENTATION * segm){
         exit(0);
     }
     int vx = 627, vy = 282, tx = 1279, ty = 298;
-    open_device( "/dev/video0" );
-    init_device( "/dev/video0" );
+    open_device( "/dev/video1" );
+    init_device( "/dev/video1" );
     uchar **fr;
     uchar *frame = NULL;
     get_camera_settings( &cs );

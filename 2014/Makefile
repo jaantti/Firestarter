@@ -3,10 +3,10 @@
 ###
 
 #32-bit system xLib
-LIBX = /usr/lib/i386-linux-gnu/libX11.so.6 /usr/lib/i386-linux-gnu/libXext.so.6
+#LIBX = /usr/lib/i386-linux-gnu/libX11.so.6 /usr/lib/i386-linux-gnu/libXext.so.6
 
 #64-bit system xLib
-#LIBX = /usr/lib/x86_64-linux-gnu/libX11.so.6 /usr/lib/x86_64-linux-gnu/libXext.so.6
+LIBX = /usr/lib/x86_64-linux-gnu/libX11.so.6 /usr/lib/x86_64-linux-gnu/libXext.so.6
 
 CXX = g++
 CFLAGS = `pkg-config --cflags opencv` -Wall -std=c++11 -Iinclude

@@ -12,5 +12,8 @@
 *.la
 *.a
 
+#Custom paths
 2014/nbproject
 2014/bin
+old_2014/nbproject
+old_2014/bin

@@ -16,6 +16,6 @@ Starter::Starter(const Starter& orig) {
 Starter::~Starter() {
 }
 
-Starter::init(){
+bool Starter::init(){
     
 }

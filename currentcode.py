@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+## THIS IS A NORMAL OPERATION
 import cv2
 import numpy as np
 import serial

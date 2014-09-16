@@ -72,6 +72,7 @@ class SEGMENTATION
 	int max_reg;
 	int max_area;
 
+        SEGMENTATION();
 	SEGMENTATION( int width, int height );
 	~SEGMENTATION();
 	void readThresholds( const char path[100] );

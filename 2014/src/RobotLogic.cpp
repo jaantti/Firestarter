@@ -16,3 +16,6 @@ RobotLogic::RobotLogic(const RobotLogic& orig) {
 RobotLogic::~RobotLogic() {
 }
 
+void RobotLogic::init() {
+ 
+}

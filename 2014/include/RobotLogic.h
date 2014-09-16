@@ -11,10 +11,12 @@
 #include "RobotConstants.h"
 
 class RobotLogic {
+
 public:
     RobotLogic();
     RobotLogic(const RobotLogic& orig);
     virtual ~RobotLogic();
+    void init();
 private:
 
 };

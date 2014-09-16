@@ -10,8 +10,14 @@
 
 #include "RobotController.h"
 #include "NetworkConnector.h"
+#include "RobotLogic.h"
+#include "ImageProcessor.h"
 
 class Starter {
+private:
+    RobotLogic rLogic;
+    ImageProcessor iProcessor;
+
 public:
     RobotController rController;
     NetworkConnector nConnector;

@@ -1,6 +1,6 @@
 /* 
  * File:   NetworkConnector.h
- * Author: antti
+ * Author: noone knows
  *
  * Created on September 7, 2014, 12:25 PM
  */
@@ -15,6 +15,7 @@ public:
     NetworkConnector();
     NetworkConnector(const NetworkConnector& orig);
     virtual ~NetworkConnector();
+    void init();
 private:
 
 };

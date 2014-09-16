@@ -1,6 +1,6 @@
 /* 
  * File:   RobotController.h
- * Author: antti
+ * Author: not me
  *
  * Created on September 7, 2014, 12:23 PM
  */
@@ -19,6 +19,7 @@ public:
     RobotController();
     RobotController(const RobotController& orig);
     ~RobotController();
+    void init();
     bool hasBall();
     void kickBall(int str);
     void driveRobot(int spd, int angle);

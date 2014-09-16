@@ -13,6 +13,9 @@
 unsigned char thres[3][256];
 unsigned char ad_thres[3][256];
 
+SEGMENTATION::SEGMENTATION(){
+    
+}
 
 SEGMENTATION::SEGMENTATION( int width, int height ) {
 	this->width = width;

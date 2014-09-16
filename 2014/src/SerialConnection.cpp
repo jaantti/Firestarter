@@ -15,6 +15,7 @@ SerialConnection::SerialConnection(const SerialConnection& orig) {
 }
 
 SerialConnection::~SerialConnection() {
+    
 }
 
 bool SerialConnection::init(){

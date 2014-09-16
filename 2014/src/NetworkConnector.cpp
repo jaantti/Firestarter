@@ -16,3 +16,7 @@ NetworkConnector::NetworkConnector(const NetworkConnector& orig) {
 NetworkConnector::~NetworkConnector() {
 }
 
+void NetworkConnector::init() {
+
+}
+

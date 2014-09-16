@@ -6,6 +6,8 @@
  */
 
 #include "Starter.h"
+#include "ImageProcessor.h"
+#include "RobotLogic.h"
 #include <iostream>
 
 Starter::Starter() {
@@ -18,6 +20,10 @@ Starter::~Starter() {
 }
 
 bool Starter::init(){
+    iProcessor = ImageProcessor();
+    nConnector = NetworkConnector();
+    rController = RobotController();
+    rLogic = RobotLogic();
     std::cout << "Initialization successful." << std::endl;
     return true;
 }

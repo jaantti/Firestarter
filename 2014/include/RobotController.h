@@ -8,15 +8,24 @@
 #ifndef ROBOTCONTROLLER_H
 #define	ROBOTCONTROLLER_H
 
+#define PI 3.14159265
+
 #include "RobotConstants.h"
+#include "SerialConnection.h"
 
 class RobotController {
+    SerialConnection connection;
 public:
     RobotController();
     RobotController(const RobotController& orig);
-    virtual ~RobotController();
+    ~RobotController();
+    bool hasBall();
+    void kickBall(int str);
+    void driveRobot(int spd, int angle);
+    
 private:
-
+    void driveThree(int spd, int angle);
+    void driveFour(int spd, int angle);
 };
 
 #endif	/* ROBOTCONTROLLER_H */

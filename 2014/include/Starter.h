@@ -20,6 +20,7 @@ public:
     Starter(const Starter& orig);
     virtual ~Starter();
     bool init();
+    bool start();
     
 private:
 

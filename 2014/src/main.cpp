@@ -6,6 +6,7 @@
  */
 
 #include <cstdlib>
+#include "Starter.h"
 
 using namespace std;
 
@@ -14,6 +15,10 @@ using namespace std;
  */
 int main(int argc, char** argv) {
 
+    
+    Starter starter = Starter();
+    starter.init();
+    starter.start();
     return 0;
 }
 

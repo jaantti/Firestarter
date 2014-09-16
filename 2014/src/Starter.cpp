@@ -6,6 +6,7 @@
  */
 
 #include "Starter.h"
+#include <iostream>
 
 Starter::Starter() {
 }
@@ -17,5 +18,11 @@ Starter::~Starter() {
 }
 
 bool Starter::init(){
+    std::cout << "Initialization successful." << std::endl;
+    return true;
+}
+
+bool Starter::start(){
     
+    return true;
 }

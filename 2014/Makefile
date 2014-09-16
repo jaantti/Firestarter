@@ -12,7 +12,7 @@ LIBX = /usr/lib/x86_64-linux-gnu/libX11.so.6 /usr/lib/x86_64-linux-gnu/libXext.s
 #RakNet dir
 ##############
 
-RAKNETDIR = /home/antti/Desktop/RakNet-4.069
+RAKNETDIR = /home/antti/Desktop/RakNet-master
 
 ##################
 # Boost location #

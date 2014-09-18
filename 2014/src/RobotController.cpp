@@ -6,7 +6,9 @@
  */
 
 #include "RobotController.h"
+#include "SerialConnection.h"
 #include <iostream>
+#include <cmath>
 
 using namespace std;
 
@@ -26,32 +28,33 @@ void RobotController::init() {
     cout << "RC init end" << endl;
 }
 
-
-void RobotController::driveRobot(int spd, int angle) {
-    if(NR_OF_WHEELS==3){
-        
+void RobotController::driveRobot(int spd, float angle) {
+    if (NR_OF_WHEELS == 3) {
+        driveThree(spd, angle);
     }
 }
-
 
 bool RobotController::hasBall() {
 
 }
 
-void RobotController::kickBall(int str){
-    
+void RobotController::kickBall(int str) {
+
 }
 
+void RobotController::driveThree(int spd, float angle) {
 
-void RobotController::driveThree(int spd, int angle) {
-    
-    
-   // int speed1 = spd * cos( 5*PI/6.0 - angle );
-   // int speed2 = spd * cos( PI/6.0 - angle );
-   // int speed3 = spd * cos( 9*PI/6.0 - angle );    
+
+    int speed0 = spd * cos(5 * PI / 6.0 - angle);
+    int speed1 = spd * cos(PI / 6.0 - angle);
+    int speed2 = spd * cos(9 * PI / 6.0 - angle);
+
+    connection.setSpeed(0, speed0);
+    connection.setSpeed(1, speed1);
+    connection.setSpeed(2, speed2);
 }
 
-void RobotController::driveFour(int spd, int angle) {
+void RobotController::driveFour(int spd, float angle) {
 
 }
 

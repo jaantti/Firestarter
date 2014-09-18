@@ -26,12 +26,12 @@ bool Starter::init() {
     rController = RobotController();
     //rLogic = RobotLogic();
     rController.init();
-    
+    //iProcessor.init();
     std::cout << "Initialization successful." << std::endl;
     return true;
 }
 
 bool Starter::start() {
-
+    rController.driveRobot(50,PI);
     return true;
 }

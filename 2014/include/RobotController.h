@@ -22,11 +22,11 @@ public:
     void init();
     bool hasBall();
     void kickBall(int str);
-    void driveRobot(int spd, int angle);
+    void driveRobot(int spd, float angle);
     
 private:
-    void driveThree(int spd, int angle);
-    void driveFour(int spd, int angle);
+    void driveThree(int spd, float angle);
+    void driveFour(int spd, float angle);
 };
 
 #endif	/* ROBOTCONTROLLER_H */

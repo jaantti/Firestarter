@@ -19,10 +19,13 @@ public:
     SerialConnection(const SerialConnection& orig);
     virtual ~SerialConnection();
     bool init();
+    void setSpeed(int motor, int speed);
+    
 private:
     array<int, NR_OF_WHEELS> motors;
     int coil;
     void sendCommand(int comport, const char* command, unsigned char* answer);
+    void sendCommand(int comport, const char* command);
 
 };
 

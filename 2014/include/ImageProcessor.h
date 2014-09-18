@@ -9,7 +9,7 @@
 #define	IMAGEPROCESSOR_H
 
 #include "RobotConstants.h"
-//#include "segmentation.h"
+#include "segmentation.h"
 
 class ImageProcessor {
 public:

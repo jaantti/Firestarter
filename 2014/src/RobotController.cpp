@@ -6,6 +6,9 @@
  */
 
 #include "RobotController.h"
+#include <iostream>
+
+using namespace std;
 
 RobotController::RobotController() {
 }
@@ -17,8 +20,10 @@ RobotController::~RobotController() {
 }
 
 void RobotController::init() {
+    cout << "RC init start" << endl;
     connection = SerialConnection();
     connection.init();
+    cout << "RC init end" << endl;
 }
 
 

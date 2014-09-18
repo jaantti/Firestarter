@@ -19,5 +19,5 @@ ImageProcessor::~ImageProcessor() {
 }
 
 void ImageProcessor::init() {
-    segm = SEGMENTATION(640, 480);
+    //segm = SEGMENTATION(640, 480);
 }

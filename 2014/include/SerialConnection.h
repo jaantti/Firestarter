@@ -9,6 +9,9 @@
 #define	SERIALCONNECTION_H
 
 #include "RobotConstants.h"
+#include <array>
+
+using namespace std;
 
 class SerialConnection {
 public:
@@ -17,6 +20,9 @@ public:
     virtual ~SerialConnection();
     bool init();
 private:
+    array<int, NR_OF_WHEELS> motors;
+    int coil;
+    void sendCommand(int comport, const char* command, unsigned char* answer);
 
 };
 

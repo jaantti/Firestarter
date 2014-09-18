@@ -9,7 +9,7 @@
 #define	IMAGEPROCESSOR_H
 
 #include "RobotConstants.h"
-#include "segmentation.h"
+//#include "segmentation.h"
 
 class ImageProcessor {
 public:
@@ -18,7 +18,7 @@ public:
     virtual ~ImageProcessor();
     void init();
 private:
-     SEGMENTATION segm;
+     //SEGMENTATION segm;
 };
 
 #endif	/* IMAGEPROCESSOR_H */

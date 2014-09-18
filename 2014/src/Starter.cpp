@@ -11,6 +11,7 @@
 #include <iostream>
 
 Starter::Starter() {
+    
 }
 
 Starter::Starter(const Starter& orig) {
@@ -19,16 +20,18 @@ Starter::Starter(const Starter& orig) {
 Starter::~Starter() {
 }
 
-bool Starter::init(){
-    iProcessor = ImageProcessor();
-    nConnector = NetworkConnector();
+bool Starter::init() {
+    //iProcessor = ImageProcessor();
+    //nConnector = NetworkConnector();
     rController = RobotController();
-    rLogic = RobotLogic();
+    //rLogic = RobotLogic();
+    rController.init();
+    
     std::cout << "Initialization successful." << std::endl;
     return true;
 }
 
-bool Starter::start(){
-    
+bool Starter::start() {
+
     return true;
 }

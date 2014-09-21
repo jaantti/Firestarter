@@ -28,9 +28,9 @@ void RobotController::init() {
     cout << "RC init end" << endl;
 }
 
-void RobotController::driveRobot(int spd, float angle) {
+void RobotController::driveRobot(float spd, float angle, float rotSpd) {
     if (NR_OF_WHEELS == 3) {
-        driveThree(spd, angle);
+        driveThree(spd, angle, rotSpd);
     }
 }
 
@@ -42,16 +42,32 @@ void RobotController::kickBall(int str) {
 
 }
 
-void RobotController::driveThree(int spd, float angle) {
+void RobotController::driveThree(float spd, float angle, float rotSpd) {
 
-
-    int speed0 = spd * cos(5 * PI / 6.0 - angle);
-    int speed1 = spd * cos(PI / 6.0 - angle);
-    int speed2 = spd * cos(9 * PI / 6.0 - angle);
-
-    connection.setSpeed(0, speed0);
-    connection.setSpeed(1, speed1);
-    connection.setSpeed(2, speed2);
+    int speed0 = spd * cos(5.0 * PI / 6.0 - angle) + rotSpd;    
+    int speed1 = spd * cos(PI / 6.0 - angle) + rotSpd;
+    int speed2 = spd * cos(3.0 * PI / 2.0 - angle) + rotSpd;
+    
+    int motorSpeeds[3] = {speed0, speed1, speed2};
+    
+    cout << "0:" << motorSpeeds[0] << ", 1:" << motorSpeeds[1] << ", 2:" << motorSpeeds[2] << endl;
+    
+    int max = 1;
+    
+    for(int i = 0; i < 2; i++){
+        if(abs(motorSpeeds[i]) < abs(motorSpeeds[i+1])) max = i+1;
+    }
+    cout << "max:" << motorSpeeds[max] << endl;
+    
+    if(abs(motorSpeeds[max]) > MAX_MOTOR_SPEED){
+        int maxSpeed = motorSpeeds[max];
+        for(int i = 0; i < 3; i++){
+            motorSpeeds[i] = (motorSpeeds[i] / (float) maxSpeed) * MAX_MOTOR_SPEED;
+        }
+    }
+    for(int i = 0; i < 3; i++){
+        connection.setSpeed(i, motorSpeeds[i]);
+    }   
 }
 
 void RobotController::driveFour(int spd, float angle) {

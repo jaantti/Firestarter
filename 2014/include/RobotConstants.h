@@ -13,6 +13,7 @@
 #define CONF_PATH ../conf
 #define CAM_W 640
 #define CAM_H 480
+#define MAX_MOTOR_SPEED 190
 
 
 enum RobotStates{

@@ -32,6 +32,9 @@ bool Starter::init() {
 }
 
 bool Starter::start() {
-    rController.driveRobot(50,PI);
+    
+    rController.driveRobot(50,PI/-2.0,0);
+    //rController.driveRobot(50,PI, PI);
+    
     return true;
 }

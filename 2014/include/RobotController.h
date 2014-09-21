@@ -22,10 +22,10 @@ public:
     void init();
     bool hasBall();
     void kickBall(int str);
-    void driveRobot(int spd, float angle);
+    void driveRobot(float spd, float angle, float rotSpd);
     
 private:
-    void driveThree(int spd, float angle);
+    void driveThree(float spd, float angle, float rotSpd);
     void driveFour(int spd, float angle);
 };
 

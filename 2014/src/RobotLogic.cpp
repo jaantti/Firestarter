@@ -10,9 +10,6 @@
 RobotLogic::RobotLogic() {
 }
 
-RobotLogic::RobotLogic(const RobotLogic& orig) {
-}
-
 RobotLogic::~RobotLogic() {
 }
 

@@ -16,7 +16,6 @@ using namespace std;
 class SerialConnection {
 public:
     SerialConnection();
-    SerialConnection(const SerialConnection& orig);
     virtual ~SerialConnection();
     bool init();
     void setSpeed(int motor, int speed);

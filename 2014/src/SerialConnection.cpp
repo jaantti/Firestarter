@@ -17,9 +17,6 @@ SerialConnection::SerialConnection() {
     coil = -1;
 }
 
-SerialConnection::SerialConnection(const SerialConnection& orig) {
-}
-
 SerialConnection::~SerialConnection() {
 
 }

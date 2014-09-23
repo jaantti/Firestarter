@@ -10,12 +10,11 @@
 #include <cstdlib>
 #include <sys/time.h>
 #include <thread>
+
+#include <iostream>
+
 unsigned char thres[3][256];
 unsigned char ad_thres[3][256];
-
-SEGMENTATION::SEGMENTATION(){
-    
-}
 
 SEGMENTATION::SEGMENTATION( int width, int height ) {
 	this->width = width;
@@ -26,7 +25,7 @@ SEGMENTATION::SEGMENTATION( int width, int height ) {
 	this->data = NULL;
 	this->th_data = new unsigned char[ width*height ];
 	this->rle = new run[ max_runs ];
-	this->run_c = 0;
+        this->run_c = 0;
 	this->regions = new region[ max_reg ];
 	this->region_c = 0;
 	this->max_area = 0;
@@ -74,67 +73,52 @@ void SEGMENTATION::thresholdImage( unsigned char *data )
 	unsigned char c1, c2;
 	unsigned char Y, Y2, U, V;
 	this->data = data;
-    bool T1, T2, T3, T4, T5, T6;
-	for( int i = 0; i < 2 * this->width * this->height; i += 4 ) {
-        Y = data[i];
-        U = data[i+1];
-        Y2 = data[i+2];
-        V = data[i+3];
-        //std::cout<<"Y:"<<(int)Y<<";U:"<<(int)U<<";V:"<<(int)V<<";Y2:"<<(int)Y2<<std::endl;
-		//col1 = thres[0][Y] & thres[1][U] & thres[2][V] ;
+        bool T1, T2, T3, T4, T5, T6;
+        for( int i = 0; i < 2 * this->width * this->height; i += 4 ) {
+            /*
+            std::cout << "Y is :" << (int)data[i] << std::endl;
+            std::cout << "U is :" << (int)data[i+1] << std::endl;
+            std::cout << "Y3 is :" << (int)data[i+2] << std::endl;
+            std::cout << "V is :" << (int)data[i+3] << std::endl;
+            */
+            Y = data[i];
+            U = data[i+1];
+            Y2 = data[i+2];
+            V = data[i+3];
+            
+            T1 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << GREEN );
+            T2 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << WHITE );
+            T3 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << ORANGE );
+            T4 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << YELLOW );
+            T5 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << BLUE );
+            T6 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << BLACK );
 
-		//std::cout<<thres[0][10]<<std::endl;
+            if(T1) c1 = GREEN;
+            else if(T2) c1 = WHITE;
+            else if(T3) c1 = ORANGE;
+            else if(T4) c1 = YELLOW;
+            else if(T5) c1 = BLUE;
+            else if(T6) c1 = BLACK;
+            else c1 = NOCOLOR;
 
-		col2 = thres[0][Y2] & thres[1][U] & thres[2][V];
-        T1 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << GREEN );
-        T2 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << WHITE );
-        T3 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << ORANGE );
-        T4 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << YELLOW );
-        T5 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << BLUE );
-        T6 = thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << BLACK );
-		if(T1) c1 = GREEN;
-		else if(T2) c1 = WHITE;
-		else if(T3) c1 = ORANGE;
-		else if(T4) c1 = YELLOW;
-		else if(T5) c1 = BLUE;
-		else if(T6) c1 = BLACK;
-		else c1 = NOCOLOR;
-        T1 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << GREEN );
-        T2 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << WHITE );
-        T3 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << ORANGE );
-        T4 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << YELLOW );
-        T5 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << BLUE );
-        T6 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << BLACK );
-        if(T1) c2 = GREEN;
-		else if(T2) c2 = WHITE;
-		else if(T3) c2 = ORANGE;
-		else if(T4) c2 = YELLOW;
-		else if(T5) c2 = BLUE;
-		else if(T6) c2 = BLACK;
-		else c2 = NOCOLOR;
-		/*
-		col1 = thres[0][Y] & thres[1][U] & thres[2][V];
-        col2 = thres[0][Y2] & thres[1][U] & thres[2][V];
-		if( col1 > 31 ) c1 = GREEN;
-		else if( col1 > 15 ) c1 = WHITE;
-		else if( col1 > 7 ) c1 = ORANGE;
-		else if( col1 > 3 ) c1 = YELLOW;
-		else if( col1 > 1 ) c1 = BLUE;
-		else if( col1 > 0 ) c1 = BLACK;
-		else c1 = NOCOLOR;
+            T1 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << GREEN );
+            T2 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << WHITE );
+            T3 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << ORANGE );
+            T4 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << YELLOW );
+            T5 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << BLUE );
+            T6 = thres[0][Y2] & thres[1][U] & thres[2][V] & ( 1 << BLACK );
 
-        if( col2> 31 ) c2 = GREEN;
-		else if( col2 > 15 ) c2 = WHITE;
-		else if( col2 > 7 ) c2 = ORANGE;
-		else if( col2 > 3 ) c2 = YELLOW;
-		else if( col2 > 1 ) c2 = BLUE;
-		else if( col2 > 0 ) c2 = BLACK;
-		else c2 = NOCOLOR;
-        */
+            if(T1) c2 = GREEN;
+            else if(T2) c2 = WHITE;
+            else if(T3) c2 = ORANGE;
+            else if(T4) c2 = YELLOW;
+            else if(T5) c2 = BLUE;
+            else if(T6) c2 = BLACK;
+            else c2 = NOCOLOR;
 
-		this->th_data[ pix_c ] = c1;
-		this->th_data[ pix_c +1 ] = c2;
-		pix_c+=2;
+            this->th_data[ pix_c ] = c1;
+            this->th_data[ pix_c +1 ] = c2;
+            pix_c+=2;
 	}
 }
 
@@ -164,8 +148,10 @@ void SEGMENTATION::EncodeRuns()
     // restore previous terminator and store next
     // one in the first pixel on the next row
     row[0] = save;
-    save = row[this->width];
-    row[this->width] = 255;
+    if(y!=height-1){
+        save = row[this->width];
+        row[this->width] = 255;
+    }
     r.y = y;
 
     x = 0;

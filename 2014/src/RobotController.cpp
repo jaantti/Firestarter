@@ -15,9 +15,6 @@ using namespace std;
 RobotController::RobotController() {
 }
 
-RobotController::RobotController(const RobotController& orig) {
-}
-
 RobotController::~RobotController() {
 }
 

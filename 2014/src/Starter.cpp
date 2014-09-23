@@ -10,7 +10,8 @@
 #include "RobotLogic.h"
 #include <iostream>
 
-Starter::Starter() {
+Starter::Starter() 
+{
     
 }
 
@@ -21,19 +22,15 @@ Starter::~Starter() {
 }
 
 bool Starter::init() {
-    //iProcessor = ImageProcessor();
-    //nConnector = NetworkConnector();
-    rController = RobotController();
-    //rLogic = RobotLogic();
     rController.init();
-    //iProcessor.init();
+    iProcessor.init();
     std::cout << "Initialization successful." << std::endl;
     return true;
 }
 
 bool Starter::start() {
     
-    rController.driveRobot(50,PI/-2.0,0);
+    //rController.driveRobot(50,PI/-2.0,0);
     //rController.driveRobot(50,PI, PI);
     
     return true;

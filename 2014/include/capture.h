@@ -22,6 +22,8 @@
 #include <string>
 
 
+#include <cstdlib>
+
 #define N_BUFFERS 4
 /*
 #define ORANGE 0

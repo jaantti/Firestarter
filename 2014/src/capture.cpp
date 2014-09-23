@@ -1,5 +1,7 @@
 #include "capture.h"
 
+#include "iostream"
+#include "cstdlib"
 
 
 int last_buf;
@@ -316,7 +318,6 @@ int image_destroy( IMAGE_CONTEXT *img_ctx )
 uchar *read_frame()
 {
     v4l2_buffer buf;
-
     memset( &buf, 0, sizeof(buf) );
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     buf.memory = V4L2_MEMORY_MMAP;
@@ -339,7 +340,6 @@ uchar *read_frame()
         fprintf( stderr, "VIDIOC_QBUF error %d, %s\n", errno, strerror(errno) );
         exit( EXIT_FAILURE );
     }
-
     return (uchar*) buffers[ last_buf ].start;
 }
 
@@ -349,7 +349,7 @@ uchar *read_frame()
 void start_capturing()
 {
     enum v4l2_buf_type type;
-
+    
     for( int i = 0; i < N_BUFFERS; i++ ) {
 
             v4l2_buffer buf;
@@ -365,7 +365,7 @@ void start_capturing()
             }
 
     }
-
+    
     type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     if( -1 == xioctl( fd, VIDIOC_STREAMON, &type ) ) {
         fprintf( stderr, "VIDIOC_STREAMON error %d, %s\n", errno, strerror(errno) );
@@ -785,7 +785,6 @@ static std::string name2var(unsigned char *name)
 int xioctl( int fh, int request, void *arg )
 {
     int r;
-
     do {
         r = ioctl( fh, request, arg );
     } while ( -1 == r && EINTR == errno );

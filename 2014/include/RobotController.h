@@ -17,7 +17,6 @@ class RobotController {
     SerialConnection connection;
 public:
     RobotController();
-    RobotController(const RobotController& orig);
     ~RobotController();
     void init();
     bool hasBall();

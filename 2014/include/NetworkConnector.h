@@ -13,7 +13,6 @@
 class NetworkConnector {
 public:
     NetworkConnector();
-    NetworkConnector(const NetworkConnector& orig);
     virtual ~NetworkConnector();
     void init();
 private:

@@ -10,9 +10,6 @@
 NetworkConnector::NetworkConnector() {
 }
 
-NetworkConnector::NetworkConnector(const NetworkConnector& orig) {
-}
-
 NetworkConnector::~NetworkConnector() {
 }
 

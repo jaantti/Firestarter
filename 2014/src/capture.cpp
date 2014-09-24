@@ -340,6 +340,7 @@ uchar *read_frame()
         fprintf( stderr, "VIDIOC_QBUF error %d, %s\n", errno, strerror(errno) );
         exit( EXIT_FAILURE );
     }
+        
     return (uchar*) buffers[ last_buf ].start;
 }
 

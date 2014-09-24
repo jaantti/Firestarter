@@ -43,6 +43,16 @@ SEGMENTATION::~SEGMENTATION() {
 		delete this->colors;
 }
 
+void SEGMENTATION::processImage(unsigned char* data) {
+    thresholdImage(data);
+    EncodeRuns();
+    ConnectComponents();
+    ExtractRegions();
+    SeparateRegions();
+    SortRegions();
+    
+}
+
 
 void SEGMENTATION::readThresholds( const char path[100] )
 {
@@ -58,8 +68,14 @@ void SEGMENTATION::readThresholds( const char path[100] )
 	}
 
     for( int i = 0; i < 3; i++ ) {
-		for( int j = 0; j < 256; j++ ) fscanf( in, "%c", &thres[i][j] );
-		for( int j = 0; j < 256; j++ ) fscanf( in, "%c", &ad_thres[i][j] );
+		for( int j = 0; j < 256; j++ ) {
+                    fscanf( in, "%c", &thres[i][j] );
+                    //std::cout << (int)thres[i][j] << std::endl;
+                }
+		for( int j = 0; j < 256; j++ ) {
+                    fscanf( in, "%c", &ad_thres[i][j] );
+                   // std::cout << (int)ad_thres[i][j] << std::endl;
+                }
 	}
 
     fclose( in );
@@ -68,6 +84,55 @@ void SEGMENTATION::readThresholds( const char path[100] )
 
 void SEGMENTATION::thresholdImage( unsigned char *data )
 {
+    int pix_c = 0;
+    unsigned char col, col2;
+    unsigned char Y, U, Y2, V;
+    unsigned char c;
+    this->data = data;
+    for( int i = 0; i < 2 * this->width * this->height; i += 4 ) {
+        
+        Y = data[i];
+        U = data[i+1];
+        Y2 = data[i+2];
+        V = data[i+3];
+        
+        col = thres[0][Y] & thres[1][U] & thres[2][V];
+        /*
+        #define ORANGE 0
+        #define YELLOW 1
+        #define BLUE 2
+        #define GREEN 3
+        #define WHITE 4
+        #define BLACK 5
+        #define NOCOLOR 6
+        */
+         
+        if( col > 31 ) c = 0;
+        else if( col > 15 ) c = 1;
+        else if( col > 7 ) c = 2;
+        else if( col > 3 ) c = 3;
+        else if( col > 1 ) c = 4;
+        else if( col > 0 ) c = 5;
+        else c = 6;
+        
+        this->th_data[ pix_c ] = c;
+        
+        col = thres[0][Y2] & thres[1][U] & thres[2][V];
+        
+        if( col > 31 ) c = 0;
+        else if( col > 15 ) c = 1;
+        else if( col > 7 ) c = 2;
+        else if( col > 3 ) c = 3;
+        else if( col > 1 ) c = 4;
+        else if( col > 0 ) c = 5;
+        else c = 6;        
+        
+        this->th_data[ pix_c + 1] = c;
+        
+        pix_c+=2;
+    }
+    
+        /*
 	int pix_c = 0;
 	unsigned char col1, col2, col3;
 	unsigned char c1, c2;
@@ -75,12 +140,13 @@ void SEGMENTATION::thresholdImage( unsigned char *data )
 	this->data = data;
         bool T1, T2, T3, T4, T5, T6;
         for( int i = 0; i < 2 * this->width * this->height; i += 4 ) {
-            /*
+            
             std::cout << "Y is :" << (int)data[i] << std::endl;
             std::cout << "U is :" << (int)data[i+1] << std::endl;
             std::cout << "Y3 is :" << (int)data[i+2] << std::endl;
             std::cout << "V is :" << (int)data[i+3] << std::endl;
-            */
+            
+            
             Y = data[i];
             U = data[i+1];
             Y2 = data[i+2];
@@ -119,7 +185,9 @@ void SEGMENTATION::thresholdImage( unsigned char *data )
             this->th_data[ pix_c ] = c1;
             this->th_data[ pix_c +1 ] = c2;
             pix_c+=2;
+                        
 	}
+        */
 }
 
 

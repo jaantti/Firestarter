@@ -2,21 +2,12 @@
 #ifndef SEGMENTATION_H_INCLUDED
 #define SEGMENTATION_H_INCLUDED
 
-/*
-#define ORANGE 0
-#define YELLOW 2
-#define BLUE 1
-#define GREEN 3
-#define WHITE 4
-#define BLACK 5
-#define NOCOLOR 6
-*/
-#define ORANGE 0
-#define YELLOW 1
-#define BLUE 2
-#define GREEN 3
-#define WHITE 4
-#define BLACK 5
+#define BLACK 0
+#define WHITE 1
+#define GREEN 2
+#define BLUE 3
+#define YELLOW 4
+#define ORANGE 5
 #define NOCOLOR 6
 
 #define COLOR_COUNT 6
@@ -75,6 +66,7 @@ class SEGMENTATION
         SEGMENTATION();
 	SEGMENTATION( int width, int height );
 	~SEGMENTATION();
+        void processImage (unsigned char *data );
 	void readThresholds( const char path[100] );
 	void thresholdImage( unsigned char *data );
 	void EncodeRuns();

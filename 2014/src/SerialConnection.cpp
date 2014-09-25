@@ -13,8 +13,7 @@
 
 
 SerialConnection::SerialConnection() {
-    motors.fill(-1);
-    coil = -1;
+    serialDevice.fill(-1);    
 }
 
 SerialConnection::~SerialConnection() {
@@ -29,12 +28,12 @@ bool SerialConnection::init() {
             unsigned char buf[100] = {0};
             sendCommand(i, "?\n", buf);
             cout << i << ":"<< string((const char *)buf);
-            motors[buf[4]-'0' - 1] = i;
+            serialDevice[buf[4]-'0' - 1] = i;
         }
     }
     cout << "motor array" << endl;
-    for(int i = 0; i < motors.size(); i++){
-        cout << i << ";" << motors[i] << endl;
+    for(int i = 0; i < serialDevice.size(); i++){
+        cout << i << ";" << serialDevice[i] << endl;
     }
     return true;
 }
@@ -42,7 +41,7 @@ bool SerialConnection::init() {
 void SerialConnection::sendCommand(int comport, const char* command, unsigned char* answer) {
         
     RS232_cputs(comport, command);
-    usleep(500000);
+    usleep(100000);
     RS232_PollComport(comport, answer, 100);    
 }
 
@@ -55,8 +54,23 @@ void SerialConnection::setSpeed(int motor, int speed){
     char out[10] = {0};
     sprintf(out, "sd%d\n", speed);
     cout << "speed:" << string(out) << endl;
-    RS232_cputs(motors[motor], (const char*)out);
+    RS232_cputs(serialDevice[motor], (const char*)out);
 }
 
+void SerialConnection::kickBall(int power){
+    char out[10] = {0};
+    sprintf(out, "k%d\n", power);
+    cout << "kick: " << string(out) << endl;
+    RS232_cputs(serialDevice[0], (const char*)out);
+}
 
+bool SerialConnection::hasBall(){
+    unsigned char answer[20] = {0};
+    sendCommand(serialDevice[GET_BALL_BOARD_ID], "gb\n", answer);
+    if(answer[3] == '1'){
+        return true;
+    }
+    return false;
+    
+}
 

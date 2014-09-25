@@ -16,6 +16,7 @@
 #define CAM_W 640
 #define CAM_H 480
 #define MAX_MOTOR_SPEED 190
+#define GET_BALL_BOARD_ID 1
 
 #define SEG_BLACK 0
 #define SEG_WHITE 1
@@ -24,6 +25,8 @@
 #define SEG_YELLOW 4
 #define SEG_ORANGE 5
 #define SEG_ORANGE 6
+
+
 
 struct orange_blob{
     int orange_area;

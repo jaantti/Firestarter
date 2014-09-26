@@ -23,14 +23,16 @@ Starter::~Starter() {
 
 bool Starter::init() {
     rController.init();
-    iProcessor.init();
+    //iProcessor.init();
     std::cout << "Initialization successful." << std::endl;
     return true;
 }
 
 bool Starter::start() {
     
-    //rController.driveRobot(50,PI/-2.0,0);
+    rController.driveRobot(50,PI/4.0,0);
+    usleep(2000000);
+    rController.driveRobot(50,2.0*PI - PI/(-4.0),0);
     //rController.driveRobot(50,PI, PI);
     
     return true;

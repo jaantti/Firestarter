@@ -28,7 +28,8 @@ bool SerialConnection::init() {
             unsigned char buf[100] = {0};
             sendCommand(i, "?\n", buf);
             cout << i << ":"<< string((const char *)buf);
-            serialDevice[buf[4]-'0' - 1] = i;
+            if(buf[0] == 'd')  serialDevice[0] = i;
+            else serialDevice[buf[4]-'0'] = i;
         }
     }
     cout << "motor array" << endl;

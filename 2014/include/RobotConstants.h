@@ -11,11 +11,12 @@
 #include <vector>
 
 #define NR_OF_WHEELS 3
-#define CAMERA_PATH /dev/video0
+#define CAMERA_PATH /dev/video1
 #define CONF_PATH ../conf
 #define CAM_W 640
 #define CAM_H 480
 #define MAX_MOTOR_SPEED 190
+#define GET_BALL_BOARD_ID 1
 
 #define SEG_BLACK 0
 #define SEG_WHITE 1
@@ -24,6 +25,8 @@
 #define SEG_YELLOW 4
 #define SEG_ORANGE 5
 #define SEG_NOCOLOR 6
+
+
 
 struct orange_blob{
     int orange_area;

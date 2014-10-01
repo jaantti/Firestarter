@@ -23,7 +23,7 @@ Starter::~Starter() {
 
 bool Starter::init() {
     rController.init();
-    iProcessor.init();
+    //iProcessor.init();
     std::cout << "Initialization successful." << std::endl;
     return true;
 }

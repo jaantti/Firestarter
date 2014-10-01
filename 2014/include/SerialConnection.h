@@ -17,12 +17,18 @@ class SerialConnection {
 public:
     SerialConnection();
     virtual ~SerialConnection();
+    /**
+     * Coil controller must have id 0, motor id's must start from 1
+     * @return 
+     */
     bool init();
     void setSpeed(int motor, int speed);
+    void kickBall(int power);
+    bool hasBall();
     
 private:
-    array<int, NR_OF_WHEELS> motors;
-    int coil;
+    array<int, NR_OF_WHEELS> serialDevice;
+    
     void sendCommand(int comport, const char* command, unsigned char* answer);
     void sendCommand(int comport, const char* command);
 

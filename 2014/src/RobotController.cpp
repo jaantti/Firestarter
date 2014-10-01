@@ -63,7 +63,7 @@ void RobotController::driveThree(float spd, float angle, float rotSpd) {
         }
     }
     for(int i = 0; i < 3; i++){
-        connection.setSpeed(i, motorSpeeds[i]);
+        connection.setSpeed(i+1, motorSpeeds[i]);
     }   
 }
 

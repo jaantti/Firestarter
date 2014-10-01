@@ -109,37 +109,51 @@ struct SUPPORTED_SETTINGS
 
 
 
+class Capture{
+public:
+    
+    int last_buf;
+    int fd;
 
-IMAGE_CONTEXT *new_window(char *wnd_name, int x, int y, int width, int height);
-void show_video(IMAGE_CONTEXT *image_ctx, uchar **frame);
-void show_threshold(IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color);
-bool isColor(uchar thres[3][256], uchar Y, uchar U, uchar V, int color);
-void yuv_to_rgb(uchar y, uchar u, uchar v, uchar *r, uchar *g, uchar *b);
-int image_put(IMAGE_CONTEXT *img_ctx);
-int image_create(IMAGE_CONTEXT *img_ctx, int width, int height);
-int image_destroy(IMAGE_CONTEXT *img_ctx);
+    int g_width, g_height;
 
-uchar *read_frame(void);
-void start_capturing(void);
-void stop_capturing(void);
-void init_mmap(char *dev_name);
-void init_device(char *dev_name);
-void uninit_device(void);
-void open_device(char *dev_name);
-void close_device(void);
-void start_capturing(void);
-void get_camera_controls(CAMERA_CONTROLS cam_ctl[100], char menu_names[30][100], int *cam_ctl_c, int *menu_c);
-void enter_control_options(struct v4l2_queryctrl *queryctrl, CAMERA_CONTROLS cam_ctl[100], char menu_names[30][100], int *cam_ctl_c, int *menu_c);
-void get_supported_settings(CAM_SETTINGS cs, SUPPORTED_SETTINGS *ss);
-void get_camera_settings(CAM_SETTINGS *cs);
-static std::string name2var(unsigned char *name);
-static std::string fcc2s(unsigned int val);
-void set_cam_value(int id, int val);
-void set_fps(int fps);
-void set_resolution(int width, int height);
-int xioctl(int fh, int request, void *arg);
-void video_cleanup(IMAGE_CONTEXT *v1, IMAGE_CONTEXT *v2);
+    BUFFER *buffers;
+    int xset;
+    int yset;
 
+    uchar last_thres[3][256];
+    
+    Capture();
+    virtual ~Capture();
+    IMAGE_CONTEXT *new_window(char *wnd_name, int x, int y, int width, int height);
+    void show_video(IMAGE_CONTEXT *image_ctx, uchar **frame);
+    void show_threshold(IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color);
+    bool isColor(uchar thres[3][256], uchar Y, uchar U, uchar V, int color);
+    void yuv_to_rgb(uchar y, uchar u, uchar v, uchar *r, uchar *g, uchar *b);
+    int image_put(IMAGE_CONTEXT *img_ctx);
+    int image_create(IMAGE_CONTEXT *img_ctx, int width, int height);
+    int image_destroy(IMAGE_CONTEXT *img_ctx);
 
+    uchar *read_frame(void);
+    void start_capturing(void);
+    void stop_capturing(void);
+    void init_mmap(char *dev_name);
+    void init_device(char *dev_name);
+    void uninit_device(void);
+    void open_device(char *dev_name);
+    void close_device(void);
+    void get_camera_controls(CAMERA_CONTROLS cam_ctl[100], char menu_names[30][100], int *cam_ctl_c, int *menu_c);
+    void enter_control_options(struct v4l2_queryctrl *queryctrl, CAMERA_CONTROLS cam_ctl[100], char menu_names[30][100], int *cam_ctl_c, int *menu_c);
+    void get_supported_settings(CAM_SETTINGS cs, SUPPORTED_SETTINGS *ss);
+    void get_camera_settings(CAM_SETTINGS *cs);
+    std::string name2var(unsigned char *name);
+    std::string fcc2s(unsigned int val);
+    void set_cam_value(int id, int val);
+    void set_fps(int fps);
+    void set_resolution(int width, int height);
+    int xioctl(int fh, int request, void *arg);
+    void video_cleanup(IMAGE_CONTEXT *v1, IMAGE_CONTEXT *v2);
+
+};
 
 #endif // CAPTURE_H_INCLUDED

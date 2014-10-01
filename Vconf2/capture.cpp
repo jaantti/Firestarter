@@ -1,22 +1,21 @@
 #include "capture.h"
 
-#include "iostream"
-#include "cstdlib"
 
 
-Capture::Capture(){
-    this->fd = -1;
-    this->xset = 0;
-    this->yset = 0;
-}
+int last_buf;
+static int fd = -1;
 
-Capture::~Capture(){
-    if(this->buffers){
-        delete this->buffers;
-    }
-}
+int g_width, g_height;
 
-IMAGE_CONTEXT *Capture::new_window( char *wnd_name, int x, int y, int width, int height )
+BUFFER *buffers;
+int xset = 0;
+int yset = 0;
+
+uchar last_thres[3][256];
+
+
+
+IMAGE_CONTEXT *new_window( char *wnd_name, int x, int y, int width, int height )
 {
     IMAGE_CONTEXT *img_ctx;
     img_ctx = new IMAGE_CONTEXT;
@@ -49,7 +48,7 @@ IMAGE_CONTEXT *Capture::new_window( char *wnd_name, int x, int y, int width, int
 
 
     img_ctx->xImage = NULL;
-    if( this->image_create( img_ctx, g_width, g_height ) < 0 )
+    if( image_create( img_ctx, g_width, g_height ) < 0 )
     {
         printf("Error: image_create() failed\n");
         exit(1);
@@ -69,7 +68,7 @@ IMAGE_CONTEXT *Capture::new_window( char *wnd_name, int x, int y, int width, int
 
 
 // Reading the data from memory, converting it to RGB, and then showing the picture
-void Capture::show_video( IMAGE_CONTEXT *image_ctx, uchar **frame)
+void show_video( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color, int bf, int bc, bool *halt )
 {
 	XImage *xImage1 = image_ctx->xImage;
 	XEvent event;
@@ -77,6 +76,7 @@ void Capture::show_video( IMAGE_CONTEXT *image_ctx, uchar **frame)
 	uchar Y, U, V;
 	uchar R, G, B;
 	int pix_c = 0;
+	int by_s, by_e, bx_s, bx_e, ys, ye, us, ue, vs, ve;
 
 
 	uchar *imageLine1 = (uchar*) xImage1 -> data;
@@ -102,12 +102,59 @@ void Capture::show_video( IMAGE_CONTEXT *image_ctx, uchar **frame)
 
 	image_put( image_ctx );
 
-	XPending( image_ctx->display);
+	if ( XPending( image_ctx->display ) > 0 ) {
+		XNextEvent( image_ctx->display, &event );
+
+
+		if( event.type == KeyPress ) {
+		    if( event.xkey.keycode == 65 ) {     // if SPACE is pressed
+                if( *halt == false ) *halt = true;
+                else *halt = false;
+		    } else
+                memcpy( thres, last_thres, 768 );
+		}
+
+        if( event.type == ButtonPress ) {
+
+            memcpy( last_thres, thres, 768 );
+            by_s = 0; by_e = g_height; bx_s = 0; bx_e = g_width;
+
+            if( event.xbutton.y - bf + 1 >= 0 ) by_s = event.xbutton.y - bf + 1;
+            if( event.xbutton.y + bf <= g_height ) by_e = event.xbutton.y + bf;
+            if( event.xbutton.x - bf + 1 >= 0 ) bx_s = event.xbutton.x - bf + 1;
+            if( event.xbutton.x + bf <= g_width ) bx_e = event.xbutton.x + bf;
+
+            for( int i = by_s; i < by_e; i++ ) for( int j = bx_s; j < bx_e; j++ ) {
+
+                Y = frame[i][ 3*j + 0 ];
+                U = frame[i][ 3*j + 1 ];
+                V = frame[i][ 3*j + 2 ];
+
+                ys = 0;
+                ye = 256;
+                us = 0;
+                ue = 256;
+                vs = 0;
+                ve = 256;
+                if( Y - bc + 1 >= 0 ) ys = Y - bc + 1;
+                if( Y + bc <= 256 ) ye = Y + bc;
+                if( U - bc + 1 >= 0 ) us = U - bc + 1;
+                if( U + bc <= 256 ) ue = U + bc;
+                if( V - bc + 1 >= 0 ) vs = V - bc + 1;
+                if( V + bc <= 256 ) ve = V + bc;
+
+
+                for( int k = ys; k < ye; k++ ) thres[0][k] |= 1 << color;
+                for( int k = us; k < ue; k++ ) thres[1][k] |= 1 << color;
+                for( int k = vs; k < ve; k++ ) thres[2][k] |= 1 << color;
+            }
+        }
+	}
 }
 
 
 
-void Capture::show_threshold( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color)
+void show_threshold( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thres[3][256], int color, int bf, int bc )
 {
     XImage *xImage1 = image_ctx->xImage;
     XEvent event;
@@ -141,12 +188,56 @@ void Capture::show_threshold( IMAGE_CONTEXT *image_ctx, uchar **frame, uchar thr
 
 
 
-    XPending( image_ctx->display );
+	if ( XPending( image_ctx->display ) > 0 ) {
+
+	    XNextEvent( image_ctx->display, &event );
+
+	    if( event.type == KeyPress ) {
+	        memcpy( thres, last_thres, 768 );
+	    }
+
+	    if( event.type == ButtonPress ) {
+
+            memcpy( last_thres, thres, 768 );
+
+            by_s = 0; by_e = g_height; bx_s = 0; bx_e = g_width;
+
+            if( event.xbutton.y - bf + 1 >= 0 ) by_s = event.xbutton.y - bf + 1;
+            if( event.xbutton.y + bf <= g_height ) by_e = event.xbutton.y + bf;
+            if( event.xbutton.x - bf + 1 >= 0 ) bx_s = event.xbutton.x - bf + 1;
+            if( event.xbutton.x + bf <= g_width ) bx_e = event.xbutton.x + bf;
+
+            for( int i = by_s; i < by_e; i++ ) for( int j = bx_s; j < bx_e; j++ ) {
+
+                Y = frame[i][ 3*j + 0 ];
+                U = frame[i][ 3*j + 1 ];
+                V = frame[i][ 3*j + 2 ];
+
+                ys = 0;
+                ye = 256;
+                us = 0;
+                ue = 256;
+                vs = 0;
+                ve = 256;
+                if( Y - bc + 1 >= 0 ) ys = Y - bc + 1;
+                if( Y + bc <= 256 ) ye = Y + bc;
+                if( U - bc + 1 >= 0 ) us = U - bc + 1;
+                if( U + bc <= 256 ) ue = U + bc;
+                if( V - bc + 1 >= 0 ) vs = V - bc + 1;
+                if( V + bc <= 256 ) ve = V + bc;
+
+
+                for( int k = ys; k < ye; k++ ) thres[0][k] &= ~( 1 << color );
+                for( int k = us; k < ue; k++ ) thres[1][k] &= ~( 1 << color );
+                for( int k = vs; k < ve; k++ ) thres[2][k] &= ~( 1 << color );
+            }
+	    }
+	}
 }
 
 
 
-bool Capture::isColor( uchar thres[3][256], uchar Y, uchar U, uchar V, int color )
+bool isColor( uchar thres[3][256], uchar Y, uchar U, uchar V, int color )
 {
     return thres[0][Y] & thres[1][U] & thres[2][V] & ( 1 << color );
 }
@@ -155,7 +246,7 @@ bool Capture::isColor( uchar thres[3][256], uchar Y, uchar U, uchar V, int color
 
 
 // Convert a pixel from YUV to RGB
-void Capture::yuv_to_rgb( uchar y, uchar u, uchar v, uchar *r, uchar *g, uchar *b )
+void yuv_to_rgb( uchar y, uchar u, uchar v, uchar *r, uchar *g, uchar *b )
 {
 	int amp = 255;
 	double R, G, B;
@@ -183,7 +274,7 @@ void Capture::yuv_to_rgb( uchar y, uchar u, uchar v, uchar *r, uchar *g, uchar *
 
 
 
-int Capture::image_put( IMAGE_CONTEXT *img_ctx )
+int image_put( IMAGE_CONTEXT *img_ctx )
 {
 
 	if( img_ctx->xImage == NULL ) return -1;
@@ -197,7 +288,7 @@ int Capture::image_put( IMAGE_CONTEXT *img_ctx )
 
 
 
-int Capture::image_create( IMAGE_CONTEXT *img_ctx, int width, int height )
+int image_create( IMAGE_CONTEXT *img_ctx, int width, int height )
 {
 	XGCValues          gcValues;
 	ulong              gcValuesMask;
@@ -273,7 +364,7 @@ int Capture::image_create( IMAGE_CONTEXT *img_ctx, int width, int height )
 
 
 
-int Capture::image_destroy( IMAGE_CONTEXT *img_ctx )
+int image_destroy( IMAGE_CONTEXT *img_ctx )
 {
 	if ( img_ctx->xImage == NULL ) return 0;
 
@@ -314,13 +405,14 @@ int Capture::image_destroy( IMAGE_CONTEXT *img_ctx )
 
 
 
-uchar *Capture::read_frame()
-{    
+uchar *read_frame()
+{
     v4l2_buffer buf;
+
     memset( &buf, 0, sizeof(buf) );
     buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     buf.memory = V4L2_MEMORY_MMAP;
-    
+
     if( -1 == xioctl( fd, VIDIOC_DQBUF, &buf ) ) {
         switch (errno) {
             case EAGAIN:
@@ -339,17 +431,17 @@ uchar *Capture::read_frame()
         fprintf( stderr, "VIDIOC_QBUF error %d, %s\n", errno, strerror(errno) );
         exit( EXIT_FAILURE );
     }
-        
+
     return (uchar*) buffers[ last_buf ].start;
 }
 
 
 
 
-void Capture::start_capturing()
+void start_capturing()
 {
     enum v4l2_buf_type type;
-    
+
     for( int i = 0; i < N_BUFFERS; i++ ) {
 
             v4l2_buffer buf;
@@ -365,7 +457,7 @@ void Capture::start_capturing()
             }
 
     }
-    
+
     type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     if( -1 == xioctl( fd, VIDIOC_STREAMON, &type ) ) {
         fprintf( stderr, "VIDIOC_STREAMON error %d, %s\n", errno, strerror(errno) );
@@ -375,7 +467,7 @@ void Capture::start_capturing()
 
 
 
-void Capture::stop_capturing()
+void stop_capturing()
 {
     enum v4l2_buf_type type;
 	type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -389,7 +481,7 @@ void Capture::stop_capturing()
 
 
 
-void Capture::init_mmap( char *dev_name )
+void init_mmap( char *dev_name )
 {
     v4l2_requestbuffers req;
 
@@ -442,7 +534,7 @@ void Capture::init_mmap( char *dev_name )
 
 
 
-void Capture::init_device( char *dev_name )
+void init_device( char *dev_name )
 {
     v4l2_capability cap;
     v4l2_format fmt;
@@ -493,7 +585,7 @@ void Capture::init_device( char *dev_name )
 
 
 
-void Capture::uninit_device()
+void uninit_device()
 {
     for( int i = 0; i < N_BUFFERS; i++ )
         if ( -1 == munmap( buffers[i].start, buffers[i].length ) ) {
@@ -508,11 +600,10 @@ void Capture::uninit_device()
 
 
 
-void Capture::open_device( char *dev_name )
+void open_device( char *dev_name )
 {
     struct stat st;
-    std::cout << "Initializing device :" << dev_name << std::endl;
-    
+
     if( -1 == stat( dev_name, &st ) ) {
         fprintf( stderr, "Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno) );
         exit( EXIT_FAILURE );
@@ -533,7 +624,7 @@ void Capture::open_device( char *dev_name )
 
 
 
-void Capture::close_device()
+void close_device()
 {
     if ( -1 == close( fd ) ) {
         fprintf( stderr, "Device Close error %d, %s\n", errno, strerror(errno) );
@@ -546,7 +637,7 @@ void Capture::close_device()
 
 
 
-void Capture::get_camera_controls( CAMERA_CONTROLS cam_ctl[100], char menu_names[30][100], int *cam_ctl_c, int *menu_c )
+void get_camera_controls( CAMERA_CONTROLS cam_ctl[100], char menu_names[30][100], int *cam_ctl_c, int *menu_c )
 {
     struct v4l2_queryctrl queryctrl;
 	int id;
@@ -579,7 +670,7 @@ void Capture::get_camera_controls( CAMERA_CONTROLS cam_ctl[100], char menu_names
 }
 
 
-void Capture::enter_control_options( struct v4l2_queryctrl *queryctrl, CAMERA_CONTROLS cam_ctl[100], char menu_names[30][100], int *cam_ctl_c, int *menu_c )
+void enter_control_options( struct v4l2_queryctrl *queryctrl, CAMERA_CONTROLS cam_ctl[100], char menu_names[30][100], int *cam_ctl_c, int *menu_c )
 {
     struct v4l2_control control;
     struct v4l2_querymenu querymenu;
@@ -625,7 +716,7 @@ void Capture::enter_control_options( struct v4l2_queryctrl *queryctrl, CAMERA_CO
 
 
 
-void Capture::set_cam_value( int id, int val )
+void set_cam_value( int id, int val )
 {
     struct v4l2_control control;
     memset( &control, 0, sizeof(control) );
@@ -638,7 +729,7 @@ void Capture::set_cam_value( int id, int val )
 
 
 
-void Capture::get_camera_settings( CAM_SETTINGS *cs )
+void get_camera_settings( CAM_SETTINGS *cs )
 {
     struct v4l2_format vfmt;
     struct v4l2_streamparm parm;
@@ -659,7 +750,7 @@ void Capture::get_camera_settings( CAM_SETTINGS *cs )
 
 
 
-std::string Capture::fcc2s(unsigned int val)
+std::string fcc2s(unsigned int val)
 {
 	std::string s;
 
@@ -673,7 +764,7 @@ std::string Capture::fcc2s(unsigned int val)
 
 
 
-void Capture::get_supported_settings( CAM_SETTINGS cs, SUPPORTED_SETTINGS *ss )
+void get_supported_settings( CAM_SETTINGS cs, SUPPORTED_SETTINGS *ss )
 {
 	struct v4l2_fmtdesc fmt;
 	struct v4l2_frmsizeenum frmsize;
@@ -728,7 +819,7 @@ void Capture::get_supported_settings( CAM_SETTINGS cs, SUPPORTED_SETTINGS *ss )
 
 
 
-void Capture::set_fps( int fps )
+void set_fps( int fps )
 {
     struct v4l2_streamparm parm;
 
@@ -742,7 +833,7 @@ void Capture::set_fps( int fps )
 }
 
 
-void Capture::set_resolution( int width, int height )
+void set_resolution( int width, int height )
 {
     struct v4l2_format in_vfmt;
     in_vfmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -761,7 +852,7 @@ void Capture::set_resolution( int width, int height )
 
 
 
-std::string Capture::name2var(unsigned char *name)
+static std::string name2var(unsigned char *name)
 {
 	std::string s;
 	int add_underscore = 0;
@@ -783,9 +874,10 @@ std::string Capture::name2var(unsigned char *name)
 
 
 
-int Capture::xioctl( int fh, int request, void *arg )
+int xioctl( int fh, int request, void *arg )
 {
     int r;
+
     do {
         r = ioctl( fh, request, arg );
     } while ( -1 == r && EINTR == errno );
@@ -795,7 +887,7 @@ int Capture::xioctl( int fh, int request, void *arg )
 
 
 
-void Capture::video_cleanup( IMAGE_CONTEXT *v1, IMAGE_CONTEXT *v2 )
+void video_cleanup( IMAGE_CONTEXT *v1, IMAGE_CONTEXT *v2 )
 {
     stop_capturing();
     uninit_device();

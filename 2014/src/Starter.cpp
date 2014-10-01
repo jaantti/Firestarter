@@ -30,8 +30,11 @@ bool Starter::init() {
 
 bool Starter::start() {
     
+    iProcessor.runIprocessor();
     //rController.driveRobot(50,PI/-2.0,0);
     //rController.driveRobot(50,PI, PI);
-    
+    while(true){
+        //Stall loop.
+    }
     return true;
 }

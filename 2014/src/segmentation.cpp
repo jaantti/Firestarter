@@ -10,11 +10,16 @@
 #include <cstdlib>
 #include <sys/time.h>
 #include <thread>
+#include "RobotConstants.h"
 
 #include <iostream>
 
 unsigned char thres[3][256];
 unsigned char ad_thres[3][256];
+
+SEGMENTATION::SEGMENTATION(){
+    SEGMENTATION(CAM_W, CAM_H);    
+}
 
 SEGMENTATION::SEGMENTATION( int width, int height ) {
 	this->width = width;

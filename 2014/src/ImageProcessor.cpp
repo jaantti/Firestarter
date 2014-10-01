@@ -8,7 +8,7 @@
 #include "ImageProcessor.h"
 
 ImageProcessor::ImageProcessor()
-    : segm(CAM_W, CAM_H) 
+    :segm(CAM_W, CAM_H), segm2(CAM_W, CAM_H)
 {
 
 }
@@ -18,140 +18,300 @@ ImageProcessor::~ImageProcessor() {
 
 void ImageProcessor::init() {
     
-    IMAGE_CONTEXT *video, *thresh;
-    IMAGE_CONTEXT *thresholds;
-    CAM_SETTINGS cs;
-    SUPPORTED_SETTINGS ss;
-    CAMERA_CONTROLS cam_ctl[100];
-    char menu_names[32][100];
-    int cam_ctl_c = 0;
-    int menu_c = 0;
     
-    open_device( "/dev/video0" );
-    init_device( "/dev/video0" );
+    switchCameras = chooseCameras();
     
-    uchar **fr;
-    uchar *frame = NULL;
-    get_camera_settings( &cs );
-    get_camera_controls( cam_ctl, menu_names, &cam_ctl_c, &menu_c );
-    get_supported_settings( cs, &ss );
-    //readThresholds("conf");
-    int gw = cs.width;
-    int gh = cs.height;
-    start_capturing();
-    segm.readThresholds("conf");    
-    int vx = 640, vy = 480, tx = 1279, ty = 298;
-    video = new_window( "Video", vx, vy, gw, gh );
-    while(true){
-        frame = read_frame();
-        
-        if(frame){
-            segm.processImage( frame );
-            
-            if( strcmp( "YUYV", cs.pix_fmt ) == 0 ) set_working_frame_yuyv( frame, gw, gh);
-            fr = get_working_frame();
-            processOrange();
-            processBlue();
-            processYellow();
-            processGreens();
-            show_video(video, fr);
-        }
-    }
+    
+    if(switchCameras){
+        front = "/dev/video0";
+        back = "/dev/video1";
+    } else {
+        front = "/dev/video1";
+        back = "/dev/video0";
+    }      
 }
 
-void ImageProcessor::processOrange() {
-    if(segm.colors[SEG_ORANGE].list!=NULL){                
+void ImageProcessor::runIprocessor() {
+    std::thread frontThread  (&ImageProcessor::processFrontCamera, this,  front);
+    std::thread backThread (&ImageProcessor::processBackCamera, this,  back);
+    frontThread.join();
+    backThread.join();
+}
+
+
+bool ImageProcessor::chooseCameras() {
+    // TODO : Implement logic for choosing which camera is which.
+    // if switchCamers = true, then video0 is front, if false, video0 is back.
+    return true;
+    
+}
+
+void ImageProcessor::processFrontCamera(char *cam) {
+    uchar *frame = NULL;
+    cap1.open_device( cam );
+    cap1.init_device( cam );
+    cap1.start_capturing();
+    segm.readThresholds("conf1");
+        
+    while(true){
+        frame = cap1.read_frame();
+        if(frame){
+            segm.processImage(frame);
+            //if( strcmp( "YUYV", cs.pix_fmt ) == 0 ) set_working_frame_yuyv( frame, gw, gh);
+            //fr = get_working_frame();
+            //cap1.show_video(video, fr);
+            
+            processOrange(true);
+            processBlue(true);
+            processYellow(true);
+            processGreens(true);
+            
+        }
+    }    
+}
+
+void ImageProcessor::processBackCamera(char *cam) {
+    uchar *frame = NULL;
+    cap2.open_device( cam );
+    cap2.init_device( cam );
+    cap2.start_capturing();
+    segm2.readThresholds("conf2");
+        
+    while(true){
+        frame = cap2.read_frame();
+        if(frame){
+            segm2.processImage(frame);
+            //if( strcmp( "YUYV", cs.pix_fmt ) == 0 ) set_working_frame_yuyv( frame, gw, gh);
+            //fr = get_working_frame();
+            //cap2.show_video(video, fr);
+            
+            processOrange(false);
+            processBlue(false);
+            processYellow(false);
+            processGreens(false);
+        }
+    }    
+    
+}
+
+void ImageProcessor::processOrange(bool front) {
+    bool seg_exist_selector;
+    if(front){
+        if(segm.colors[SEG_ORANGE].list!=NULL){
+            seg_exist_selector = true;
+        } else {
+            seg_exist_selector = false;
+        }
+    } else {
+        if(segm2.colors[SEG_ORANGE].list!=NULL){
+            seg_exist_selector = true;
+        } else {
+            seg_exist_selector = false;
+        }
+    }    
+    if(seg_exist_selector){
+        std::cout << "I AM PROCESSING ORANGE" << std::endl;
         int orangeCounter = 0;
         struct region *tempRegion;
-        tempRegion = segm.colors[SEG_ORANGE].list;
-                 
-        blob_data.o_blob.push_back(orange_blob());
-        blob_data.o_blob[orangeCounter].orange_area = tempRegion->area;
-        blob_data.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
-        blob_data.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;
+        if(front){
+            tempRegion = segm.colors[SEG_ORANGE].list;
+        } else {
+            tempRegion = segm2.colors[SEG_ORANGE].list;
+        }
+        
+        if(front){
+            blob_data_front.o_blob.push_back(orange_blob());
+            blob_data_front.o_blob[orangeCounter].orange_area = tempRegion->area;
+            blob_data_front.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
+            blob_data_front.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;
+            std::cout << " x : " << tempRegion->cen_x << " y : " << tempRegion->cen_y << std::endl;
+        } else {
+            blob_data_back.o_blob.push_back(orange_blob());
+            blob_data_back.o_blob[orangeCounter].orange_area = tempRegion->area;
+            blob_data_back.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
+            blob_data_back.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;
+        }
+        
                 
         while(true){
             if(tempRegion->next!=NULL){
                 orangeCounter++;
                 tempRegion = tempRegion->next;      
-                      
-                blob_data.o_blob.push_back(orange_blob());
-                blob_data.o_blob[orangeCounter].orange_area = tempRegion->area;
-                blob_data.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
-                blob_data.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;
+                if(front){
+                    blob_data_front.o_blob.push_back(orange_blob());
+                    blob_data_front.o_blob[orangeCounter].orange_area = tempRegion->area;
+                    blob_data_front.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
+                    blob_data_front.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;                    
+                } else {
+                    blob_data_back.o_blob.push_back(orange_blob());
+                    blob_data_back.o_blob[orangeCounter].orange_area = tempRegion->area;
+                    blob_data_back.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
+                    blob_data_back.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;
+                }
                         
             } else {
-                blob_data.oranges_processed = orangeCounter+1;
+                if(front){
+                    blob_data_front.oranges_processed = orangeCounter+1;
+                } else {
+                    blob_data_back.oranges_processed = orangeCounter+1;
+                }
                 break;
             }
         }
     }
 }
 
-void ImageProcessor::processBlue() {
-    if(segm.colors[SEG_BLUE].list!=NULL){                
+void ImageProcessor::processBlue(bool front) {
+    bool seg_exist_selector;
+    if(front){
+        if(segm.colors[SEG_BLUE].list!=NULL){
+            seg_exist_selector = true;
+        } else {
+            seg_exist_selector = false;
+        }
+    } else {
+        if(segm2.colors[SEG_BLUE].list!=NULL){
+            seg_exist_selector = true;
+        } else {
+            seg_exist_selector = false;
+        }
+    }
+    if(seg_exist_selector){                
         int blueCounter = 0;
         struct region *tempRegion;
-        tempRegion = segm.colors[SEG_BLUE].list;
-                 
-        blob_data.b_blob.push_back(blue_blob());
-        blob_data.b_blob[blueCounter].blue_area = tempRegion->area;
-        blob_data.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
-        blob_data.b_blob[blueCounter].blue_cen_y = tempRegion->cen_y;
-                
+        if(front){
+            tempRegion = segm.colors[SEG_BLUE].list;
+        } else {
+            tempRegion = segm2.colors[SEG_BLUE].list;
+        }
+        if(front){
+            blob_data_front.b_blob.push_back(blue_blob());
+            blob_data_front.b_blob[blueCounter].blue_area = tempRegion->area;
+            blob_data_front.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
+            blob_data_front.b_blob[blueCounter].blue_cen_y = tempRegion->cen_y;               
+        } else {
+            blob_data_back.b_blob.push_back(blue_blob());
+            blob_data_back.b_blob[blueCounter].blue_area = tempRegion->area;
+            blob_data_back.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
+            blob_data_back.b_blob[blueCounter].blue_cen_y = tempRegion->cen_y;
+               
+        }
         while(true){
             if(tempRegion->next!=NULL){
                 blueCounter++;
                 tempRegion = tempRegion->next;      
-                      
-                blob_data.b_blob.push_back(blue_blob());
-                blob_data.b_blob[blueCounter].blue_area = tempRegion->area;
-                blob_data.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
-                blob_data.b_blob[blueCounter].blue_cen_y = tempRegion->cen_y;
-                        
+                if(front){
+                    blob_data_front.b_blob.push_back(blue_blob());
+                    blob_data_front.b_blob[blueCounter].blue_area = tempRegion->area;
+                    blob_data_front.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
+                    blob_data_front.b_blob[blueCounter].blue_cen_y = tempRegion->cen_y;    
+                } else {
+                    blob_data_back.b_blob.push_back(blue_blob());
+                    blob_data_back.b_blob[blueCounter].blue_area = tempRegion->area;
+                    blob_data_back.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
+                    blob_data_back.b_blob[blueCounter].blue_cen_y = tempRegion->cen_y;
+                }
+                                        
             } else {
-                blob_data.blues_processed = blueCounter+1;
+                if(front){
+                    blob_data_front.blues_processed = blueCounter+1;
+                } else {
+                    blob_data_back.blues_processed = blueCounter+1;
+                }
                 break;
             }
         }
     }
 }
 
-void ImageProcessor::processYellow() {
-    if(segm.colors[SEG_YELLOW].list!=NULL){                
+void ImageProcessor::processYellow(bool front) {
+    bool seg_exist_selector;
+    if(front){
+        if(segm.colors[SEG_YELLOW].list!=NULL){
+            seg_exist_selector = true;
+        } else {
+            seg_exist_selector = false;
+        }
+    } else {
+        if(segm2.colors[SEG_YELLOW].list!=NULL){
+            seg_exist_selector = true;
+        } else {
+            seg_exist_selector = false;
+        }
+    }
+    if(seg_exist_selector){                
         int yellowCounter = 0;
         struct region *tempRegion;
-        tempRegion = segm.colors[SEG_YELLOW].list;
-                 
-        blob_data.y_blob.push_back(yellow_blob());
-        blob_data.y_blob[yellowCounter].yellow_area = tempRegion->area;
-        blob_data.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
-        blob_data.y_blob[yellowCounter].yellow_cen_y = tempRegion->cen_y;
+        if(front){
+            tempRegion = segm.colors[SEG_YELLOW].list;
+        } else {
+            tempRegion = segm2.colors[SEG_YELLOW].list;
+        }
+        
+        if(front){
+            blob_data_front.y_blob.push_back(yellow_blob());
+            blob_data_front.y_blob[yellowCounter].yellow_area = tempRegion->area;
+            blob_data_front.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
+            blob_data_front.y_blob[yellowCounter].yellow_cen_y = tempRegion->cen_y;  
+        } else {
+            blob_data_back.y_blob.push_back(yellow_blob());
+            blob_data_back.y_blob[yellowCounter].yellow_area = tempRegion->area;
+            blob_data_back.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
+            blob_data_back.y_blob[yellowCounter].yellow_cen_y = tempRegion->cen_y;
+        }
+        
                 
         while(true){
             if(tempRegion->next!=NULL){
                 yellowCounter++;
                 tempRegion = tempRegion->next;      
-                      
-                blob_data.y_blob.push_back(yellow_blob());
-                blob_data.y_blob[yellowCounter].yellow_area = tempRegion->area;
-                blob_data.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
-                blob_data.y_blob[yellowCounter].yellow_cen_y = tempRegion->cen_y;
-                        
+                if(front){
+                    blob_data_front.y_blob.push_back(yellow_blob());
+                    blob_data_front.y_blob[yellowCounter].yellow_area = tempRegion->area;
+                    blob_data_front.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
+                    blob_data_front.y_blob[yellowCounter].yellow_cen_y = tempRegion->cen_y;
+                } else {
+                    blob_data_back.y_blob.push_back(yellow_blob());
+                    blob_data_back.y_blob[yellowCounter].yellow_area = tempRegion->area;
+                    blob_data_back.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
+                    blob_data_back.y_blob[yellowCounter].yellow_cen_y = tempRegion->cen_y;
+                }
+                                        
             } else {
-                blob_data.yellows_processed = yellowCounter+1;
+                if(front){
+                    blob_data_front.yellows_processed = yellowCounter+1;
+                } else {
+                    blob_data_back.yellows_processed = yellowCounter+1;
+                }
                 break;
             }
         }
     }
 }
 
-
-void ImageProcessor::processGreens() {
-    if(segm.colors[SEG_GREEN].list!=NULL){
+void ImageProcessor::processGreens(bool front) {
+    bool seg_exist_selector;
+    if(front){
+        if(segm.colors[SEG_GREEN].list!=NULL){
+            seg_exist_selector = true;
+        } else {
+            seg_exist_selector = false;
+        }
+    } else {
+        if(segm2.colors[SEG_GREEN].list!=NULL){
+            seg_exist_selector = true;
+        } else {
+            seg_exist_selector = false;
+        }
+    }
+    if(seg_exist_selector){
         struct region *tempRegion;
         int total_green = 0;
-        tempRegion = segm.colors[SEG_GREEN].list;
+        if(front){
+            tempRegion = segm.colors[SEG_GREEN].list;
+        } else {
+            tempRegion = segm2.colors[SEG_GREEN].list;
+        }
         int greens_processed = 0;
         greens_processed++;
         total_green+=tempRegion->area;
@@ -161,13 +321,37 @@ void ImageProcessor::processGreens() {
                 total_green+=tempRegion->area;
                 greens_processed++;
             } else {
-                blob_data.total_green = total_green;
-                blob_data.greens_processed = greens_processed;
+                if(front){
+                    blob_data_front.total_green = total_green;
+                    blob_data_front.greens_processed = greens_processed;
+                } else {
+                    blob_data_back.total_green = total_green;
+                    blob_data_back.greens_processed = greens_processed;
+                }                
                 break;
             }
         }
     }
 }
 
-
+//Legacy image displaying code.
+ /*
+    //Imshow initialization block.    
+    IMAGE_CONTEXT *video, *thresh;
+    IMAGE_CONTEXT *thresholds;
+    CAM_SETTINGS cs;
+    SUPPORTED_SETTINGS ss;
+    CAMERA_CONTROLS cam_ctl[100];
+    char menu_names[32][100];
+    int cam_ctl_c = 0;
+    int menu_c = 0;    
+    uchar **fr;
+    cap2.get_camera_settings( &cs );
+    cap2.get_camera_controls( cam_ctl, menu_names, &cam_ctl_c, &menu_c );
+    cap2.get_supported_settings( cs, &ss );
+    int gw = cs.width;
+    int gh = cs.height;
+    int vx = 640, vy = 480, tx = 1279, ty = 298;
+    //video = cap2.new_window( "Video", vx, vy, gw, gh );
+*/
 

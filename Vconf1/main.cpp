@@ -106,7 +106,7 @@ int main (int argc, char *argv[])
 
     memset( path, '\0', 100 );
     strcat( path, robot_dir );
-    strcat( path, "conf" );
+    strcat( path, "conf1" );
 
     in = fopen( path, "r" );
 
@@ -389,11 +389,13 @@ void reset(GtkWidget *widget, gpointer data)
 
     if( gtk_toggle_button_get_active( GTK_TOGGLE_BUTTON(color_checkbox) ) ) {
         for( int i = 0; i < 3; i++ ) {
-            for( int j = 0; j < 256; j++ ) ad_thres[i][j] &= ~( 1 << color );
+			for( int j = 0; j < 256; j++ ) ad_thres[i][j] = ( 0 );
+//            for( int j = 0; j < 256; j++ ) ad_thres[i][j] &= ~( 1 << color );
         }
     } else {
         for( int i = 0; i < 3; i++ ) {
-            for( int j = 0; j < 256; j++ ) thres[i][j] &= ~( 1 << color );
+			for( int j = 0; j < 256; j++ ) thres[i][j] = ( 0);	
+//            for( int j = 0; j < 256; j++ ) thres[i][j] &= ~( 1 << color );
         }
     }
 }
@@ -576,7 +578,7 @@ void end()
 
     memset( path, '\0', 100 );
     strcat( path, robot_dir );
-    strcat( path, "conf" );
+    strcat( path, "conf1" );
 
     // Creating the threshold file
     out = fopen( path, "w" );

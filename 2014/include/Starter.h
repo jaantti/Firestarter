@@ -27,9 +27,6 @@ public:
     virtual ~Starter();
     bool init();
     bool start();
-    
-private:
-
 };
 
 #endif	/* STARTER_H */

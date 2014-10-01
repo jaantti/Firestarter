@@ -23,7 +23,7 @@
 #define SEG_BLUE 3
 #define SEG_YELLOW 4
 #define SEG_ORANGE 5
-#define SEG_ORANGE 6
+#define SEG_NOCOLOR 6
 
 struct orange_blob{
     int orange_area;

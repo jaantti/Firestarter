@@ -10,7 +10,7 @@
 #include "r_video.h"
 #include "capture.h"
 
-Capture cap;
+
 
 
 char y_array[255];
@@ -190,7 +190,7 @@ void draw_dot( int x, int y )
 
 
 
-bool check_for_line( int x, int y, int b_min_x, int b_max_x )
+bool check_for_line( int x, int y )
 {
 	float m;
 	float b;
@@ -199,7 +199,7 @@ bool check_for_line( int x, int y, int b_min_x, int b_max_x )
 	int cur = 0;
 	int white_c, black_c;
 	int cur_x;
-	bool gr_chk = false;
+	int line_c = 0;
 
 
 
@@ -214,8 +214,6 @@ bool check_for_line( int x, int y, int b_min_x, int b_max_x )
         m = (float) ( gwidth/2 - cur_x ) / (float) ( gheight - y );
         b = (float) cur_x - m*(float)y;
 
-        gr_chk = false;
-
         for( int i = y; i < gheight; i++ ) {
 
             black_c = 0;
@@ -224,25 +222,21 @@ bool check_for_line( int x, int y, int b_min_x, int b_max_x )
             new_y = i;
             new_x = int ( m*i + b );
 
-            if( !gr_chk ){
-                if ( IS_COLOR( 3*new_x, new_y, GREEN ) ) gr_chk = true;
+
+            if( IS_COLOR( 3*new_x, new_y, WHITE ) ) last[cur] = WHITE;
+            else if( IS_COLOR( 3*new_x, new_y, BLACK ) ) last[cur] = BLACK;
+            else last[cur] = 0;
+
+            if( cur < 4 ) cur++;
+            else cur = 0;
+
+
+            for( int j = 0; j < 5; j++ ) {
+                if( last[j] == WHITE ) white_c++;
+                else if( last[j] == BLACK ) black_c++;
             }
-            else {
 
-                if( IS_COLOR( 3*new_x, new_y, WHITE ) ) last[cur] = WHITE;
-                else if( IS_COLOR( 3*new_x, new_y, BLACK ) ) last[cur] = BLACK;
-                else last[cur] = 0;
-
-                if( cur < 4 ) cur++;
-                else cur = 0;
-
-                for( int j = 0; j < 5; j++ ) {
-                    if( last[j] == WHITE ) white_c++;
-                    else if( last[j] == BLACK ) black_c++;
-                }
-
-                if( black_c > 0 && white_c > 0 ) return true;
-            }
+            if( black_c > 0 && white_c > 0 ) return true;
         }
     }
 
@@ -353,7 +347,7 @@ void detect_ball( int *x, int *y )
 
                 if( area >= MIN_BALL_AREA  && green_c > 2 && ( (double)correct_c / (double)area ) > 0.4 ) {
 
-                    if( check_for_line( j, i, b_min_x, b_max_x ) ) {
+                    if( check_for_line( j, i ) ) {
                         printf("Line detected\n");
                         continue;
                     } else
@@ -393,32 +387,10 @@ void detect_ball( int *x, int *y )
 }
 
 
-void get_rgb_frame(uchar **frame, uchar *rgb_frame, int g_height, int g_width){
-    uchar Y, U, V;
-	uchar R, G, B;
-	int pix_c = 0;
-
-	for( int i = 0; i < g_height; i++ ) {
-	    for( int j = 0; j < 3*g_width; j += 3 ) {
-
-            Y = frame[i][ j + 0 ];
-            U = frame[i][ j + 1 ];
-            V = frame[i][ j + 2 ];
-
-            cap.yuv_to_rgb( Y, U, V, &R, &G, &B );
-            rgb_frame[ 4*pix_c + 0 ] = Y;
-            rgb_frame[ 4*pix_c + 1 ] = U;
-            rgb_frame[ 4*pix_c + 2 ] = Y;
-            rgb_frame[ 4*pix_c + 3 ] = V;
-
-            pix_c++;
-	    }
-	}
-
-}
 
 
-void set_working_frame_yuyv( uchar *frame, int width, int height)
+
+void set_working_frame_yuyv( uchar *frame, int width, int height )
 {
     uchar Y1, Y2, U, V;
     int pix_c = 0;
@@ -448,6 +420,7 @@ void set_working_frame_yuyv( uchar *frame, int width, int height)
         U = frame[ i + 1 ];
         Y2 = frame[ i + 2 ];
         V = frame[ i + 3 ];
+
         data [row_id] [ 3*pix_c + 0 ] = Y1;
         data [row_id] [ 3*pix_c + 1 ] = U;
         data [row_id] [ 3*pix_c + 2 ] = V;

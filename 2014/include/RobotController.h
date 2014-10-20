@@ -18,10 +18,34 @@ class RobotController {
 public:
     RobotController();
     ~RobotController();
+    /**
+     * Initialize variables and serial connection
+     */
     void init();
+    /**
+     * Checks if ball is in dribbler
+     * @return true if ball in dribbler
+     */
     bool hasBall();
+    /**
+     * Kick ball
+     * @param str Kick with strength str
+     */
     void kickBall(int str);
+    /**
+     * Drive three-wheeled robot
+     * @param spd Moving speed
+     * @param angle Moving angle
+     * @param rotSpd Rotation speed
+     */
     void driveRobot(float spd, float angle, float rotSpd);
+    /**
+     * Drive robot
+     * @param spd Moving speed
+     * @param angle Moving angle
+     * @param rotSpd Rotation speed
+     */
+    void detectSerial(bool serial);
     
 private:
     void driveThree(float spd, float angle, float rotSpd);

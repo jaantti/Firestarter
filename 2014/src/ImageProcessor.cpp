@@ -6,6 +6,9 @@
  */
 
 #include "ImageProcessor.h"
+#include "boost/thread.hpp"
+
+using namespace boost;
 
 ImageProcessor::ImageProcessor()
     :segm(CAM_W, CAM_H), segm2(CAM_W, CAM_H)
@@ -32,10 +35,18 @@ void ImageProcessor::init() {
 }
 
 void ImageProcessor::runIprocessor() {
-    std::thread frontThread  (&ImageProcessor::processFrontCamera, this,  front);
-    std::thread backThread (&ImageProcessor::processBackCamera, this,  back);
+    boost::thread frontThread  (&ImageProcessor::processFrontCamera, this,  front);
+    boost::thread backThread (&ImageProcessor::processBackCamera, this,  back);
     frontThread.join();
     backThread.join();
+}
+
+void ImageProcessor::runFrontCamera(){
+    processFrontCamera(front);
+}
+
+void ImageProcessor::runBackCamera(){
+    processBackCamera(back);
 }
 
 
@@ -53,7 +64,7 @@ void ImageProcessor::processFrontCamera(char *cam) {
     cap1.start_capturing();
     segm.readThresholds("conf1");
         
-    while(true){
+    while(!codeEnd){
         frame = cap1.read_frame();
         if(frame){
             segm.processImage(frame);
@@ -89,6 +100,7 @@ void ImageProcessor::processBackCamera(char *cam) {
             processBlue(false);
             processYellow(false);
             processGreens(false);
+            usleep(10000);
         }
     }    
     
@@ -97,12 +109,18 @@ void ImageProcessor::processBackCamera(char *cam) {
 void ImageProcessor::processOrange(bool front) {
     bool seg_exist_selector;
     if(front){
+        frontLock.lock();
+        blob_data_front = {};
+        frontLock.unlock();
         if(segm.colors[SEG_ORANGE].list!=NULL){
             seg_exist_selector = true;
         } else {
             seg_exist_selector = false;
         }
     } else {
+        backLock.lock();
+        blob_data_back = {};
+        backLock.unlock();
         if(segm2.colors[SEG_ORANGE].list!=NULL){
             seg_exist_selector = true;
         } else {
@@ -110,7 +128,7 @@ void ImageProcessor::processOrange(bool front) {
         }
     }    
     if(seg_exist_selector){
-        std::cout << "I AM PROCESSING ORANGE" << std::endl;
+        //std::cout << "I AM PROCESSING ORANGE" << std::endl;
         int orangeCounter = 0;
         struct region *tempRegion;
         if(front){
@@ -120,16 +138,21 @@ void ImageProcessor::processOrange(bool front) {
         }
         
         if(front){
+            frontLock.lock();
             blob_data_front.o_blob.push_back(orange_blob());
             blob_data_front.o_blob[orangeCounter].orange_area = tempRegion->area;
             blob_data_front.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
             blob_data_front.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;
-            std::cout << " x : " << tempRegion->cen_x << " y : " << tempRegion->cen_y << std::endl;
+            //std::cout << " x : " << tempRegion->cen_x << " y : " << tempRegion->cen_y << std::endl;
+            frontLock.unlock();
+            
         } else {
+            backLock.lock();
             blob_data_back.o_blob.push_back(orange_blob());
             blob_data_back.o_blob[orangeCounter].orange_area = tempRegion->area;
             blob_data_back.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
             blob_data_back.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;
+            backLock.unlock();
         }
         
                 
@@ -138,22 +161,30 @@ void ImageProcessor::processOrange(bool front) {
                 orangeCounter++;
                 tempRegion = tempRegion->next;      
                 if(front){
+                    frontLock.lock();
                     blob_data_front.o_blob.push_back(orange_blob());
                     blob_data_front.o_blob[orangeCounter].orange_area = tempRegion->area;
                     blob_data_front.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
-                    blob_data_front.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;                    
+                    blob_data_front.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;
+                    frontLock.unlock();
                 } else {
+                    backLock.lock();
                     blob_data_back.o_blob.push_back(orange_blob());
                     blob_data_back.o_blob[orangeCounter].orange_area = tempRegion->area;
                     blob_data_back.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
                     blob_data_back.o_blob[orangeCounter].orange_cen_y = tempRegion->cen_y;
+                    backLock.unlock();
                 }
                         
             } else {
                 if(front){
+                    frontLock.lock();
                     blob_data_front.oranges_processed = orangeCounter+1;
+                    frontLock.unlock();
                 } else {
+                    backLock.lock();
                     blob_data_back.oranges_processed = orangeCounter+1;
+                    backLock.unlock();
                 }
                 break;
             }
@@ -185,11 +216,13 @@ void ImageProcessor::processBlue(bool front) {
             tempRegion = segm2.colors[SEG_BLUE].list;
         }
         if(front){
+            lock_guard<mutex> guard(blobFrontMutex);
             blob_data_front.b_blob.push_back(blue_blob());
             blob_data_front.b_blob[blueCounter].blue_area = tempRegion->area;
             blob_data_front.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
             blob_data_front.b_blob[blueCounter].blue_cen_y = tempRegion->cen_y;               
         } else {
+            lock_guard<mutex> guard(blobBackMutex);
             blob_data_back.b_blob.push_back(blue_blob());
             blob_data_back.b_blob[blueCounter].blue_area = tempRegion->area;
             blob_data_back.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
@@ -201,6 +234,7 @@ void ImageProcessor::processBlue(bool front) {
                 blueCounter++;
                 tempRegion = tempRegion->next;      
                 if(front){
+                    lock_guard<mutex> guard(blobFrontMutex);
                     blob_data_front.b_blob.push_back(blue_blob());
                     blob_data_front.b_blob[blueCounter].blue_area = tempRegion->area;
                     blob_data_front.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
@@ -249,11 +283,13 @@ void ImageProcessor::processYellow(bool front) {
         }
         
         if(front){
+            lock_guard<mutex> guard(blobFrontMutex);
             blob_data_front.y_blob.push_back(yellow_blob());
             blob_data_front.y_blob[yellowCounter].yellow_area = tempRegion->area;
             blob_data_front.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
             blob_data_front.y_blob[yellowCounter].yellow_cen_y = tempRegion->cen_y;  
         } else {
+            lock_guard<mutex> guard(blobBackMutex);
             blob_data_back.y_blob.push_back(yellow_blob());
             blob_data_back.y_blob[yellowCounter].yellow_area = tempRegion->area;
             blob_data_back.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
@@ -266,6 +302,7 @@ void ImageProcessor::processYellow(bool front) {
                 yellowCounter++;
                 tempRegion = tempRegion->next;      
                 if(front){
+                    lock_guard<mutex> guard(blobFrontMutex);
                     blob_data_front.y_blob.push_back(yellow_blob());
                     blob_data_front.y_blob[yellowCounter].yellow_area = tempRegion->area;
                     blob_data_front.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
@@ -322,9 +359,11 @@ void ImageProcessor::processGreens(bool front) {
                 greens_processed++;
             } else {
                 if(front){
+                    lock_guard<mutex> guard(blobFrontMutex);
                     blob_data_front.total_green = total_green;
                     blob_data_front.greens_processed = greens_processed;
                 } else {
+                    lock_guard<mutex> guard(blobBackMutex);
                     blob_data_back.total_green = total_green;
                     blob_data_back.greens_processed = greens_processed;
                 }                
@@ -334,6 +373,29 @@ void ImageProcessor::processGreens(bool front) {
     }
 }
 
+blobs ImageProcessor::getBlobsFront(){
+    //lock_guard<mutex> guard(blobFrontMutex);
+    frontLock.lock();
+    return blob_data_front;
+}
+
+blobs ImageProcessor::getBlobsBack(){
+    //lock_guard<mutex> guard(blobBackMutex);
+    backLock.lock();    
+    return blob_data_back;
+}
+
+void ImageProcessor::unlockFront(){
+    frontLock.unlock();
+}
+
+void ImageProcessor::unlockBack(){
+    backLock.unlock();
+}
+
+void ImageProcessor::stopProcessor(){
+    codeEnd = true;
+}
 //Legacy image displaying code.
  /*
     //Imshow initialization block.    

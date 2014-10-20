@@ -17,10 +17,15 @@ class Starter {
 private:
     RobotLogic rLogic;
     ImageProcessor iProcessor;
+    bool codeEnd = false;
+    /**
+     * Waits for keypress to end code
+     */
+    void codeEndListener();
 
 public:
     RobotController rController;
-    NetworkConnector nConnector;
+    NetworkConnector nConnector;    
     
     Starter();
     Starter(const Starter& orig);

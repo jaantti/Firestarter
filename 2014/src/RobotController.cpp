@@ -71,3 +71,7 @@ void RobotController::driveFour(int spd, float angle) {
 
 }
 
+void RobotController::detectSerial(bool serial){
+    connection.setDetectSerial(serial);
+}
+

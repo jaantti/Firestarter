@@ -11,9 +11,9 @@ Capture::Capture(){
 }
 
 Capture::~Capture(){
-    if(this->buffers){
+    /*if(this->buffers){
         delete this->buffers;
-    }
+    }*/
 }
 
 IMAGE_CONTEXT *Capture::new_window( char *wnd_name, int x, int y, int width, int height )

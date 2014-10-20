@@ -27,7 +27,7 @@ BOOST_FLAVOUR =
 
 
 CXX = g++
-CFLAGS = `pkg-config --cflags opencv` -Wall -std=c++11 -I$(RAKNETDIR)/Source -I$(BOOST_HEADERS) -Iinclude
+CFLAGS = `pkg-config --cflags opencv` -Wall -std=c++11 -I$(RAKNETDIR)/Source -I$(BOOST_HEADERS) -Iinclude -g
 LIBS = `pkg-config --libs opencv` $(LIBX) -L$(RAKNETDIR)/Lib/LibStatic -lRakNetLibStatic -L$(BOOST_LIBRARIES) -lboost_thread$(BOOST_FLAVOUR) -lboost_system
 APP = bin/main
 SRCDIR = src/
@@ -46,8 +46,14 @@ $(OBJDIR)%.o: $(SRCDIR)%.cpp
 obj/rs232.o: src/rs232.c
 	$(CXX) $(CFLAGS) -c src/rs232.c -o obj/rs232.o
 
-clean:
-	rm -f $(OBJS)
-	rm -f obj/rs232.o
-	rm -f $(APP)
+clean: cleandoc
+	rm -fv $(OBJS)
+	rm -fv obj/rs232.o
+	rm -fv $(APP)
+	
+doc:
+	doxygen
+
+cleandoc:
+	rm -rfv docs/*
 

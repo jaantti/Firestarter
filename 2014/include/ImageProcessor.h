@@ -16,8 +16,13 @@
 #include <cstdlib>
 #include <iostream>
 #include <thread>
+#include "boost/thread.hpp"
+
+using namespace boost;
 
 class ImageProcessor {
+    mutex blobBackMutex;
+    mutex blobFrontMutex;
 public:
     blobs blob_data_front;
     blobs blob_data_back;
@@ -29,12 +34,36 @@ public:
     virtual ~ImageProcessor();
     void init();
     void runIprocessor();
+    void runFrontCamera();
+    void runBackCamera();
+    void stopProcessor();
+    /**
+     * Blob info from front camera
+     * @return Front camera blobs
+     */
+    blobs getBlobsFront();
+    /**
+     * Blob info form back camera
+     * @return 
+     */
+    blobs getBlobsBack();
+    /**
+     * Releases mutex lock, must be used after getBlobsFront() or code will be in a deadlock
+     */
+    void unlockFront();
+    /**
+     * Releases mutex lock, must be used after getBlobsBack() of code will be in a deadlock
+     */
+    void unlockBack();
 private:
     // if switchCamers = true, then video0 is front, if false, video0 is back.
     char *front;
     char *back;
     bool switchCameras;
     bool chooseCameras();
+    bool codeEnd = false;
+    mutex frontLock;
+    mutex backLock;
     void sendNetworkInfo();
     void processFrontCamera(char *cam);
     void processBackCamera( char *cam);
@@ -42,6 +71,7 @@ private:
     void processYellow(bool front);
     void processBlue(bool front);
     void processGreens(bool front);
+    
 };
 
 #endif	/* IMAGEPROCESSOR_H */

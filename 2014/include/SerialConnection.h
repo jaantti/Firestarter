@@ -25,10 +25,11 @@ public:
     void setSpeed(int motor, int speed);
     void kickBall(int power);
     bool hasBall();
+    void setDetectSerial(bool serial);
     
 private:
-    array<int, NR_OF_WHEELS> serialDevice;
-    
+    array<int, NR_OF_WHEELS + 1> serialDevice;
+    bool detectSerial = true;
     void sendCommand(int comport, const char* command, unsigned char* answer);
     void sendCommand(int comport, const char* command);
 

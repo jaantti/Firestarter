@@ -29,40 +29,50 @@
 
 
 struct orange_blob{
-    int orange_area;
-    int orange_cen_x;
-    int orange_cen_y;
+    int orange_area = 0;
+    int orange_cen_x = -1;
+    int orange_cen_y = -1;
 };
 
 struct yellow_blob{
-    int yellow_area;
-    int yellow_cen_x;
-    int yellow_cen_y;
+    int yellow_area = 0;
+    int yellow_cen_x = -1;
+    int yellow_cen_y = -1;
 };
 
 struct blue_blob{
-    int blue_area;
-    int blue_cen_x;
-    int blue_cen_y;
+    int blue_area = 0;
+    int blue_cen_x = -1;
+    int blue_cen_y = -1;
 };
 
 
 struct blobs{
-    int oranges_processed;
+    int oranges_processed = 0;
     std::vector<orange_blob> o_blob;
     
-    int blues_processed;
+    int blues_processed = 0;
     std::vector<blue_blob> b_blob;
     
-    int yellows_processed;
+    int yellows_processed = 0;
     std::vector<yellow_blob> y_blob;
     
-    int total_green;
-    int greens_processed;
+    int total_green = 0;
+    int greens_processed = 0;
 };
 
 enum RobotStates{
     //TODO populate states
+};
+
+enum Goal{
+    gYELLOW,
+    gBLUE
+};
+
+enum Role{
+    rATTACK,
+    rDEFEND
 };
 
 

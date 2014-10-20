@@ -9,6 +9,7 @@
 #include "ImageProcessor.h"
 #include "RobotLogic.h"
 #include <iostream>
+#include "boost/thread.hpp"
 
 Starter::Starter() 
 {
@@ -22,19 +23,41 @@ Starter::~Starter() {
 }
 
 bool Starter::init() {
+    //========================
+    rController.detectSerial(true);
+    //========================
     rController.init();
-    //iProcessor.init();
+    iProcessor.init();
+    rLogic.init(&rController, &iProcessor);    
     std::cout << "Initialization successful." << std::endl;
     return true;
 }
 
 bool Starter::start() {
     
-    iProcessor.runIprocessor();
+    boost::thread iFrontThread(&ImageProcessor::runFrontCamera, &iProcessor);
+    //boost::thread iBackThread(&ImageProcessor::runBackCamera, &iProcessor);
+    boost::thread codeEndThread(&Starter::codeEndListener, this);
+    
+    
     //rController.driveRobot(50,PI/-2.0,0);
     //rController.driveRobot(50,PI, PI);
-    while(true){
-        //Stall loop.
+    usleep(500000);
+    //Runs robot logic
+    while(!codeEnd){
+        rLogic.run(rATTACK, gBLUE);
+        usleep(10000);
+        
     }
+    iProcessor.stopProcessor();
+    codeEndThread.join();
+    iFrontThread.join();
+    //iBackThread.join();
     return true;
+}
+
+void Starter::codeEndListener(){
+    int i;
+    std::cin >> i;
+    codeEnd = true;
 }

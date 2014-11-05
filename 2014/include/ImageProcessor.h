@@ -17,6 +17,10 @@
 #include <iostream>
 #include <thread>
 #include "boost/thread.hpp"
+#include <sys/time.h>
+#include <unistd.h>
+
+#include <stdlib.h>
 
 using namespace boost;
 
@@ -57,6 +61,7 @@ public:
     void unlockBack();
 private:
     // if switchCamers = true, then video0 is front, if false, video0 is back.
+    struct timeval start_front, start_back, end_front, end_back;
     char *front;
     char *back;
     bool switchCameras;

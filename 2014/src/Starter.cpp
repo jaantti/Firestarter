@@ -13,19 +13,18 @@
 
 Starter::Starter() 
 {
-    
+    rLogic = RobotLogic(Goal::gBLUE);
 }
 
 Starter::Starter(const Starter& orig) {
+    
 }
 
 Starter::~Starter() {
 }
 
 bool Starter::init() {
-    //========================
-    rController.detectSerial(true);
-    //========================
+    
     rController.init();
     iProcessor.init();
     rLogic.init(&rController, &iProcessor);    
@@ -36,16 +35,16 @@ bool Starter::init() {
 bool Starter::start() {
     
     boost::thread iFrontThread(&ImageProcessor::runFrontCamera, &iProcessor);
-    //boost::thread iBackThread(&ImageProcessor::runBackCamera, &iProcessor);
+    boost::thread iBackThread(&ImageProcessor::runBackCamera, &iProcessor);
     boost::thread codeEndThread(&Starter::codeEndListener, this);
     
     
-    //rController.driveRobot(50,PI/-2.0,0);
+    rController.driveRobot(50,PI/-2.0,0);
     //rController.driveRobot(50,PI, PI);
-    usleep(500000);
+    //usleep(200000);
     //Runs robot logic
     while(!codeEnd){
-        rLogic.run(rATTACK, gBLUE);
+        rLogic.run(rATTACK);
         usleep(10000);
         
     }

@@ -24,7 +24,7 @@ bool SerialConnection::init() {
     //cout << "init" << endl;
 
     //detectSerial = false;
-    for (int j = 0; j < 3; j++) {
+    for (int j = 0; j < NR_OF_WHEELS; j++) {
         for (int i = 5; i < 15; i++) {
             //cout << "for" << endl;
             if (!RS232_OpenComport(i, 19200)) {
@@ -37,10 +37,11 @@ bool SerialConnection::init() {
         }
     }
 
-    cout << "motor array" << endl;
+    //cout << "motor array" << endl;
     for (unsigned int i = 0; i < serialDevice.size(); i++) {
         cout << i << ";" << serialDevice[i] << endl;
     }
+    usleep(10000000);
     return true;
 }
 
@@ -58,15 +59,15 @@ void SerialConnection::sendCommand(int comport, const char* command) {
 
 void SerialConnection::setSpeed(int motor, int speed) {
     char out[10] = {0};
-    sprintf(out, "sd%d\n", speed);
-    cout << "speed:" << string(out) << endl;
+    //sprintf(out, "sd%d\n", speed);
+    //cout << "speed:" << string(out) << endl;
     RS232_cputs(serialDevice[motor], (const char*) out);
 }
 
 void SerialConnection::kickBall(int power) {
     char out[10] = {0};
-    sprintf(out, "k%d\n", power);
-    cout << "kick: " << string(out) << endl;
+    //sprintf(out, "k%d\n", power);
+    //cout << "kick: " << string(out) << endl;
     RS232_cputs(serialDevice[0], (const char*) out);
 }
 

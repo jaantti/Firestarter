@@ -448,7 +448,7 @@ void Capture::init_device( char *dev_name )
     v4l2_format fmt;
 
     unsigned int min;
-
+    std::cout << "Initializing :" << dev_name << std::endl;
 
     if( -1 == xioctl( fd, VIDIOC_QUERYCAP, &cap ) ) {
         if( EINVAL == errno ) {
@@ -511,7 +511,7 @@ void Capture::uninit_device()
 void Capture::open_device( char *dev_name )
 {
     struct stat st;
-    std::cout << "Initializing device :" << dev_name << std::endl;
+    std::cout << "Opening :" << dev_name << std::endl;
     
     if( -1 == stat( dev_name, &st ) ) {
         fprintf( stderr, "Cannot identify '%s': %d, %s\n", dev_name, errno, strerror(errno) );
@@ -535,6 +535,7 @@ void Capture::open_device( char *dev_name )
 
 void Capture::close_device()
 {
+    std::cout << "Closing device!" << std::endl;
     if ( -1 == close( fd ) ) {
         fprintf( stderr, "Device Close error %d, %s\n", errno, strerror(errno) );
         exit( EXIT_FAILURE );

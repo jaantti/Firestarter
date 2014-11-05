@@ -23,7 +23,3 @@ v4l2-ctl -d /dev/video1 -c gain=5
 
 v4l2-ctl -d /dev/video1 --set-fmt-video=width=640,height=480,pixelformat=0
 v4l2-ctl -d /dev/video1 -p 60
-
-./bin/main
-
-

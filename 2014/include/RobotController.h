@@ -49,7 +49,7 @@ public:
     
 private:
     void driveThree(float spd, float angle, float rotSpd);
-    void driveFour(int spd, float angle);
+    void driveFour(float spd, float angle, float rotSpd);
 };
 
 #endif	/* ROBOTCONTROLLER_H */

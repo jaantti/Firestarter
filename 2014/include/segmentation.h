@@ -53,7 +53,7 @@ class SEGMENTATION
 	int width, height;
 	unsigned char *data;
 	unsigned char *th_data;
-
+        
 	run *rle;
 	region *regions;
 	color_class_state *colors;

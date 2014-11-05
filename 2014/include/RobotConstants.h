@@ -10,13 +10,15 @@
 
 #include <vector>
 
-#define NR_OF_WHEELS 3
+#define NR_OF_WHEELS 4
 #define CAMERA_PATH /dev/video1
 #define CONF_PATH ../conf
 #define CAM_W 640
 #define CAM_H 480
 #define MAX_MOTOR_SPEED 190
 #define GET_BALL_BOARD_ID 1
+#define MIN_BLOB_SIZE 10
+#define MIN_GREEN_AREA 1000
 
 #define SEG_BLACK 0
 #define SEG_WHITE 1
@@ -30,22 +32,45 @@
 
 struct orange_blob{
     int orange_area = 0;
+    int orange_w = 0;
     int orange_cen_x = -1;
     int orange_cen_y = -1;
 };
 
+struct orange_ball{
+    int orange_cen_x = -1;
+    int orange_cen_y = -1;
+    int orange_w = -1;
+    int orange_y = -1;
+};
+
 struct yellow_blob{
     int yellow_area = 0;
+    int yellow_w = 0;
     int yellow_cen_x = -1;
     int yellow_cen_y = -1;
 };
 
+struct yellow_gate{
+    int yellow_cen_x = -1;
+    int yellow_cen_y = -1;
+    int yellow_w = -1;
+    int yellow_h = -1;
+};
+
 struct blue_blob{
     int blue_area = 0;
+    int blue_w = 0;
     int blue_cen_x = -1;
     int blue_cen_y = -1;
 };
 
+struct blue_gate{
+    int blue_cen_x = -1;
+    int blue_cen_y = -1;
+    int blue_w = -1;
+    int blue_h = -1;
+};
 
 struct blobs{
     int oranges_processed = 0;
@@ -61,8 +86,27 @@ struct blobs{
     int greens_processed = 0;
 };
 
-enum RobotStates{
-    //TODO populate states
+struct blobs_processed{
+    int oranges_postprocessed = 0;
+    std::vector<orange_ball> o_ball;
+    
+    int blues_postprocessed = 0;
+    std::vector<blue_gate> b_gate;
+    
+    int yellows_postprocessed = 0;
+    std::vector<yellow_gate> y_gate;
+    
+    int total_green = 0;
+    int greens_processed = 0;
+};
+
+enum RobotState{
+    FIND_BALL,
+    FIND_GATE,
+    BALL_TIMEOUT,
+    GATE_TIMEOUT,
+    NOT_GREEN,
+    KICK_BALL
 };
 
 enum Goal{

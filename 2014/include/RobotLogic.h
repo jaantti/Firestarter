@@ -11,11 +11,13 @@
 #include "RobotConstants.h"
 #include "ImageProcessor.h"
 #include "RobotController.h"
+#include "ImagePostProcessor.h"
 
 class RobotLogic {
 
 public:
     RobotLogic();
+    RobotLogic(Goal gl);
     virtual ~RobotLogic();
     /**
      * Initialize variables
@@ -23,19 +25,32 @@ public:
      * @param iProc
      */
     void init(RobotController *rCont, ImageProcessor *iProc);
+    void init(RobotController *rCont, ImagePostProcessor *pProc);
     
     /**
      * Run code
      * @param role Robot role
-     * @param goal Color of the goal
      */
-    void run(Role role, Goal goal);
+    void run(Role role);
 private:
-    void runAttack(Goal goal);
-    void runDefend(Goal goal);
+    Goal goal;
+    void runAttack();
+    void runDefend();
     RobotController *rController;
     ImageProcessor *iProcessor;
+    ImagePostProcessor *pProcessor;
     void moveToBall(int x, int y);
+    void setRState(RobotState state);
+    RobotState rState = RobotState::FIND_BALL;
+    
+    bool isGreen(blobs blobsFront, blobs blobsBack);
+    
+    void findBall(blobs blobsFront, blobs blobsBack);
+    void ballTimeout(blobs blobsFront, blobs blobsBack);
+    void findGate(blobs blobsFront, blobs blobsBack);
+    void gateTimeout(blobs blobsFront, blobs blobsBack);
+    void kickBall(blobs blobsFront, blobs blobsBack);
+    void notGreen(blobs blobsFront, blobs blobsBack);    
     
 };
 

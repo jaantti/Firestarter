@@ -14,7 +14,6 @@ using namespace std;
  * 
  */
 int main(int argc, char** argv) {
-
     
     Starter starter = Starter();
     starter.init();

@@ -41,7 +41,11 @@ struct orange_ball{
     int orange_cen_x = -1;
     int orange_cen_y = -1;
     int orange_w = -1;
-    int orange_y = -1;
+    int orange_h = -1;
+    int orange_x1 = -1;
+    int orange_x2 = -1;
+    int orange_y1 = -1;
+    int orange_y2 = -1;
 };
 
 struct yellow_blob{
@@ -56,6 +60,10 @@ struct yellow_gate{
     int yellow_cen_y = -1;
     int yellow_w = -1;
     int yellow_h = -1;
+    int yellow_x1 = -1;
+    int yellow_x2 = -1;
+    int yellow_y1 = -1;
+    int yellow_y2 = -1;
 };
 
 struct blue_blob{
@@ -63,6 +71,7 @@ struct blue_blob{
     int blue_w = 0;
     int blue_cen_x = -1;
     int blue_cen_y = -1;
+    
 };
 
 struct blue_gate{
@@ -70,6 +79,10 @@ struct blue_gate{
     int blue_cen_y = -1;
     int blue_w = -1;
     int blue_h = -1;
+    int blue_x1 = -1;
+    int blue_x2 = -1;
+    int blue_y1 = -1;
+    int blue_y2 = -1;
 };
 
 struct blobs{

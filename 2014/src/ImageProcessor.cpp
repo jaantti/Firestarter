@@ -178,14 +178,15 @@ void ImageProcessor::processOrange(bool front) {
             tempRegion = segm2.colors[SEG_ORANGE].list;
         }
         
-        if(tempRegion->area < MIN_BLOB_SIZE){
+        int len_check = tempRegion->y2 - tempRegion->y1;
+        if(len_check < MIN_BLOB_SIZE){
             return;
         }
         
         if(front){
             frontLock.lock();
             blob_data_front.o_blob.push_back(orange_blob());
-            int len = tempRegion->x2 - tempRegion->x1;
+            int len = tempRegion->y2 - tempRegion->y1;
             blob_data_front.o_blob[orangeCounter].orange_w = len;
             blob_data_front.o_blob[orangeCounter].orange_area = tempRegion->area;
             blob_data_front.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
@@ -195,7 +196,7 @@ void ImageProcessor::processOrange(bool front) {
         } else {
             backLock.lock();
             blob_data_back.o_blob.push_back(orange_blob());
-            int len = tempRegion->x2 - tempRegion->x1;
+            int len = tempRegion->y2 - tempRegion->y1;
             blob_data_back.o_blob[orangeCounter].orange_w = len;
             blob_data_back.o_blob[orangeCounter].orange_area = tempRegion->area;
             blob_data_back.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
@@ -209,8 +210,8 @@ void ImageProcessor::processOrange(bool front) {
                 orangeCounter++;
                 tempRegion = tempRegion->next;  
                 
-                
-                if(tempRegion->area < MIN_BLOB_SIZE){
+                len_check = tempRegion->y2 - tempRegion->y1;
+                if(len_check < MIN_BLOB_SIZE){
                     if(front){
                         frontLock.lock();
                         blob_data_front.oranges_processed = orangeCounter+1;
@@ -227,7 +228,7 @@ void ImageProcessor::processOrange(bool front) {
                 if(front){
                     frontLock.lock();
                     blob_data_front.o_blob.push_back(orange_blob());
-                    int len = tempRegion->x2 - tempRegion->x1;
+                    int len = tempRegion->y2 - tempRegion->y1;
                     blob_data_front.o_blob[orangeCounter].orange_w = len;
                     blob_data_front.o_blob[orangeCounter].orange_area = tempRegion->area;
                     blob_data_front.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
@@ -236,7 +237,7 @@ void ImageProcessor::processOrange(bool front) {
                 } else {
                     backLock.lock();
                     blob_data_back.o_blob.push_back(orange_blob());
-                    int len = tempRegion->x2 - tempRegion->x1;
+                    int len = tempRegion->y2 - tempRegion->y1;
                     blob_data_back.o_blob[orangeCounter].orange_w = len;
                     blob_data_back.o_blob[orangeCounter].orange_area = tempRegion->area;
                     blob_data_back.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
@@ -292,7 +293,7 @@ void ImageProcessor::processBlue(bool front) {
         if(front){
             frontLock.lock();
             blob_data_front.b_blob.push_back(blue_blob());
-            int len = tempRegion->x2 - tempRegion->x1;
+            int len = tempRegion->y2 - tempRegion->y1;
             blob_data_front.b_blob[blueCounter].blue_w = len;
             blob_data_front.b_blob[blueCounter].blue_area = tempRegion->area;
             blob_data_front.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
@@ -301,7 +302,7 @@ void ImageProcessor::processBlue(bool front) {
         } else {
             backLock.lock();
             blob_data_back.b_blob.push_back(blue_blob());
-            int len = tempRegion->x2 - tempRegion->x1;
+            int len = tempRegion->y2 - tempRegion->y1;
             blob_data_back.b_blob[blueCounter].blue_w = len;
             blob_data_back.b_blob[blueCounter].blue_area = tempRegion->area;
             blob_data_back.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
@@ -321,7 +322,7 @@ void ImageProcessor::processBlue(bool front) {
                 if(front){
                     frontLock.lock();
                     blob_data_front.b_blob.push_back(blue_blob());
-                    int len = tempRegion->x2 - tempRegion->x1;
+                    int len = tempRegion->y2 - tempRegion->y1;
                     blob_data_front.b_blob[blueCounter].blue_w = len;
                     blob_data_front.b_blob[blueCounter].blue_area = tempRegion->area;
                     blob_data_front.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
@@ -330,7 +331,7 @@ void ImageProcessor::processBlue(bool front) {
                 } else {
                     backLock.lock();
                     blob_data_back.b_blob.push_back(blue_blob());
-                    int len = tempRegion->x2 - tempRegion->x1;
+                    int len = tempRegion->y2 - tempRegion->y1;
                     blob_data_back.b_blob[blueCounter].blue_w = len;
                     blob_data_back.b_blob[blueCounter].blue_area = tempRegion->area;
                     blob_data_back.b_blob[blueCounter].blue_cen_x = tempRegion->cen_x;
@@ -385,7 +386,7 @@ void ImageProcessor::processYellow(bool front) {
         if(front){
             frontLock.lock();
             blob_data_front.y_blob.push_back(yellow_blob());
-            int len = tempRegion->x2 - tempRegion->x1;
+            int len = tempRegion->y2 - tempRegion->y1;
             blob_data_front.y_blob[yellowCounter].yellow_w = len;
             blob_data_front.y_blob[yellowCounter].yellow_area = tempRegion->area;
             blob_data_front.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
@@ -394,7 +395,7 @@ void ImageProcessor::processYellow(bool front) {
         } else {
             backLock.lock();
             blob_data_back.y_blob.push_back(yellow_blob());
-            int len = tempRegion->x2 - tempRegion->x1;
+            int len = tempRegion->y2 - tempRegion->y1;
             blob_data_back.y_blob[yellowCounter].yellow_w = len;
             blob_data_back.y_blob[yellowCounter].yellow_area = tempRegion->area;
             blob_data_back.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
@@ -415,7 +416,7 @@ void ImageProcessor::processYellow(bool front) {
                 if(front){
                     frontLock.lock();
                     blob_data_front.y_blob.push_back(yellow_blob());
-                    int len = tempRegion->x2 - tempRegion->x1;
+                    int len = tempRegion->y2 - tempRegion->y1;
                     blob_data_front.y_blob[yellowCounter].yellow_w = len;
                     blob_data_front.y_blob[yellowCounter].yellow_area = tempRegion->area;
                     blob_data_front.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;
@@ -424,7 +425,7 @@ void ImageProcessor::processYellow(bool front) {
                 } else {
                     backLock.lock();
                     blob_data_back.y_blob.push_back(yellow_blob());
-                    int len = tempRegion->x2 - tempRegion->x1;
+                    int len = tempRegion->y2 - tempRegion->y1;
                     blob_data_back.y_blob[yellowCounter].yellow_w = len;
                     blob_data_back.y_blob[yellowCounter].yellow_area = tempRegion->area;
                     blob_data_back.y_blob[yellowCounter].yellow_cen_x = tempRegion->cen_x;

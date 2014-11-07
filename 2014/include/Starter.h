@@ -12,11 +12,13 @@
 #include "NetworkConnector.h"
 #include "RobotLogic.h"
 #include "ImageProcessor.h"
+#include "ImagePostProcessor.h"
 
 class Starter {
 private:
     RobotLogic rLogic;
     ImageProcessor iProcessor;
+    ImagePostProcessor pProcessor;
     bool codeEnd = false;
     /**
      * Waits for keypress to end code

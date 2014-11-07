@@ -14,6 +14,7 @@
 Starter::Starter() 
 {
     rLogic = RobotLogic(Goal::gBLUE);
+    pProcessor = ImagePostProcessor(&iProcessor);
 }
 
 Starter::Starter(const Starter& orig) {
@@ -34,6 +35,8 @@ bool Starter::init() {
 
 bool Starter::start() {
     
+    
+    
     boost::thread iFrontThread(&ImageProcessor::runFrontCamera, &iProcessor);
     boost::thread iBackThread(&ImageProcessor::runBackCamera, &iProcessor);
     boost::thread codeEndThread(&Starter::codeEndListener, this);
@@ -44,6 +47,7 @@ bool Starter::start() {
     //usleep(200000);
     //Runs robot logic
     while(!codeEnd){
+        pProcessor.run();
         rLogic.run(rATTACK);
         usleep(10000);
         

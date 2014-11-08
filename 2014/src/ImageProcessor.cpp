@@ -30,7 +30,8 @@ void ImageProcessor::init() {
     } else {
         front = "/dev/video1";
         back = "/dev/video0";
-    }      
+    }
+    usleep(1000000);
 }
 
 void ImageProcessor::runIprocessor() {
@@ -110,6 +111,7 @@ void ImageProcessor::processFrontCamera(char *cam) {
     cap1.open_device( cam );
     cap1.init_device( cam );
     cap1.start_capturing();
+    std::cout << " Successfully initialized Front camera " << cam << std::endl;
     segm.readThresholds("conf1");
  
     while(!codeEnd){
@@ -131,8 +133,8 @@ void ImageProcessor::processBackCamera(char *cam) {
     cap2.open_device( cam );
     cap2.init_device( cam );
     cap2.start_capturing();
-    segm2.readThresholds("conf2");
-    
+    std::cout << " Successfully initialized Back camera " << cam << std::endl;
+    segm2.readThresholds("conf2");   
     
     while(true){        
         frame = cap2.read_frame();
@@ -169,7 +171,7 @@ void ImageProcessor::processOrange(bool front) {
             seg_exist_selector = false;
         }
     }    
-    if(seg_exist_selector){        
+    if(seg_exist_selector){
         int orangeCounter = 0;
         struct region *tempRegion;
         if(front){

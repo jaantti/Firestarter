@@ -142,16 +142,15 @@ void ImagePostProcessor::processOrangeBlobsFront(){
         }
     }
     blob_structure_front.oranges_postprocessed = count;
+    //std::cout << " BALLS AFTER :" << count << std::endl;
     /*
-    std::cout << " BALLS AFTER :" << count << std::endl;
+    
     for(int i=0; i<count; i++){
         orange_ball ball = blob_structure_front.o_ball.at(i);
         
         std::cout << "BALL COORDS : (" << ball.orange_cen_x << " ; " << ball.orange_cen_y << ")" << std::endl;
         std::cout << "BALL WID :" << ball.orange_w << std::endl;
     }
-    usleep(10000);
-    exit(5);
     */
 }
 
@@ -326,7 +325,6 @@ bool ImagePostProcessor::orangeFitsInFrontList(int x, int y, int w) {
         bool check1 = x>=ball.orange_x1 && x<=ball.orange_x2;
         bool check2 = y>=ball.orange_y1 && y<=ball.orange_y2;
         if(check1 && check2){
-            //exit(1);
             return true;
         }
         j=i;
@@ -339,9 +337,7 @@ bool ImagePostProcessor::orangeFitsInFrontList(int x, int y, int w) {
     }
     //int fr;
     //std::cin >> fr;
-    */
-    
-    //exit(0);
+    */    
     
     return false;
 }

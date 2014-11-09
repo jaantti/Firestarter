@@ -16,7 +16,7 @@
 #define CAM_W 640
 #define CAM_H 480
 #define MAX_MOTOR_SPEED 190
-#define GET_BALL_BOARD_ID 1
+#define GET_BALL_BOARD_ID 4
 #define MIN_BLOB_SIZE 10
 #define MIN_GREEN_AREA 1000
 

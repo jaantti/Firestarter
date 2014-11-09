@@ -13,7 +13,7 @@
 
 Starter::Starter() 
 {
-    rLogic = RobotLogic(Goal::gBLUE);
+    rLogic = RobotLogic(Goal::gYELLOW);
 }
 
 Starter::Starter(const Starter& orig) {
@@ -45,7 +45,7 @@ bool Starter::start() {
     //Runs robot logic
     while(!codeEnd){
         rLogic.run(rATTACK);
-        usleep(10000);
+        usleep(1000);
         
     }
     iProcessor.stopProcessor();

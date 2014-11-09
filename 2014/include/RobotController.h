@@ -46,6 +46,8 @@ public:
      * @param rotSpd Rotation speed
      */
     void detectSerial(bool serial);
+   
+    void pingCoil();
     
 private:
     void driveThree(float spd, float angle, float rotSpd);

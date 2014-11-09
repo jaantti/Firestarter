@@ -3,7 +3,7 @@
 *
 * Author: Teunis van Beelen
 *
-* Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013 Teunis van Beelen
+* Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014 Teunis van Beelen
 *
 * teuniz@gmail.com
 *
@@ -29,7 +29,7 @@
 ***************************************************************************
 */
 
-/* last revision: February 1, 2013 */
+/* last revision: October 05, 2014 */
 
 /* For more info and how to use this libray, visit: http://www.teuniz.net/RS-232/ */
 
@@ -62,12 +62,13 @@ extern "C" {
 
 #endif
 
-int RS232_OpenComport(int, int);
+int RS232_OpenComport(int, int, const char *);
 int RS232_PollComport(int, unsigned char *, int);
 int RS232_SendByte(int, unsigned char);
 int RS232_SendBuf(int, unsigned char *, int);
 void RS232_CloseComport(int);
 void RS232_cputs(int, const char *);
+int RS232_IsDCDEnabled(int);
 int RS232_IsCTSEnabled(int);
 int RS232_IsDSREnabled(int);
 void RS232_enableDTR(int);

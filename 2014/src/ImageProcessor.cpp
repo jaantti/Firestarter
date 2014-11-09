@@ -70,6 +70,8 @@ bool ImageProcessor::chooseCameras() {
     //If solution = false, means that video1 is the front camera and video0 the back.
     bool solution = true;
     
+    std::cout << "poop" << std::endl;
+    
     while(true){
         frame1 = cap1.read_frame();
         frame2 = cap2.read_frame();

@@ -487,8 +487,12 @@ void Capture::init_device( char *dev_name )
     min = fmt.fmt.pix.bytesperline * fmt.fmt.pix.height;
     if( fmt.fmt.pix.sizeimage < min )
         fmt.fmt.pix.sizeimage = min;
-
+    
+    
+    
     init_mmap( dev_name );
+    
+    std::cout << "shit" << std::endl;
 }
 
 

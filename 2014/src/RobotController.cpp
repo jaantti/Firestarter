@@ -23,6 +23,7 @@ void RobotController::init() {
     connection = SerialConnection();
     connection.init();
     cout << "RC init end" << endl;
+    connection.chargeCoil();
 }
 
 void RobotController::driveRobot(float spd, float angle, float rotSpd) {
@@ -39,8 +40,12 @@ bool RobotController::hasBall() {
     return connection.hasBall();
 }
 
-void RobotController::kickBall(int str) {
+void RobotController::pingCoil() {
+    connection.pingCoil();
+}
 
+void RobotController::kickBall(int str) {
+    connection.kickBall(str);
 }
 
 void RobotController::driveThree(float spd, float angle, float rotSpd) {

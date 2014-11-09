@@ -10,6 +10,7 @@
 
 #include "RobotConstants.h"
 #include <array>
+#include <unordered_map>
 
 using namespace std;
 
@@ -26,6 +27,9 @@ public:
     void kickBall(int power);
     bool hasBall();
     void setDetectSerial(bool serial);
+    void chargeCoil();
+    void pingCoil();
+    
     
 private:
     array<int, NR_OF_WHEELS + 1> serialDevice;

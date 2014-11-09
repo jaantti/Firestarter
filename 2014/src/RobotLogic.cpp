@@ -48,8 +48,6 @@ void RobotLogic::runAttack() {
     blobs blobsBack = iProcessor->getBlobsBack();
     iProcessor->unlockBack();
     
-    rController->pingCoil();
-    
     switch (rState) {
                 
         case RobotState::FIND_BALL:
@@ -77,16 +75,14 @@ void RobotLogic::runAttack() {
             notGreen(blobsFront, blobsBack);
             break;
     }
-    
-    // See osa tundub olevat ebavajalik - Taavi
-    
-    if (false && blobsFront.oranges_processed > 0) {
+
+    if (blobsFront.oranges_processed > 0) {
         //cout << "orange list size: " << blobsFront.o_blob.size() << endl;
         orange_blob oBlob = blobsFront.o_blob.at(0);
         //cout << "orange area front: " << oBlob.orange_area << "\n";
-        if (oBlob.orange_area > 10) {
-            if (oBlob.orange_cen_x > CAM_W / 2) std::cout << "front: turn right\n";
-            if (oBlob.orange_cen_x <= CAM_W / 2) std::cout << "front: turn left\n";
+        if (oBlob.orange_area > 20) {
+            //if (oBlob.orange_cen_x > 320) std::cout << "front: turn right\n";
+            //if (oBlob.orange_cen_x <= 320) std::cout << "front: turn left\n";
             moveToBall(oBlob.orange_cen_x, oBlob.orange_cen_y);
         }
 
@@ -95,10 +91,10 @@ void RobotLogic::runAttack() {
     }
     if (false && blobsBack.oranges_processed > 0) {
         orange_blob oBlob = blobsBack.o_blob.at(0);
-        cout << "orange area back: " << oBlob.orange_area << "\n";
-        if (oBlob.orange_area > 10) {
-            if (oBlob.orange_cen_x > CAM_W / 2) std::cout << "back: turn right\n";
-            if (oBlob.orange_cen_x <= CAM_W / 2) std::cout << "back: turn left\n";
+        //cout << "orange area back: " << oBlob.orange_area << "\n";
+        if (oBlob.orange_area > 20) {
+            //if (oBlob.orange_cen_x > 320) std::cout << "back: turn right\n";
+            //if (oBlob.orange_cen_x <= 320) std::cout << "back: turn left\n";
         }
 
     }

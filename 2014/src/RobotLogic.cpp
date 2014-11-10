@@ -10,8 +10,8 @@
 
 using namespace std;
 
-RobotLogic::RobotLogic(){
-    
+RobotLogic::RobotLogic() {
+
 }
 
 RobotLogic::RobotLogic(Goal gl) {
@@ -29,8 +29,16 @@ void RobotLogic::init(RobotController* rCont, ImageProcessor* iProc) {
 void RobotLogic::init(RobotController* rCont, ImagePostProcessor* pProc) {
     rController = rCont;
     pProcessor = pProc;
-}
 
+    //Näide
+    //pProcessor->blob_structure_back.o_ball.size();
+    //blobs_processed blobsBack = pProcessor->blob_structure_back;
+    //int oSize = blobsBack.o_ball.size();
+
+    //orange_ball o_ball = blobsBack.o_ball.at(0);
+    //int x = o_ball.orange_cen_x;
+
+}
 
 void RobotLogic::run(Role role) {
     if (role == rATTACK) {
@@ -43,60 +51,44 @@ void RobotLogic::run(Role role) {
 
 void RobotLogic::runAttack() {
     //cout << "before mutex" << endl;
-    blobs blobsFront = iProcessor->getBlobsFront();
-    iProcessor->unlockFront();
-    blobs blobsBack = iProcessor->getBlobsBack();
-    iProcessor->unlockBack();
-    
+    //blobs blobsFront = iProcessor->getBlobsFront();
+    //iProcessor->unlockFront();
+    //blobs blobsBack = iProcessor->getBlobsBack();
+    //iProcessor->unlockBack();
+
+    blobs_processed blobsFront = pProcessor->blob_structure_front;
+    blobs_processed blobsBack = pProcessor->blob_structure_back;
+
+    if (blobsFront.o_ball.size() > 0) {
+        cout << blobsFront.o_ball.at(0).orange_cen_x << endl;
+    }
+
     switch (rState) {
-                
+
         case RobotState::FIND_BALL:
-            //cout << "FIND_BALL";
+            cout << "FIND_BALL" << endl;
             findBall(blobsFront, blobsBack);
             break;
         case RobotState::BALL_TIMEOUT:
-            //cout << "BALL_TIMEOUT";
+            cout << "BALL_TIMEOUT" << endl;
             ballTimeout(blobsFront, blobsBack);
             break;
         case RobotState::FIND_GATE:
-            //cout << "FIND_GATE";
+            cout << "FIND_GATE" << endl;
             findGate(blobsFront, blobsBack);
             break;
         case RobotState::GATE_TIMEOUT:
-            //cout << "GATE_TIMEOUT";
+            cout << "GATE_TIMEOUT" << endl;
             gateTimeout(blobsFront, blobsBack);
             break;
         case RobotState::KICK_BALL:
-            //cout << "KICK_BALL";
+            cout << "KICK_BALL" << endl;
             kickBall(blobsFront, blobsBack);
             break;
         case RobotState::NOT_GREEN:
-            //cout << "NOT_GREEN";
+            cout << "NOT_GREEN" << endl;
             notGreen(blobsFront, blobsBack);
             break;
-    }
-
-    if (blobsFront.oranges_processed > 0) {
-        //cout << "orange list size: " << blobsFront.o_blob.size() << endl;
-        orange_blob oBlob = blobsFront.o_blob.at(0);
-        //cout << "orange area front: " << oBlob.orange_area << "\n";
-        if (oBlob.orange_area > 20) {
-            //if (oBlob.orange_cen_x > 320) std::cout << "front: turn right\n";
-            //if (oBlob.orange_cen_x <= 320) std::cout << "front: turn left\n";
-            moveToBall(oBlob.orange_cen_x, oBlob.orange_cen_y);
-        }
-
-    } else {
-        //rController->driveRobot(0, 0, 0);
-    }
-    if (false && blobsBack.oranges_processed > 0) {
-        orange_blob oBlob = blobsBack.o_blob.at(0);
-        //cout << "orange area back: " << oBlob.orange_area << "\n";
-        if (oBlob.orange_area > 20) {
-            //if (oBlob.orange_cen_x > 320) std::cout << "back: turn right\n";
-            //if (oBlob.orange_cen_x <= 320) std::cout << "back: turn left\n";
-        }
-
     }
 }
 
@@ -114,90 +106,109 @@ void RobotLogic::setRState(RobotState state) {
     rState = state;
 }
 
-bool RobotLogic::isGreen(blobs blobsFront, blobs blobsBack) {
+bool RobotLogic::isGreen(blobs_processed blobsFront, blobs_processed blobsBack) {
     if (blobsFront.total_green < MIN_GREEN_AREA) return false;
     else return true;
 }
 
-void RobotLogic::findBall(blobs blobsFront, blobs blobsBack) {
+void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack) {
+
+    if (rController->hasBall()) rState = RobotState::FIND_GATE;
+    //if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
+    if (false) rState = RobotState::BALL_TIMEOUT;
     
-    if(blobsFront.oranges_processed>0){
-        orange_blob oBlob = blobsFront.o_blob.at(0);
-        int x = oBlob.orange_cen_x;
+    if (blobsFront.o_ball.size() > 0) {
+
+        orange_ball oBall = blobsFront.o_ball.at(0);
+
+        int x = oBall.orange_cen_x;
         
-        if (oBlob.orange_area > 15) {
-             if (x < CAM_W / 2 - 40) {
-                 //cout << "LEFT" << "\n";
-                 rController->driveRobot(30, 0, 15);
-             }
-            else if (x > CAM_W / 2 + 40) {
+        //Fancy formula
+        int turnSpd = (CAM_W/2.0 - x)*0.1;
+        
+        if (oBall.orange_w > 5) {
+            if (x < CAM_W / 2 - 10) {
+                //cout << "LEFT" << "\n";
+                rController->driveRobot(30, 0, turnSpd);
+            } else if (x > CAM_W / 2 + 10) {
                 //cout << "RIGHT" << "\n";
-                rController->driveRobot(30, 0, -15);
-                }
-            else rController->driveRobot(30, 0, 0);
+                rController->driveRobot(30, 0, turnSpd);
+            } else rController->driveRobot(30, 0, 0);
         } else {
-            rController->driveRobot(0,0,20);
+            rController->driveRobot(0, 0, 20);
         }
-        
-     
-        
-        if (rController->hasBall()) rState = RobotState::FIND_GATE;
-        if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
-        if (false) rState = RobotState::BALL_TIMEOUT;
+
+        //If ball is near, turn on dribbler
+        cout << "ball width: " << oBall.orange_w << endl;
+        if (oBall.orange_w > 50) {
+            rController->runDribbler();
+        } else {
+            rController->stopDribbler();
+        }
+    } else {
+        rController->driveRobot(0, 0, 20);
     }
+
     
-}
-
-void RobotLogic::ballTimeout(blobs blobsFront, blobs blobsBack) {
 
 }
 
-void RobotLogic::findGate(blobs blobsFront, blobs blobsBack) {
+void RobotLogic::ballTimeout(blobs_processed blobsFront, blobs_processed blobsBack) {
+
+}
+
+void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack) {
+    //if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
+    if(!rController->hasBall()) rState = RobotState::FIND_BALL;
+    
     int goalX, goalY;
-    
+    rController->runDribbler();
+
     if (goal == Goal::gBLUE) {
-        if (blobsFront.blues_processed > 0) {
-            goalX = blobsFront.b_blob.at(0).blue_cen_x;
-            goalY = blobsFront.b_blob.at(0).blue_cen_y;
-        }else{
+        if (blobsFront.b_gate.size() > 0) {
+            goalX = blobsFront.b_gate.at(0).blue_cen_x;
+            goalY = blobsFront.b_gate.at(0).blue_cen_y;
+        } else {
             //rState = RobotState.GATE_TIMEOUT;
-            rController->driveRobot(0,0,10);
+            rController->driveRobot(0, 0, 10);
             return;
         }
     }
     if (goal == Goal::gYELLOW) {
-        if(blobsFront.yellows_processed > 0){
-            goalX = blobsFront.y_blob.at(0).yellow_cen_x;
-            goalX = blobsFront.y_blob.at(0).yellow_cen_x;
-        }else{
+        if (blobsFront.y_gate.size() > 0) {
+            goalX = blobsFront.y_gate.at(0).yellow_cen_x;
+            goalX = blobsFront.y_gate.at(0).yellow_cen_x;
+        } else {
             //rState = RobotState.GATE_TIMEOUT;
-            rController->driveRobot(0,0,10);
+            rController->driveRobot(0, 0, 10);
             return;
         }
     }
     if (goalX < 310) rController->driveRobot(0, 0, 20);
     else if (goalX > 330) rController->driveRobot(0, 0, -20);
-    else {       
+    else {
         rState = RobotState::KICK_BALL;
     }
+
     
-    if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
-    
+
+    rController->stopDribbler();
 }
 
-void RobotLogic::gateTimeout(blobs blobsFront, blobs blobsBack) {
+void RobotLogic::gateTimeout(blobs_processed blobsFront, blobs_processed blobsBack) {
 
-    if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
+    //if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
 }
 
-void RobotLogic::kickBall(blobs blobsFront, blobs blobsBack) {
-    cout << "KICKBALL" << "\n";
+void RobotLogic::kickBall(blobs_processed blobsFront, blobs_processed blobsBack) {
+    cout << "!!!KICKBALL!!!" << "\n";
     rController->kickBall(1000);
     rState = RobotState::FIND_BALL;
-    if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
+    //if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
 }
 
-void RobotLogic::notGreen(blobs blobsFront, blobs blobsBack) {
+void RobotLogic::notGreen(blobs_processed blobsFront, blobs_processed blobsBack) {
     //Do something smart
-    rState = RobotState::FIND_BALL;    
+    //rController->driveRobot(-40,0,0);
+    rState = RobotState::FIND_BALL;
 }

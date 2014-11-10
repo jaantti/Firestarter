@@ -29,6 +29,8 @@ public:
     void setDetectSerial(bool serial);
     void chargeCoil();
     void pingCoil();
+    void runDribbler();
+    void stopDribbler();
     
     
 private:

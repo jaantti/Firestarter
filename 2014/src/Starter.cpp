@@ -13,7 +13,7 @@
 
 Starter::Starter() 
 {
-    rLogic = RobotLogic(Goal::gBLUE);
+    rLogic = RobotLogic(Goal::gYELLOW);
     pProcessor = ImagePostProcessor(&iProcessor);
 }
 
@@ -28,15 +28,13 @@ bool Starter::init() {
     
     rController.init();
     iProcessor.init();
-    rLogic.init(&rController, &iProcessor);    
+    rLogic.init(&rController, &pProcessor);    
     std::cout << "Initialization successful." << std::endl;
     return true;
 }
 
 bool Starter::start() {
-    
-    
-    
+            
     boost::thread iFrontThread(&ImageProcessor::runFrontCamera, &iProcessor);
     boost::thread iBackThread(&ImageProcessor::runBackCamera, &iProcessor);
     boost::thread codeEndThread(&Starter::codeEndListener, this);

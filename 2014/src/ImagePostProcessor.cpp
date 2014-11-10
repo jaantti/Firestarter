@@ -58,7 +58,7 @@ void ImagePostProcessor::processOrangeBlobsBack(){
        blob_structure_back.oranges_postprocessed = 0;
        return;
     }
-    std::cout << "BALLS BEFORE : " << size << std::endl;
+    //std::cout << "BALLS BEFORE : " << size << std::endl;
     int count = 0;
     for(int i = 0; i<size; i++){
         orange_blob blob = temp_vector.at(i);
@@ -143,8 +143,8 @@ void ImagePostProcessor::processOrangeBlobsFront(){
     }
     blob_structure_front.oranges_postprocessed = count;
     //std::cout << " BALLS AFTER :" << count << std::endl;
-    /*
     
+    /*
     for(int i=0; i<count; i++){
         orange_ball ball = blob_structure_front.o_ball.at(i);
         
@@ -154,45 +154,58 @@ void ImagePostProcessor::processOrangeBlobsFront(){
     */
 }
 
-
 void ImagePostProcessor::processBlueBlobsFront() {
+    //Create temporary datastore for processing purposes
     std::vector<blue_blob> temp_vector = blob_container_front.b_blob;
     int size = temp_vector.size();
+    
     if(size==0){
        blob_structure_front.blues_postprocessed = 0;
        return;
     }
+    // Initialize first gate vector, all other blobs will be placed according to
+    // this one.
     int count = 0;
-    for(int i = 0; i<size; i++){
-        blue_blob blob = temp_vector.at(i);
-        if(blueFitsInFrontList(blob.blue_cen_x, blob.blue_cen_y, blob.blue_w)){
-            //Already exists, discard by passing over
-            continue;
-        } else {
-            blob_structure_front.b_gate.push_back(blue_gate());
+    blue_blob init = temp_vector.at(count);
+    
+    int x1, x2, y1, y2;
+    
+    //Calculate the x1, x2, y1, y2 based on centerpoint and width
+    int half_w = init.blue_w/2;
             
-            //Calculate the x1, x2, y1, y2 based on centerpoint and width
-            int half_w = blob.blue_w/2;
-            int x1, x2, y1, y2;
-            x1 = blob.blue_cen_x-half_w;
-            x2 = blob.blue_cen_x+half_w;
-            y1 = blob.blue_cen_y-half_w;
-            y2 = blob.blue_cen_y+half_w;
-
-            blob_structure_front.b_gate[count].blue_cen_x = blob.blue_cen_x;
-            blob_structure_front.b_gate[count].blue_cen_y = blob.blue_cen_y;
-            blob_structure_front.b_gate[count].blue_w = blob.blue_w;
-            blob_structure_front.b_gate[count].blue_h = blob.blue_w;
-            blob_structure_front.b_gate[count].blue_x1 = x1;
-            blob_structure_front.b_gate[count].blue_x2 = x2;
-            blob_structure_front.b_gate[count].blue_y1 = y1;
-            blob_structure_front.b_gate[count].blue_y2 = x2;
-            count++;            
-        }
+    x1 = init.blue_cen_x-half_w;
+    x2 = init.blue_cen_x+half_w;
+    y1 = init.blue_cen_y-half_w;
+    y2 = init.blue_cen_y+half_w;
+    
+    blob_structure_front.b_gate.push_back(blue_gate());
+    
+    blob_structure_front.b_gate[count].blue_cen_x = init.blue_cen_x;
+    blob_structure_front.b_gate[count].blue_cen_y = init.blue_cen_y;
+    blob_structure_front.b_gate[count].blue_h = init.blue_w;
+    
+    blob_structure_front.b_gate[count].blue_x1 = x1;
+    blob_structure_front.b_gate[count].blue_x2 = x2;
+    blob_structure_front.b_gate[count].blue_y1 = y1;
+    blob_structure_front.b_gate[count].blue_y2 = x2;
+    
+    count++;
+    
+    
+    for(int i = 1; i<size; i++){
+        blue_blob blob = temp_vector.at(i);
+        mergeBlueGateFront(blue_blob blob);
     }
     blob_structure_front.blues_postprocessed = count;
+    /*
+    for(int i=0; i<count; i++){
+        blue_gate ball = blob_structure_front.b_gate.at(i);
+        
+        std::cout << "GATE COORDS : (" << ball.blue_cen_x << " ; " << ball.blue_cen_y << ")" << std::endl;
+        std::cout << "GATE WID :" << ball.blue_w << std::endl;
+    }
+    */
 }
-
 
 void ImagePostProcessor::processBlueBlobsBack() {
 std::vector<blue_blob> temp_vector = blob_container_back.b_blob;
@@ -217,7 +230,7 @@ std::vector<blue_blob> temp_vector = blob_container_back.b_blob;
             x2 = blob.blue_cen_x+half_w;
             y1 = blob.blue_cen_y-half_w;
             y2 = blob.blue_cen_y+half_w;
-
+            
             blob_structure_back.b_gate[count].blue_cen_x = blob.blue_cen_x;
             blob_structure_back.b_gate[count].blue_cen_y = blob.blue_cen_y;
             blob_structure_back.b_gate[count].blue_w = blob.blue_w;
@@ -231,7 +244,6 @@ std::vector<blue_blob> temp_vector = blob_container_back.b_blob;
     }
     blob_structure_back.blues_postprocessed = count;
 }
-
 
 void ImagePostProcessor::processYellowBlobsFront(){
     std::vector<yellow_blob> temp_vector = blob_container_front.y_blob;
@@ -270,7 +282,6 @@ void ImagePostProcessor::processYellowBlobsFront(){
     }
     blob_structure_front.yellows_postprocessed = count;
 }
-
 
 void ImagePostProcessor::processYellowBlobsBack(){
     std::vector<yellow_blob> temp_vector = blob_container_back.y_blob;
@@ -366,6 +377,7 @@ bool ImagePostProcessor::blueFitsInFrontList(int x, int y, int w) {
     if(size==0){
         return false;
     }
+    
     std::vector<blue_gate> gate_vector = blob_structure_front.b_gate;
     for(int i=0; i<size; i++){
         blue_gate gate = gate_vector.at(i);
@@ -393,7 +405,6 @@ bool ImagePostProcessor::blueFitsInBackList(int x, int y, int w) {
         if(check1 && check2){
             return true;
         }
-        
     }
     
     return false;
@@ -435,6 +446,14 @@ bool ImagePostProcessor::yellowFitsInBackList(int x, int y, int w) {
     }
     
     return false;
+}
+
+bool ImagePostProcessor::mergeBlueGate(int init_x, int init_y, int init_w) {
+
+}
+
+bool ImagePostProcessor::mergeYellowGate(int init_x, int init_y, int init_w) {
+
 }
 
 

@@ -48,6 +48,14 @@ void RobotController::kickBall(int str) {
     connection.kickBall(str);
 }
 
+void RobotController::runDribbler() {
+    connection.runDribbler();
+}
+
+void RobotController::stopDribbler() {
+    connection.stopDribbler();
+}
+
 void RobotController::driveThree(float spd, float angle, float rotSpd) {
 
     int speed0 = spd * cos(5.0 * PI / 6.0 - angle) + rotSpd;    

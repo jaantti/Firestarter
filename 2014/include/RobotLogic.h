@@ -43,14 +43,14 @@ private:
     void setRState(RobotState state);
     RobotState rState = RobotState::FIND_BALL;
     
-    bool isGreen(blobs blobsFront, blobs blobsBack);
+    bool isGreen(blobs_processed blobsFront, blobs_processed blobsBack);
     
-    void findBall(blobs blobsFront, blobs blobsBack);
-    void ballTimeout(blobs blobsFront, blobs blobsBack);
-    void findGate(blobs blobsFront, blobs blobsBack);
-    void gateTimeout(blobs blobsFront, blobs blobsBack);
-    void kickBall(blobs blobsFront, blobs blobsBack);
-    void notGreen(blobs blobsFront, blobs blobsBack);    
+    void findBall(blobs_processed blobsFront, blobs_processed blobsBack);
+    void ballTimeout(blobs_processed blobsFront, blobs_processed blobsBack);
+    void findGate(blobs_processed blobsFront, blobs_processed blobsBack);
+    void gateTimeout(blobs_processed blobsFront, blobs_processed blobsBack);
+    void kickBall(blobs_processed blobsFront, blobs_processed blobsBack);
+    void notGreen(blobs_processed blobsFront, blobs_processed blobsBack);    
     
 };
 

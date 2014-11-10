@@ -118,7 +118,7 @@ void ImageProcessor::processFrontCamera(char *cam) {
  
     while(!codeEnd){
         frame = cap1.read_frame();
-        if(frame){
+        if(frame){            
             segm.processImage(frame);            
             processOrange(true);
             processBlue(true);
@@ -141,6 +141,8 @@ void ImageProcessor::processBackCamera(char *cam) {
     while(true){        
         frame = cap2.read_frame();
         if(frame){
+            
+            
             segm2.processImage(frame);            
             processOrange(false);
             processBlue(false);

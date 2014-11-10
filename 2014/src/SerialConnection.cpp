@@ -50,7 +50,11 @@ bool SerialConnection::init() {
     for(int i=0; i < NR_OF_WHEELS + 1; i++){
         cout << i << ":" << serialDevice[i] << endl;
     }
-    usleep(10000000);
+    
+    sendCommand(serialDevice[0], "fs0\n");
+    sendCommand(serialDevice[0], "pd0\n");
+    
+    usleep(3000000);
     return true;
 }
 
@@ -69,18 +73,23 @@ void SerialConnection::sendCommand(int comport, const char* command) {
 void SerialConnection::setSpeed(int motor, int speed) {
     char out[10] = {0};
     sprintf(out, "sd%d\n", speed);
-    //cout << "speed:" << string(out) << endl;
+    cout << "speed:" << string(out) << endl;
     RS232_cputs(serialDevice[motor], (const char*) out);
     
 }
 
 void SerialConnection::kickBall(int power) {
     
-    char out[10] = {0};
-    sprintf(out, "k%d\n", power);
+    //char out[10] = {0};
+    //sprintf(out, "k%d\n", power);
     //cout << "kick: " << string(out) << endl;
-    RS232_cputs(serialDevice[0], (const char*) out);
-     
+    //RS232_cputs(serialDevice[0], (const char*) out);
+    for(int i = 0; i < 4; i++){
+        RS232_cputs(serialDevice[i+1], (const char*)("sd0\n"));
+    }
+    RS232_cputs(serialDevice[0], (const char*)("wl-255\n"));
+    usleep(3000000);
+    RS232_cputs(serialDevice[0], (const char*)("wl0\n"));
 }
 
 bool SerialConnection::hasBall() {
@@ -89,18 +98,29 @@ bool SerialConnection::hasBall() {
     sendCommand(serialDevice[GET_BALL_BOARD_ID], "gb\n", answer);
     
     if (answer[3] == '1') {
+        cout << "I have a ball" << endl;
         return true;
     }
     return false;
     
 }
 
+void SerialConnection::runDribbler() {
+    //RS232_cputs(serialDevice[0], (const char*)("tg\n"));
+    RS232_cputs(serialDevice[0], (const char*)("wl255\n"));
+}
+
+void SerialConnection::stopDribbler() {
+    //RS232_cputs(serialDevice[0], (const char*)("ts\n"));
+    RS232_cputs(serialDevice[0], (const char*)("wl0\n"));
+}
+
 void SerialConnection::pingCoil() {
-    RS232_cputs(serialDevice[0], (const char*)("p\n"));
+    //RS232_cputs(serialDevice[0], (const char*)("p\n"));
 }
 
 void SerialConnection::chargeCoil() {
-    RS232_cputs(serialDevice[0], (const char*)("c\n"));
+    //RS232_cputs(serialDevice[0], (const char*)("c\n"));
 }
 
 void SerialConnection::setDetectSerial(bool serial) {

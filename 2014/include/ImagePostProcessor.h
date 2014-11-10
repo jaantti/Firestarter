@@ -36,11 +36,11 @@ private:
     bool orangeFitsInFrontList(int x, int y, int w);
     bool orangeFitsInBackList(int x, int y, int w);
     
-    bool blueFitsInFrontList(int x, int y, int w);
-    bool blueFitsInBackList(int x, int y, int w);
+    bool mergeBlueGateFront(int init_x,int init_y,int init_w);
+    bool mergeBlueGateBack(int init_x,int init_y,int init_w);
+    bool mergeYellowGateFront(int init_x, int init_y, int init_w);
+    bool mergeYellowGateBack(int init_x, int init_y, int init_w);
     
-    bool yellowFitsInFrontList(int x, int y, int w);
-    bool yellowFitsInBackList(int x, int y, int w);
     
     ImageProcessor* iProc;
     blobs blob_container_front;

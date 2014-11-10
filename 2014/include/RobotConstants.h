@@ -16,8 +16,8 @@
 #define CAM_W 640
 #define CAM_H 480
 #define MAX_MOTOR_SPEED 190
-#define GET_BALL_BOARD_ID 4
-#define MIN_BLOB_SIZE 10
+#define GET_BALL_BOARD_ID 3
+#define MIN_BLOB_SIZE 3
 #define MIN_GREEN_AREA 1000
 
 #define SEG_BLACK 0
@@ -59,7 +59,7 @@ struct yellow_gate{
     int yellow_cen_x = -1;
     int yellow_cen_y = -1;
     int yellow_w = -1;
-    int yellow_h = -1;
+    int yellow_h = -1;    
     int yellow_x1 = -1;
     int yellow_x2 = -1;
     int yellow_y1 = -1;

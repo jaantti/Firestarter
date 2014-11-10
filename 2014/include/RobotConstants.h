@@ -28,6 +28,8 @@
 #define SEG_ORANGE 5
 #define SEG_NOCOLOR 6
 
+//DO NOT TOUCH. MISSION CRITICAL SYSTEMS
+#define MAGIC 1.15
 
 
 struct orange_blob{

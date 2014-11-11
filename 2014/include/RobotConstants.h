@@ -13,10 +13,19 @@
 #define NR_OF_WHEELS 4
 #define CAMERA_PATH /dev/video1
 #define CONF_PATH ../conf
+
 #define CAM_W 640
 #define CAM_H 480
-#define MAX_MOTOR_SPEED 190
+#define CAM_HFOV 63
+#define CAM_VFOV 48
+#define REAR_CAM_HEIGTH 143 //in millimeters from ground to centre of lens
+#define REAR_CAM_ANGLE 23 //angle between ground plane and camera central horizontal plane, camera is pointed downwards
+#define FRONT_CAM_HEIGTH 154
+#define FRONT_CAM_ANGLE 21
+
+#define MAX_MOTOR_SPEED 250
 #define GET_BALL_BOARD_ID 3
+#define SWITCH_BOARD_ID 2
 #define MIN_BLOB_SIZE 3
 #define MIN_GREEN_AREA 1000
 

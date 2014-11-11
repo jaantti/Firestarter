@@ -18,9 +18,22 @@ public:
     ImagePostProcessor(ImageProcessor*  imageProcessor);
     void run();
     virtual ~ImagePostProcessor();
-    blobs_processed blob_structure_front;
-    blobs_processed blob_structure_back;
-    
+
+    void lockBackSystem();
+    void lockFrontSystem();
+
+    blobs_processed getFrontSystem();
+    blobs_processed getBackSystem();
+
+    void unlockBackSystem();
+    void unlockFrontSystem();
+
+    blue_gate getFrontBlue();
+    blue_gate getBackBlue();
+
+    yellow_gate getFrontYellow();
+    yellow_gate getBackYellow();
+
 private:
     void loadBlobVectors();
     void processBlobVectors();
@@ -44,10 +57,15 @@ private:
 
     blue_gate expandBlueGate(blue_gate gate, blue_blob expander);
     
+    blobs_processed blob_structure_front;
+    blobs_processed blob_structure_back;
+
     ImageProcessor* iProc;
     blobs blob_container_front;
     blobs blob_container_back;
     
+    boost::mutex frontLock;
+    boost::mutex backLock;
     
 
 };

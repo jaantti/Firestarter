@@ -25,7 +25,7 @@
 
 #define MAX_MOTOR_SPEED 250
 #define GET_BALL_BOARD_ID 3
-#define SWITCH_BOARD_ID 2
+#define GET_SWITCH_BOARD_ID 2
 #define MIN_BLOB_SIZE 3
 #define MIN_GREEN_AREA 1000
 

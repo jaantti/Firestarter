@@ -26,6 +26,8 @@ public:
     void setSpeed(int motor, int speed);
     void kickBall(int power);
     bool hasBall();
+    bool getStart();
+    char getGoal();
     void setDetectSerial(bool serial);
     void chargeCoil();
     void pingCoil();

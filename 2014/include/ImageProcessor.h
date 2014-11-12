@@ -25,8 +25,6 @@
 using namespace boost;
 
 class ImageProcessor {
-    mutex blobBackMutex;
-    mutex blobFrontMutex;
 public:
     blobs blob_data_front;
     blobs blob_data_back;

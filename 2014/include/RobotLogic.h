@@ -18,6 +18,7 @@ class RobotLogic {
 public:
     RobotLogic();
     RobotLogic(Goal gl);
+    void setGoal();
     virtual ~RobotLogic();
     /**
      * Initialize variables

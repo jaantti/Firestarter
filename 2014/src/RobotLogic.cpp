@@ -40,6 +40,15 @@ void RobotLogic::init(RobotController* rCont, ImagePostProcessor* pProc) {
 
 }
 
+void RobotLogic::setGoal() {
+    if (rController->getAttackedGoal()=='B') {
+        goal = Goal::gBLUE;
+    }
+    else if (rController->getAttackedGoal()=='Y') {
+        goal = Goal::gYELLOW;
+    }
+}
+
 void RobotLogic::run(Role role) {
     if (role == rATTACK) {
         runAttack();

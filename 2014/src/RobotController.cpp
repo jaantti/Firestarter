@@ -56,6 +56,14 @@ void RobotController::stopDribbler() {
     connection.stopDribbler();
 }
 
+char RobotController::getAttackedGoal() {
+    return connection.getGoal();
+}
+
+bool RobotController::getStart() {
+    return connection.getStart();
+}
+
 void RobotController::driveThree(float spd, float angle, float rotSpd) {
 
     int speed0 = spd * cos(5.0 * PI / 6.0 - angle) + rotSpd;    

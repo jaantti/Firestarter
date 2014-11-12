@@ -13,7 +13,7 @@
 
 Starter::Starter() :pProcessor(&iProcessor)
 {
-    rLogic = RobotLogic(Goal::gYELLOW);
+    rLogic = RobotLogic();
 }
 
 Starter::~Starter() {
@@ -23,7 +23,8 @@ bool Starter::init() {
     
     rController.init();
     iProcessor.init();
-    rLogic.init(&rController, &pProcessor);    
+    rLogic.init(&rController, &pProcessor);
+    rLogic.setGoal();
     std::cout << "Initialization successful." << std::endl;
     return true;
 }

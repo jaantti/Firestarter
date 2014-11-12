@@ -113,6 +113,31 @@ bool SerialConnection::hasBall() {
     
 }
 
+char SerialConnection::getGoal() {
+    
+    unsigned char answer[20] = {0};
+    sendCommand(serialDevice[GET_SWITCH_BOARD_ID], "s1\n", answer);
+    
+    if (answer[4] == '1') {
+        cout << "Attacking blue" << endl;
+        return 'B';
+    }
+    cout << "Attacking yellow" << endl;
+    return 'Y';
+}
+
+bool SerialConnection::getStart() {
+    
+    unsigned char answer[20] = {0};
+    sendCommand(serialDevice[GET_SWITCH_BOARD_ID], "s4\n", answer);
+    
+    if (answer[4] == '1') {
+        cout << "GO" << endl;
+        return true;
+    }
+    return false;
+}
+
 void SerialConnection::runDribbler() {
     RS232_cputs(serialDevice[0], (const char*)("tg\n"));
     //RS232_cputs(serialDevice[0], (const char*)("wl255\n"));

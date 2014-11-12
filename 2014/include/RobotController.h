@@ -53,6 +53,11 @@ public:
     
     void stopDribbler();
     
+    char getAttackedGoal();
+    
+    bool getStart();
+    
+    
 private:
     void driveThree(float spd, float angle, float rotSpd);
     void driveFour(float spd, float angle, float rotSpd);

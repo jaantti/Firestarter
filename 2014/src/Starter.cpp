@@ -37,8 +37,6 @@ bool Starter::start() {
     boost::thread codeEndThread(&Starter::codeEndListener, this);    
     
     rController.driveRobot(50,PI/-2.0,0);
-    //rController.driveRobot(50,PI, PI);
-    //usleep(200000);
     //Runs robot logic
     while(!codeEnd){
         rLogic.run(rATTACK);

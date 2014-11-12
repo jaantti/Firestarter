@@ -71,15 +71,12 @@ void RobotController::driveThree(float spd, float angle, float rotSpd) {
     int speed2 = spd * cos(3.0 * PI / 2.0 - angle) + rotSpd;
     
     int motorSpeeds[3] = {speed0, speed1, speed2};
-    
-    //cout << "0:" << motorSpeeds[0] << ", 1:" << motorSpeeds[1] << ", 2:" << motorSpeeds[2] << endl;
-    
+        
     int max = 1;
     
     for(int i = 0; i < 2; i++){
         if(abs(motorSpeeds[i]) < abs(motorSpeeds[i+1])) max = i+1;
     }
-    //cout << "max:" << motorSpeeds[max] << endl;
     
     if(abs(motorSpeeds[max]) > MAX_MOTOR_SPEED){
         int maxSpeed = motorSpeeds[max];
@@ -100,15 +97,12 @@ void RobotController::driveFour(float spd, float angle, float rotSpd) {
     int speed3 = spd * sin(angle + PI / 4.0) + rotSpd;
     
     int motorSpeeds[4] = {speed0, speed1, speed2, speed3};
-    
-    //cout << "0:" << motorSpeeds[0] << ", 1:" << motorSpeeds[1] << ", 2:" << motorSpeeds[2] << ", 3:" << motorSpeeds[3]<<endl;
-    
+        
     int max = 1;
     
     for(int i = 0; i < 3; i++){
         if(abs(motorSpeeds[i]) < abs(motorSpeeds[i+1])) max = i+1;
     }
-    //cout << "max:" << motorSpeeds[max] << endl;
     
     if(abs(motorSpeeds[max]) > MAX_MOTOR_SPEED){
         int maxSpeed = motorSpeeds[max];
@@ -118,10 +112,7 @@ void RobotController::driveFour(float spd, float angle, float rotSpd) {
     }
     for(int i = 0; i < 4; i++){
         connection.setSpeed(i+1, motorSpeeds[i]);
-    }   
-    
-    
-
+    }
 }
 
 void RobotController::detectSerial(bool serial){

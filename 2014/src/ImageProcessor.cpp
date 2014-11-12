@@ -64,7 +64,7 @@ bool ImageProcessor::chooseCameras() {
     cap2.start_capturing();
     
     segm.readThresholds("conf1");
-    segm2.readThresholds("conf2");
+    segm2.readThresholds("conf1");
     
     //If solution = true, means that video0 is the front camera and video1 is the back camera.
     //If solution = false, means that video1 is the front camera and video0 the back.
@@ -117,7 +117,7 @@ void ImageProcessor::processFrontCamera(char *cam) {
  
     while(!codeEnd){
         frame = cap1.read_frame();
-        if(frame){            
+        if(frame){
             segm.processImage(frame);            
             processOrange(true);
             processBlue(true);
@@ -135,7 +135,7 @@ void ImageProcessor::processBackCamera(char *cam) {
     cap2.init_device( cam );
     cap2.start_capturing();
     std::cout << " Successfully initialized Back camera " << cam << std::endl;
-    segm2.readThresholds("conf2");   
+    segm2.readThresholds("conf1");   
     
     while(!codeEnd){        
         frame = cap2.read_frame();

@@ -523,13 +523,19 @@ yellow_gate ImagePostProcessor::expandYellowGate(yellow_gate gate, yellow_blob e
 }
 
 blobs_processed ImagePostProcessor::getBackSystem(){
+        blobs_processed temp;
 	backLock.lock();
-	return blob_structure_back;
+	temp = blob_structure_back;
+        backLock.unlock();
+        return temp;
 }
 
 blobs_processed ImagePostProcessor::getFrontSystem(){
+        blobs_processed temp;
 	frontLock.lock();
-	return blob_structure_front;
+	temp = blob_structure_front;
+        frontLock.unlock();
+        return temp;
 }
 
 blue_gate ImagePostProcessor::getFrontBlue(){

@@ -67,7 +67,7 @@ void RobotLogic::runAttack() {
 
     blobs_processed blobsFront = pProcessor->getFrontSystem();
     blobs_processed blobsBack = pProcessor->getBackSystem();
-
+    
     if (blobsFront.o_ball.size() > 0) {
         cout << blobsFront.o_ball.at(0).orange_cen_x << endl;
     }

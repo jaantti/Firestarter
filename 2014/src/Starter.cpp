@@ -11,14 +11,9 @@
 #include <iostream>
 #include "boost/thread.hpp"
 
-Starter::Starter() 
+Starter::Starter() :pProcessor(&iProcessor)
 {
     rLogic = RobotLogic(Goal::gYELLOW);
-    pProcessor = ImagePostProcessor(&iProcessor);
-}
-
-Starter::Starter(const Starter& orig) {
-    
 }
 
 Starter::~Starter() {

@@ -5,16 +5,7 @@
  * Created on November 4, 2014, 3:43 PM
  */
 
-#include "capture.h"
-
-
 #include "ImagePostProcessor.h"
-#include "boost/thread.hpp"
-
-//TODO:: Rewrite the system as threaded.
-ImagePostProcessor::ImagePostProcessor(){
-    
-}
 
 ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor) {
     iProc = imageProcessor;
@@ -23,6 +14,8 @@ ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor) {
 
 ImagePostProcessor::~ImagePostProcessor() {
 }
+
+
 void ImagePostProcessor::run(){
     loadBlobVectors();
     processBlobVectors();

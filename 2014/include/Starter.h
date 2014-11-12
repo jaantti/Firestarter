@@ -30,7 +30,6 @@ public:
     NetworkConnector nConnector;    
     
     Starter();
-    Starter(const Starter& orig);
     virtual ~Starter();
     bool init();
     bool start();

@@ -137,7 +137,7 @@ void ImageProcessor::processBackCamera(char *cam) {
     std::cout << " Successfully initialized Back camera " << cam << std::endl;
     segm2.readThresholds("conf2");   
     
-    while(true){        
+    while(!codeEnd){        
         frame = cap2.read_frame();
         if(frame){
             

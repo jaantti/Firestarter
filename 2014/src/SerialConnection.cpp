@@ -55,8 +55,8 @@ bool SerialConnection::init() {
         cout << i << ":" << serialDevice[i] << endl;
     }
     
-    sendCommand(serialDevice[0], "fs0\n");
-    sendCommand(serialDevice[0], "pd0\n");
+    //sendCommand(serialDevice[0], "fs0\n");
+    //sendCommand(serialDevice[0], "pd0\n");
     
     usleep(3000000);
     return true;
@@ -106,7 +106,7 @@ bool SerialConnection::hasBall() {
     sendCommand(serialDevice[GET_BALL_BOARD_ID], "gb\n", answer);
     
     if (answer[3] == '1') {
-        cout << "I have a ball" << endl;
+        //cout << "I have a ball" << endl;
         return true;
     }
     return false;

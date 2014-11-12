@@ -18,6 +18,7 @@ ImagePostProcessor::~ImagePostProcessor() {
 
 void ImagePostProcessor::run(){
     while(!codeEnd){
+        usleep(20000);
         loadBlobVectors();
         processBlobVectors();
     }

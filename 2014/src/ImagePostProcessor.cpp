@@ -43,7 +43,7 @@ void ImagePostProcessor::run(){
         
         mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
 
-        //printf("Per second: %ld frames\n", mtime);
+        printf("Per second: %ld frames\n", mtime);
     
     }
 }

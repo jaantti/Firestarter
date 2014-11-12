@@ -65,7 +65,7 @@ bool SerialConnection::init() {
 void SerialConnection::sendCommand(int comport, const char* command, unsigned char* answer) {
 
     RS232_cputs(comport, command);
-    usleep(100000);
+    usleep(10000);
     RS232_PollComport(comport, answer, 100);
 }
 

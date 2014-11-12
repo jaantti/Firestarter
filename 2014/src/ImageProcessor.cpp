@@ -30,6 +30,7 @@ void ImageProcessor::init() {
         front = "/dev/video1";
         back = "/dev/video0";
     }
+    std::cout << " Front camera chosen. Waiting" << std::endl;
     usleep(1000000);
 }
 
@@ -69,9 +70,7 @@ bool ImageProcessor::chooseCameras() {
     //If solution = true, means that video0 is the front camera and video1 is the back camera.
     //If solution = false, means that video1 is the front camera and video0 the back.
     bool solution = true;
-    
-    std::cout << "poop" << std::endl;
-    
+        
     while(true){
         frame1 = cap1.read_frame();
         frame2 = cap2.read_frame();
@@ -103,6 +102,7 @@ bool ImageProcessor::chooseCameras() {
     cap1.uninit_device();
     cap1.close_device();
     usleep(1000000);
+    std::cout << " Capture stopped successfully" << std::endl;
     return solution;
     
 }

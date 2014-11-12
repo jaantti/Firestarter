@@ -105,7 +105,8 @@ bool RobotLogic::isGreen(blobs_processed blobsFront, blobs_processed blobsBack) 
 }
 
 void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack) {
-
+    std::cout << " Finding ball nemo." << std::endl;
+    
     if (rController->hasBall()) rState = RobotState::FIND_GATE;
     if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
     if (false) rState = RobotState::BALL_TIMEOUT;
@@ -141,6 +142,7 @@ void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack)
     } else {
         rController->driveRobot(0, 0, 20);
     }
+    
 }
 
 void RobotLogic::ballTimeout(blobs_processed blobsFront, blobs_processed blobsBack) {

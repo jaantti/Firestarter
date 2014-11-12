@@ -11,6 +11,9 @@
 #include "RobotConstants.h"
 #include "ImageProcessor.h"
 #include <boost/thread.hpp>
+#include <sys/time.h>
+#include <stdio.h>
+#include <unistd.h>
 
 class ImagePostProcessor {
 public:
@@ -63,6 +66,9 @@ private:
     blobs_processed blob_structure_front;
     blobs_processed blob_structure_back;
 
+    blobs_processed temp_holder_front;
+    blobs_processed temp_holder_back;
+    
     ImageProcessor* iProc;
     blobs blob_container_front;
     blobs blob_container_back;

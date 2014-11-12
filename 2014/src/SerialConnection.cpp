@@ -35,7 +35,7 @@ bool SerialConnection::init() {
             if (!RS232_OpenComport(i, 19200, "8N1")) {
                 unsigned char buf[100] = {0};
                 sendCommand(i, "?\n", buf);
-                cout << i << ":" << string((const char *) buf);
+                //cout << i << ":" << string((const char *) buf);
                 if (buf[0] == 'd' || buf[4] == '0') serialDevice[0] = i;
                 else serialDevice[buf[4] - '0'] = i;
             }
@@ -79,7 +79,6 @@ void SerialConnection::setSpeed(int motor, int speed) {
     pingCoil();
     char out[10] = {0};
     sprintf(out, "sd%d\n", speed);
-    //cout << "speed:" << string(out) << endl;
     RS232_cputs(serialDevice[motor], (const char*) out);
     
 }
@@ -92,12 +91,8 @@ void SerialConnection::kickBall(int power) {
     
     char out[10] = {0};
     sprintf(out, "k%d\n", power);
-    //cout << "kick: " << string(out) << endl;
     RS232_cputs(serialDevice[0], (const char*) out);
     
-    //RS232_cputs(serialDevice[0], (const char*)("wl-255\n"));
-    //usleep(3000000);
-    //RS232_cputs(serialDevice[0], (const char*)("wl0\n"));
 }
 
 bool SerialConnection::hasBall() {

@@ -528,42 +528,42 @@ blobs_processed ImagePostProcessor::getFrontSystem(){
 
 blue_gate ImagePostProcessor::getFrontBlue(){
 	frontLock.lock();
-	blue_gate = {}
+	blue_gate blueGate = {};
 	if(blob_structure_front.blues_postprocessed>0){
-		blue_gate = blob_structure_front.b_gate.at(0);
+		blueGate = blob_structure_front.b_gate.at(0);
 	}
 	frontLock.unlock();
-	return blue_gate;
+	return blueGate;
 }
 
 blue_gate ImagePostProcessor::getBackBlue(){
 	backLock.lock();
-	blue_gate = {}
+	blue_gate blueGate= {};
 	if(blob_structure_back.blues_postprocessed>0){
-		blue_gate = blob_structure_back.b_gate.at(0);
+		blueGate = blob_structure_back.b_gate.at(0);
 	}
 	backLock.unlock();
-	return blue_gate;
+	return blueGate;
 }
 
 yellow_gate ImagePostProcessor::getFrontYellow(){
 	frontLock.lock();
-	yellow_gate = {}
+	yellow_gate yellowGate = {};
 	if(blob_structure_front.yellows_postprocessed>0){
-		blue_gate = blob_structure_front.y_gate.at(0);
+		yellowGate = blob_structure_front.y_gate.at(0);
 	}
 	frontLock.unlock();
-	return yellow_gate;
+	return yellowGate;
 }
 
 yellow_gate ImagePostProcessor::getBackYellow(){
 	backLock.lock();
-	yellow_gate = {}
+	yellow_gate yellowGate = {};
 	if(blob_structure_back.yellows_postprocessed>0){
-		blue_gate = blob_structure_back.y_gate.at(0);
+		yellowGate = blob_structure_back.y_gate.at(0);
 	}
 	backLock.unlock();
-	return yellow_gate;
+	return yellowGate;
 }
 
 void ImagePostProcessor::lockBackSystem(){

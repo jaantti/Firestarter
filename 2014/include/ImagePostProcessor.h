@@ -11,6 +11,7 @@
 #include "RobotConstants.h"
 #include "ImageProcessor.h"
 #include "RobotConstants.h"
+#include <boost/thread.hpp>
 
 class ImagePostProcessor {
 public:

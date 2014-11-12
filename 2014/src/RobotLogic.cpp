@@ -56,8 +56,8 @@ void RobotLogic::runAttack() {
     //blobs blobsBack = iProcessor->getBlobsBack();
     //iProcessor->unlockBack();
 
-    blobs_processed blobsFront = pProcessor->blob_structure_front;
-    blobs_processed blobsBack = pProcessor->blob_structure_back;
+    blobs_processed blobsFront = pProcessor->getFrontSystem();
+    blobs_processed blobsBack = pProcessor->getBackSystem();
 
     if (blobsFront.o_ball.size() > 0) {
         cout << blobsFront.o_ball.at(0).orange_cen_x << endl;
@@ -169,7 +169,7 @@ void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack)
     if (true || goal == Goal::gBLUE) {
         cout << "in first if" << endl;
         if (blobsFront.b_gate.size() > 0) {
-            if (blobsFront.b_gate.at(0).blue_w > 10) {
+            if (blobsFront.b_gate.at(0).blue_w > 30) {
                 goalX = blobsFront.b_gate.at(0).blue_cen_x;
                 goalY = blobsFront.b_gate.at(0).blue_cen_y;
                 cout << "in if bulue x:" << blobsFront.b_gate.at(0).blue_cen_x << endl;
@@ -183,7 +183,7 @@ void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack)
     }
     if (goal == Goal::gYELLOW) {
         if (blobsFront.y_gate.size() > 0) {
-            if (blobsFront.y_gate.at(0).yellow_w > 10) {
+            if (blobsFront.y_gate.at(0).yellow_w > 30) {
                 goalX = blobsFront.y_gate.at(0).yellow_cen_x;
                 goalY = blobsFront.y_gate.at(0).yellow_cen_y;
             }

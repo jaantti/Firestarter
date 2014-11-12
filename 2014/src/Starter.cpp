@@ -52,7 +52,7 @@ bool Starter::start() {
     }
     iProcessor.stopProcessor();
     codeEndThread.join();
-    pProcTread.join()
+    pProcTread.join();
     iFrontThread.join();
     iBackThread.join();
 

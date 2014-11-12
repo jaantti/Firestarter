@@ -85,7 +85,7 @@ void SerialConnection::setSpeed(int motor, int speed) {
 
 void SerialConnection::kickBall(int power) {
     
-    for(int i = 0; i < 4; i++){
+    for(int i = 0; i < NR_OF_WHEELS; i++){
         RS232_cputs(serialDevice[i+1], (const char*)("sd0\n"));
     }
     
@@ -155,3 +155,8 @@ void SerialConnection::setDetectSerial(bool serial) {
     detectSerial = serial;
 }
 
+void SerialConnection::closeSerial(){
+    for(int i = 0; i < NR_OF_WHEELS + 1; i++){
+        RS232_CloseComport(serialDevice[i]);
+    }
+}

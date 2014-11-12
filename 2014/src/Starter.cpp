@@ -39,7 +39,7 @@ bool Starter::start() {
     rController.driveRobot(50,PI/-2.0,0);
     //Runs robot logic
     while(!codeEnd){
-        rLogic.run(rATTACK);
+        rLogic.run(Role::rATTACK);
         usleep(1000);        
     }
     
@@ -49,6 +49,7 @@ bool Starter::start() {
     pProcTread.join();
     iFrontThread.join();
     iBackThread.join();
+    rController.closeSerial();
 
     return true;
 }

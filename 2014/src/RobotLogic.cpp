@@ -40,11 +40,15 @@ void RobotLogic::setGoal() {
     }
 }
 
+float RobotLogic::getAngle(int x_coor) {
+	return (((float)x_coor-(float)CAM_W/2.0)/(float)CAM_W*(float)CAM_HFOV*-1.0);
+}
+
 void RobotLogic::run(Role role) {
-    if (role == rATTACK) {
+    if (role == Role::rATTACK) {
         runAttack();
     }
-    if (role == rDEFEND) {
+    if (role == Role::rDEFEND) {
         runDefend();
     }
 }
@@ -59,11 +63,11 @@ void RobotLogic::runAttack() {
     switch (rState) {
 
         case RobotState::FIND_BALL:
-            //cout << "FIND_BALL" << endl;
+            cout << "FIND_BALL" << endl;
             findBall(blobsFront, blobsBack);
             break;
         case RobotState::BALL_TIMEOUT:
-            //cout << "BALL_TIMEOUT" << endl;
+            cout << "BALL_TIMEOUT" << endl;
             ballTimeout(blobsFront, blobsBack);
             break;
         case RobotState::FIND_GATE:
@@ -71,15 +75,15 @@ void RobotLogic::runAttack() {
             findGate(blobsFront, blobsBack);
             break;
         case RobotState::GATE_TIMEOUT:
-            //cout << "GATE_TIMEOUT" << endl;
+            cout << "GATE_TIMEOUT" << endl;
             gateTimeout(blobsFront, blobsBack);
             break;
         case RobotState::KICK_BALL:
-            //cout << "KICK_BALL" << endl;
+            cout << "KICK_BALL" << endl;
             kickBall(blobsFront, blobsBack);
             break;
         case RobotState::NOT_GREEN:
-            //cout << "NOT_GREEN" << endl;
+            cout << "NOT_GREEN" << endl;
             notGreen(blobsFront, blobsBack);
             break;
     }
@@ -105,10 +109,10 @@ bool RobotLogic::isGreen(blobs_processed blobsFront, blobs_processed blobsBack) 
 }
 
 void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack) {
-    std::cout << " Finding ball nemo." << std::endl;
-    
+    //std::cout << " Finding ball nemo." << std::endl;
+    rController->stopDribbler();
     if (rController->hasBall()) rState = RobotState::FIND_GATE;
-    if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
+    //if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
     if (false) rState = RobotState::BALL_TIMEOUT;
     
     if (blobsFront.o_ball.size() > 0) {
@@ -118,9 +122,14 @@ void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack)
         int x = oBall.orange_cen_x;
         
         //Fancy formula
-        int turnSpd = (CAM_W/2.0 - x + 30)*0.07;
-        int moveSpd = 5 + 800/oBall.orange_w;
+        //int turnSpd = (CAM_W/2.0 - x)*0.07;
+        //cout << "ball x:" << x << endl;
+        //cout << "ball angle:" << getAngle(x) << endl;
+        int turnSpd = getAngle(x)*0.5;
+        int moveDir = getAngle(x)/180*PI*0.5;
+        int moveSpd = 15 + 800/oBall.orange_w;
         
+        /*
         if (oBall.orange_w > 5) {
             if (x < CAM_W / 2 - 10) {
                 //cout << "LEFT" << "\n";
@@ -132,7 +141,13 @@ void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack)
         } else {
             rController->driveRobot(0, 0, 20);
         }
-
+        */
+        if (oBall.orange_w > 5) {
+            rController->driveRobot(moveSpd, moveDir, turnSpd);
+        } else {
+            rController->driveRobot(0, 0, 30);
+        }
+        
         //If ball is near, turn on dribbler
         if (oBall.orange_w > 50) {
             rController->runDribbler();
@@ -140,7 +155,7 @@ void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack)
             //rController->stopDribbler();
         }
     } else {
-        rController->driveRobot(0, 0, 20);
+        rController->driveRobot(0, 0, 30);
     }
     
 }
@@ -152,49 +167,57 @@ void RobotLogic::ballTimeout(blobs_processed blobsFront, blobs_processed blobsBa
 void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack) {
     if(!rController->hasBall()) rState = RobotState::FIND_BALL;
     rController->runDribbler();
-    
+    int aimThresh = -1;
+    int turnSpeed = -1;
     int goalX = -2, goalY;
-    cout << "blue size:" << blobsFront.b_gate.size() << endl;
+    //cout << "blue size:" << blobsFront.b_gate.size() << endl;
     if(blobsFront.b_gate.size() > 0)
-        cout << "goal size: " << blobsFront.b_gate.at(0).blue_w << endl;
+        cout << "blue size: " << blobsFront.b_gate.at(0).blue_w << endl;
 
     if (goal == Goal::gBLUE) {
         if (blobsFront.b_gate.size() > 0) {
-            if (blobsFront.b_gate.at(0).blue_w > 30) {
+            if (blobsFront.b_gate.at(0).blue_w > MIN_GATE_WIDTH) {
                 goalX = blobsFront.b_gate.at(0).blue_cen_x;
+                cout << "blue x: " << goalX << endl;
                 goalY = blobsFront.b_gate.at(0).blue_cen_y;
+                aimThresh = blobsFront.b_gate.at(0).blue_w * 0.1;
+                turnSpeed = getAngle(goalX)*0.5;
+                //turnSpeed = (CAM_W/2.0 - blobsFront.b_gate.at(0).blue_cen_x)*0.05 + 5;
             }
             
         } else {
             //rState = RobotState.GATE_TIMEOUT;
-            rController->driveRobot(0, 0, 10);
+            rController->driveRobot(0, 0, 30);
             return;
         }
     }
     
     if (goal == Goal::gYELLOW) {
         if (blobsFront.y_gate.size() > 0) {
-            if (blobsFront.y_gate.at(0).yellow_w > 20) {
+            cout << "yellow size: " << blobsFront.y_gate.at(0).yellow_w << endl;
+            if (blobsFront.y_gate.at(0).yellow_w > MIN_GATE_WIDTH) {
                 goalX = blobsFront.y_gate.at(0).yellow_cen_x;
+                cout << "yellow x: " << goalX << endl;
                 goalY = blobsFront.y_gate.at(0).yellow_cen_y;
+                aimThresh = blobsFront.y_gate.at(0).yellow_w * 0.1+20;
+                turnSpeed = getAngle(goalX)*0.5;
+                //turnSpeed = (CAM_W/2.0 - blobsFront.y_gate.at(0).yellow_cen_x)*0.05 + 5;
             }
             
         } else {
             //rState = RobotState.GATE_TIMEOUT;
-            rController->driveRobot(0, 0, 10);
+            rController->driveRobot(0, 0, 30);
             return;
         }
     }
     //cout << "goalX:" << goalX << endl;
-    int aimTresh = blobsFront.b_gate.at(0).blue_w * 0.2 - 10;
-    int turnSpd = (CAM_W/2.0 - blobsFront.b_gate.at(0).blue_cen_x)*0.05 + 5;
-    if (goalX == -2) rController->driveRobot(0, 0, 10);
-    else if (goalX < 320 - aimTresh) rController->driveRobot(0, 0, turnSpd);
-    else if (goalX > 320 + aimTresh) rController->driveRobot(0, 0, turnSpd);
+    if (goalX == -2) rController->driveRobot(0, 0, 30);
+    else if (goalX < CAM_W/2 - aimThresh) rController->driveRobot(0, 0, turnSpeed);
+    else if (goalX > CAM_W/2 + aimThresh) rController->driveRobot(0, 0, turnSpeed);
     else {
         rState = RobotState::KICK_BALL;
     }
-    rController->stopDribbler();
+    //rController->stopDribbler();
 }
 
 void RobotLogic::gateTimeout(blobs_processed blobsFront, blobs_processed blobsBack) {

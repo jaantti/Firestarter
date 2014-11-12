@@ -12,7 +12,7 @@ using namespace std;
 /*
  * 
  */
-int main(int argc, char** argv) {
+int main(int argc, char** argv) {   
     Starter starter;
     starter.init();
     starter.start();

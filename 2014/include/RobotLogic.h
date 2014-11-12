@@ -19,6 +19,7 @@ public:
     RobotLogic();
     RobotLogic(Goal gl);
     void setGoal();
+    float getAngle(int x_coor);
     virtual ~RobotLogic();
     /**
      * Initialize variables

@@ -28,6 +28,7 @@
 #define GET_SWITCH_BOARD_ID 2
 #define MIN_BLOB_SIZE 3
 #define MIN_GREEN_AREA 1000
+#define MIN_GATE_WIDTH 80
 
 #define SEG_BLACK 0
 #define SEG_WHITE 1
@@ -133,14 +134,14 @@ enum RobotState{
     KICK_BALL
 };
 
-enum Goal{
-    gYELLOW,
-    gBLUE
+enum class Goal : int{
+    gYELLOW = 1,
+    gBLUE = 2
 };
 
-enum Role{
-    rATTACK,
-    rDEFEND
+enum class Role : int{
+    rATTACK = 1,
+    rDEFEND = 2
 };
 
 

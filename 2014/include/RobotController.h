@@ -57,6 +57,8 @@ public:
     
     bool getStart();
     
+    void closeSerial(){connection.closeSerial();}
+    
     
 private:
     void driveThree(float spd, float angle, float rotSpd);

@@ -43,7 +43,7 @@ void ImagePostProcessor::run(){
         
         mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
 
-        printf("Per second: %ld frames\n", mtime);
+        //printf("Per second: %ld frames\n", mtime);
     
     }
 }
@@ -231,6 +231,11 @@ void ImagePostProcessor::processBlueBlobsFront() {
     gate.blue_w = gate.blue_x2 - gate.blue_x1;
     gate.blue_cen_x = gate.blue_x2 - gate.blue_w/2;
     
+    
+    //std::cout << "BLUE_W : " << gate.blue_w << " ; BLUE_CEN_X:" << gate.blue_cen_x << std::endl;
+    //std::cout << "BLUE_H:" << gate.blue_h << " ; BLUE_CEN_Y:" << gate.blue_cen_y << std::endl;
+        
+    
     frontLock.lock();
     blob_structure_front.b_gate.clear();
     blob_structure_front.b_gate.push_back(blue_gate());
@@ -293,6 +298,8 @@ void ImagePostProcessor::processBlueBlobsBack() {
 	gate.blue_w = gate.blue_x2 - gate.blue_x1;
 	gate.blue_cen_x = gate.blue_x2 - gate.blue_w/2;
 
+        std::cout << "BLUE_W : " << gate.blue_w << " ; BLUE_CEN_X:" << gate.blue_cen_x << " ; BLUE_HEIGHT:" << gate.blue_h << std::endl;
+        
 	backLock.lock();
         blob_structure_back.b_gate.clear();
         blob_structure_back.b_gate.push_back(blue_gate());

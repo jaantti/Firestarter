@@ -129,7 +129,7 @@ int main (int argc, char *argv[])
     strcat( path, robot_dir );
     strcat( path, "cam.sh" );
 
-    system( path );
+    //system( path );
 
 
     // Initialize GTK+

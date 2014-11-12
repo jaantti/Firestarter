@@ -33,6 +33,7 @@ public:
     void pingCoil();
     void runDribbler();
     void stopDribbler();
+    void closeSerial();
     
     
 private:

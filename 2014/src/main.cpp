@@ -13,8 +13,7 @@ using namespace std;
  * 
  */
 int main(int argc, char** argv) {
-    
-    Starter starter = Starter();
+    Starter starter;
     starter.init();
     starter.start();
     return 0;

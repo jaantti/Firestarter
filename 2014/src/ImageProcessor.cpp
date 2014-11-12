@@ -15,8 +15,6 @@ ImageProcessor::ImageProcessor() :segm(CAM_W, CAM_H), segm2(CAM_W, CAM_H)
 
 }
 
-
-
 ImageProcessor::~ImageProcessor() {
 }
 

@@ -33,8 +33,7 @@ bool Starter::start() {
     boost::thread iFrontThread(&ImageProcessor::runFrontCamera, &iProcessor);
     boost::thread iBackThread(&ImageProcessor::runBackCamera, &iProcessor);
     boost::thread pProcTread(&ImagePostProcessor::run, &pProcessor);
-    boost::thread codeEndThread(&Starter::codeEndListener, this);
-    
+    boost::thread codeEndThread(&Starter::codeEndListener, this);    
     
     rController.driveRobot(50,PI/-2.0,0);
     //rController.driveRobot(50,PI, PI);
@@ -42,9 +41,10 @@ bool Starter::start() {
     //Runs robot logic
     while(!codeEnd){
         rLogic.run(rATTACK);
-        usleep(1000);
-        
+        usleep(1000);        
     }
+    
+    pProcessor.stopProcessor();
     iProcessor.stopProcessor();
     codeEndThread.join();
     pProcTread.join();

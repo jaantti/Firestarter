@@ -17,16 +17,29 @@ ImagePostProcessor::~ImagePostProcessor() {
 
 
 void ImagePostProcessor::run(){
-    loadBlobVectors();
-    processBlobVectors();
+    while(!codeEnd){
+        loadBlobVectors();
+        processBlobVectors();
+    }
 }
+
+
+void ImagePostProcessor::stopProcessor() {
+    codeEnd = true;
+}
+
 
 void ImagePostProcessor::loadBlobVectors() {
 
+    frontLock.lock();
     blob_structure_front = {};
-
+    frontLock.unlock();
+    
+    backLock.lock();
     blob_structure_back = {};
-
+    backLock.unlock();
+    
+    
     //These will be only avalible in this thread.
     blob_container_front = {};
 

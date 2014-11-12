@@ -35,6 +35,7 @@ public:
     SEGMENTATION segm; // front
     SEGMENTATION segm2; // back
     ImageProcessor();
+    ImageProcessor(const ImageProcessor &obj);
     virtual ~ImageProcessor();
     void init();
     void runIprocessor();

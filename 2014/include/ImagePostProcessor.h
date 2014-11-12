@@ -16,9 +16,12 @@ class ImagePostProcessor {
 public:
     
     ImagePostProcessor(ImageProcessor*  imageProcessor);
+    ImagePostProcessor(const ImagePostProcessor &iProc);
     void run();
     virtual ~ImagePostProcessor();
 
+    void stopProcessor();
+    
     void lockBackSystem();
     void lockFrontSystem();
 
@@ -63,6 +66,7 @@ private:
     ImageProcessor* iProc;
     blobs blob_container_front;
     blobs blob_container_back;
+    bool codeEnd = false;
     
     boost::mutex frontLock;
     boost::mutex backLock;

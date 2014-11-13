@@ -27,7 +27,7 @@ void RobotController::init() {
 }
 
 void RobotController::driveRobot(float spd, float angle, float rotSpd) {
-    connection.pingCoil();
+    pingCoil();
     if (NR_OF_WHEELS == 3) {
         driveThree(spd, angle, rotSpd);
     }

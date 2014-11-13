@@ -32,11 +32,15 @@ void RobotLogic::init(RobotController* rCont, ImagePostProcessor* pProc) {
 }
 
 void RobotLogic::setGoal() {
-    if (rController->getAttackedGoal()=='B') {
+    char gate = rController->getAttackedGoal();
+    if (gate=='B') {
         goal = Goal::gBLUE;
     }
-    else if (rController->getAttackedGoal()=='Y') {
+    else if (gate=='Y') {
         goal = Goal::gYELLOW;
+    }
+    else {
+        cout << "setGoal: wat?" << endl;
     }
 }
 
@@ -168,6 +172,7 @@ void RobotLogic::ballTimeout(blobs_processed blobsFront, blobs_processed blobsBa
 void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack) {
     if(!rController->hasBall()) rState = RobotState::FIND_BALL;
     rController->runDribbler();
+    setGoal();
     int aimThresh = -1;
     int turnSpeed = -1;
     int goalX = -2, goalY;

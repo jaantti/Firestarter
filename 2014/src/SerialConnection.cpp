@@ -117,9 +117,12 @@ char SerialConnection::getGoal() {
     if (answer[4] == '1') {
         cout << "Attacking blue" << endl;
         return 'B';
+    } else if (answer[4] == '0') {
+        cout << "Attacking yellow" << endl;
+        return 'Y';
     }
-    cout << "Attacking yellow" << endl;
-    return 'Y';
+    cout << "serial: getGoal: wat?" << endl;
+    return '\0';
 }
 
 bool SerialConnection::getStart() {

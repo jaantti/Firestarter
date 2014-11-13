@@ -40,7 +40,7 @@ void RobotLogic::setGoal() {
         goal = Goal::gYELLOW;
     }
     else {
-        cout << "setGoal: wat?" << endl;
+        cout << "robotLogic: setGoal: wat?" << endl;
     }
 }
 

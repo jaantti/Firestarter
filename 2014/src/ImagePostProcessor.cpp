@@ -69,7 +69,12 @@ void ImagePostProcessor::loadBlobVectors() {
     iProc->unlockFront();
     blob_container_back = iProc->getBlobsBack();
     iProc->unlockBack();
-            
+    frontLock.lock();
+    blob_structure_front.total_green = blob_container_front.total_green;
+    frontLock.unlock();
+    backLock.lock();
+    blob_structure_back.total_green = blob_container_back.total_green;
+    backLock.unlock();        
 }
 
 void ImagePostProcessor::processBlobVectors() {

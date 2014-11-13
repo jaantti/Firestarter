@@ -104,6 +104,7 @@ void RobotLogic::setRState(RobotState state) {
 }
 
 bool RobotLogic::isGreen(blobs_processed blobsFront, blobs_processed blobsBack) {
+    cout << "total green area: " << blobsFront.total_green << endl;
     if (blobsFront.total_green < MIN_GREEN_AREA) return false;
     else return true; 
 }
@@ -112,7 +113,7 @@ void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack)
     //std::cout << " Finding ball nemo." << std::endl;
     rController->stopDribbler();
     if (rController->hasBall()) rState = RobotState::FIND_GATE;
-    //if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
+    if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
     if (false) rState = RobotState::BALL_TIMEOUT;
     
     if (blobsFront.o_ball.size() > 0) {
@@ -235,5 +236,6 @@ void RobotLogic::kickBall(blobs_processed blobsFront, blobs_processed blobsBack)
 
 void RobotLogic::notGreen(blobs_processed blobsFront, blobs_processed blobsBack) {
     //TODO : something smart
+    rController->driveRobot(0,0,100);
     rState = RobotState::FIND_BALL;
 }

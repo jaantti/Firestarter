@@ -19,10 +19,7 @@ SerialConnection::SerialConnection() {
 
 SerialConnection::~SerialConnection() {
     stopDribbler();
-    for(int i=0; i < NR_OF_WHEELS + 1; i++){
-        //RS232_CloseComport(serialDevice[i]);
-    }
-    
+      
 }
 
 bool SerialConnection::init() {
@@ -64,18 +61,20 @@ bool SerialConnection::init() {
 
 void SerialConnection::sendCommand(int comport, const char* command, unsigned char* answer) {
 
+    if(comport == -1) return;
     RS232_cputs(comport, command);
     usleep(10000);
     RS232_PollComport(comport, answer, 100);
 }
 
 void SerialConnection::sendCommand(int comport, const char* command) {
+    if(comport == -1) return;
     RS232_cputs(comport, command);
     usleep(5000);
 }
 
 void SerialConnection::setSpeed(int motor, int speed) {
-    
+    if(motor == -1) return;
     pingCoil();
     char out[10] = {0};
     sprintf(out, "sd%d\n", speed);
@@ -84,7 +83,9 @@ void SerialConnection::setSpeed(int motor, int speed) {
 }
 
 void SerialConnection::kickBall(int power) {
-    
+    for(int i = 0; i < NR_OF_WHEELS + 1; i++){
+        if (serialDevice[i] == -1) return;
+    }
     for(int i = 0; i < NR_OF_WHEELS; i++){
         RS232_cputs(serialDevice[i+1], (const char*)("sd0\n"));
     }
@@ -134,20 +135,24 @@ bool SerialConnection::getStart() {
 }
 
 void SerialConnection::runDribbler() {
+    if(serialDevice[0] == -1) return;
     RS232_cputs(serialDevice[0], (const char*)("tg\n"));
     //RS232_cputs(serialDevice[0], (const char*)("wl255\n"));
 }
 
 void SerialConnection::stopDribbler() {
+    if(serialDevice[0] == -1) return;
     RS232_cputs(serialDevice[0], (const char*)("ts\n"));
     //RS232_cputs(serialDevice[0], (const char*)("wl0\n"));
 }
 
 void SerialConnection::pingCoil() {
+    if(serialDevice[0] == -1) return;
     RS232_cputs(serialDevice[0], (const char*)("p\n"));
 }
 
 void SerialConnection::chargeCoil() {
+    if(serialDevice[0] == -1) return;
     RS232_cputs(serialDevice[0], (const char*)("c\n"));
 }
 

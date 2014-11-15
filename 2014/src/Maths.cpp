@@ -1,6 +1,7 @@
 #include "Maths.h"
 
 #include <iostream>
+#include <string>
 #include <sstream>
 
 namespace Math {

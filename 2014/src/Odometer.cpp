@@ -140,4 +140,5 @@ Odometer::Movement Odometer::calculateMovement(float omegaFL, float omegaFR, flo
 	return Movement(
 		avgVelocityX,
 		avgVelocityY,
-		avgOmega
+		avgOmega);
+}

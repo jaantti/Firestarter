@@ -6,6 +6,9 @@
 #include <vector>
 #include <queue>
 #include <numeric>
+#include <cstdlib>
+#include <cmath>
+#include <string>
 
 #undef min
 #undef max
@@ -46,7 +49,7 @@ static float sign(float num) {
 }
 
 static float round(float r, int places = 1) {
-    float off = (float)::pow(10, places);
+    float off = (float)std::pow(10, places);
 
     return (float)((int)(r * off) / off);
 }
@@ -341,7 +344,7 @@ public:
     Polygon getTranslated(float dx, float dy) const;
     Polygon getScaled(float sx, float sy) const;
     Polygon getRotated(float angle) const;
-	std::string toJSON();
+    std::string toJSON();
 
 private:
     PointList points;

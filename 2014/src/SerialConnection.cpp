@@ -75,7 +75,6 @@ void SerialConnection::sendCommand(int comport, const char* command) {
 
 void SerialConnection::setSpeed(int motor, int speed) {
     if(motor == -1) return;
-    pingCoil();
     char out[10] = {0};
     sprintf(out, "sd%d\n", speed);
     RS232_cputs(serialDevice[motor], (const char*) out);

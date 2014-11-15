@@ -121,7 +121,7 @@ char SerialConnection::getGoal() {
         return 'Y';
     }
     cout << "serial: getGoal: wat?" << endl;
-    return '\0';
+    return 'X';
 }
 
 bool SerialConnection::getStart() {
@@ -130,7 +130,7 @@ bool SerialConnection::getStart() {
     sendCommand(serialDevice[GET_SWITCH_BOARD_ID], "s4\n", answer);
     
     if (answer[4] == '1') {
-        cout << "GO" << endl;
+        //cout << "GO" << endl;
         return true;
     }
     return false;
@@ -156,6 +156,11 @@ void SerialConnection::pingCoil() {
 void SerialConnection::chargeCoil() {
     if(serialDevice[0] == -1) return;
     RS232_cputs(serialDevice[0], (const char*)("c\n"));
+}
+
+void SerialConnection::dischargeCoil() {
+    if(serialDevice[0] == -1) return;
+    RS232_cputs(serialDevice[0], (const char*)("d\n"));
 }
 
 void SerialConnection::setDetectSerial(bool serial) {

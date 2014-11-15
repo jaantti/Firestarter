@@ -83,9 +83,12 @@ bool ImageProcessor::chooseCameras() {
         if(frame1){
             segm.processImage(frame1);            
             if(segm.colors[SEG_ORANGE].list!=NULL){
-                solution = true;
-                std::cout << "Calibration found ! Video0 in front." << std::endl;
-                break;
+                std::cout << "orange size:" << segm.colors[SEG_ORANGE].list[0].area << std::endl;
+                if(segm.colors[SEG_ORANGE].list[0].area>20) {
+                    solution = true;
+                    std::cout << "Calibration found ! Video0 in front." << std::endl;
+                    break;
+                }
             }
         }
         if(frame2){

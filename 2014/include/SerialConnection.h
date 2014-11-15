@@ -30,6 +30,7 @@ public:
     char getGoal();
     void setDetectSerial(bool serial);
     void chargeCoil();
+    void dischargeCoil();
     void pingCoil();
     void runDribbler();
     void stopDribbler();

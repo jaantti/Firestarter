@@ -138,8 +138,7 @@ Odometer::Movement Odometer::calculateMovement(float omegaFL, float omegaFR, flo
 	//velocity = velocityVector.getLength() / dt;
 
 	return Movement(
-            avgVelocityX,
-            avgVelocityY,
-            avgOmega
-        );
+		avgVelocityX,
+		avgVelocityY,
+		avgOmega);
 }

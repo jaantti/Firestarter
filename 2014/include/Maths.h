@@ -47,7 +47,7 @@ static float sign(float num) {
 }
 
 static float round(float r, int places = 1) {
-    float off = (float)::pow(10, places);
+    float off = (float)std::pow(10, places);
 
     return (float)((int)(r * off) / off);
 }

@@ -42,6 +42,10 @@
 //DO NOT TOUCH. MISSION CRITICAL SYSTEMS
 #define MAGIC 1.15
 
+//Magic curve fitting constants
+//y=a*x^b
+#define CURVE_FIT_A 15370
+#define CURVE_FIT_B -1.142
 
 struct orange_blob{
     int orange_area = 0;
@@ -127,6 +131,7 @@ struct blobs_processed{
 };
 
 enum RobotState{
+    IDLE,
     FIND_BALL,
     FIND_GATE,
     BALL_TIMEOUT,

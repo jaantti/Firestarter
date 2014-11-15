@@ -49,6 +49,10 @@ public:
    
     void pingCoil();
     
+    void chargeCoil();
+    
+    void dischargeCoil();
+    
     void runDribbler();
     
     void stopDribbler();

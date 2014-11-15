@@ -2,10 +2,11 @@
 #define MATHS_H
 
 #include <stdio.h>
-#include <math.h>
+#include <cmath>
 #include <vector>
 #include <queue>
 #include <numeric>
+#include <cstdlib>
 
 #undef min
 #undef max
@@ -341,7 +342,6 @@ public:
     Polygon getTranslated(float dx, float dy) const;
     Polygon getScaled(float sx, float sy) const;
     Polygon getRotated(float angle) const;
-	std::string toJSON();
 
 private:
     PointList points;

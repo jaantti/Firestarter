@@ -13,9 +13,13 @@
 #include "RobotLogic.h"
 #include "ImageProcessor.h"
 #include "ImagePostProcessor.h"
+#include "CameraCanvas.h"
 
 class Starter {
 private:
+    
+    CameraCanvas canvas1;
+    CameraCanvas canvas2;
     RobotLogic rLogic;
     ImageProcessor iProcessor;
     ImagePostProcessor pProcessor;

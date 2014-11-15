@@ -13,6 +13,7 @@
 #include "RobotConstants.h"
 
 #include <iostream>
+#include <fstream>
 
 unsigned char thres[3][256];
 unsigned char ad_thres[3][256];
@@ -21,10 +22,10 @@ SEGMENTATION::SEGMENTATION(){
     SEGMENTATION(CAM_W, CAM_H);    
 }
 
-SEGMENTATION::SEGMENTATION( int width, int height ) {
+SEGMENTATION::SEGMENTATION( int width, int height ) {        
 	this->width = width;
 	this->height = height;
-	this->max_runs = width*height/1;
+	this->max_runs = width*height;
 	this->max_reg = width*height;
 
 	this->data = NULL;
@@ -94,14 +95,13 @@ void SEGMENTATION::thresholdImage( unsigned char *data )
     unsigned char Y, U, Y2, V;
     unsigned char c;
     this->data = data;
-    for( int i = 0; i < 2 * this->width * this->height; i += 4 ) {
+    
+    for( int i = 0; i < (2 * this->width * this->height); i += 4 ) {
         
         Y = data[i];
         U = data[i+1];
         Y2 = data[i+2];
-        V = data[i+3];
-        
-        col = thres[0][Y] & thres[1][U] & thres[2][V];
+        V = data[i+3];        
         
         /*
         #define ORANGE 0
@@ -113,12 +113,14 @@ void SEGMENTATION::thresholdImage( unsigned char *data )
         #define NOCOLOR 6
         */
          
-        if( col = 32 ) c = 0;
-        else if( col = 16 ) c = 1;
-        else if( col = 8 ) c = 2;
-        else if( col = 4 ) c = 3;
-        else if( col = 2 ) c = 4;
-        else if( col = 1 ) c = 5;
+        col = thres[0][Y] & thres[1][U] & thres[2][V];
+        
+        if( col > 31 ) c = 0;
+        else if( col > 15 ) c = 1;
+        else if( col > 7 ) c = 2;
+        else if( col > 3 ) c = 3;
+        else if( col > 1 ) c = 4;
+        else if( col > 0 ) c = 5;
         else c = 6;
                 
         this->th_data[ pix_c ] = c;
@@ -165,10 +167,9 @@ void SEGMENTATION::EncodeRuns()
     // restore previous terminator and store next
     // one in the first pixel on the next row
     row[0] = save;
-    if(y!=height-1){
-        save = row[this->width];
-        row[this->width] = 255;
-    }
+    save = row[this->width];
+    row[this->width] = 255;
+    
     r.y = y;
 
     x = 0;
@@ -187,10 +188,10 @@ void SEGMENTATION::EncodeRuns()
 
 
 		if(j >= this->max_runs) {
-        	row[this->width] = save;
+                    row[this->width] = save;
 
-			printf( "Runlength buffer exceeded.\n" );
-			this->run_c = j;
+                    printf( "Runlength buffer exceeded.\n" );
+                    this->run_c = j;
         	return;
         }
       }

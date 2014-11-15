@@ -58,6 +58,19 @@ public:
      * Releases mutex lock, must be used after getBlobsBack() of code will be in a deadlock
      */
     void unlockBack();
+    
+    void lockBackFrame();
+    void unlockBackFrame();
+    
+    void lockFrontFrame();
+    void unlockFrontFrame();
+    
+    uchar* getWorkingFrontFrame();
+    uchar* getWorkingBackFrame();
+    
+    uchar* getWorkingFrontThresh();
+    uchar* getWorkingBackThresh();
+    
 private:
     // if switchCamers = true, then video0 is front, if false, video0 is back.
     struct timeval start_front, start_back, end_front, end_back;
@@ -68,6 +81,15 @@ private:
     bool codeEnd = false;
     mutex frontLock;
     mutex backLock;
+    
+    uchar* workingFrontFrame;
+    uchar* workingFrontThresh;
+    uchar* workingBackFrame;
+    uchar* workingBackThresh;
+    
+    mutex frontFrameLock;
+    mutex backFrameLock;
+    
     void sendNetworkInfo();
     void processFrontCamera(char *cam);
     void processBackCamera( char *cam);

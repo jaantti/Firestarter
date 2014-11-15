@@ -257,34 +257,6 @@ Polygon Polygon::getRotated(float angle) const {
     return rotated;
 }
 
-std::string Polygon::toJSON() {
-    std::stringstream stream;
-
-	stream << "[";
-
-	Point point;
-	bool first = true;
-
-	for (PointListIt it = points.begin(); it != points.end(); it++) {
-		point = *it;
-
-		if (!first) {
-            stream << ",";
-        } else {
-            first = false;
-        }
-
-		stream << "{";
-		stream << "\"x\":" << point.x << ",";
-		stream << "\"y\":" << point.y;
-		stream << "}";
-	}
-
-	stream << "]";
-
-	return stream.str();
-}
-
 Circle::Intersections Circle::getIntersections(const Circle& other) {
 	Intersections intersections = Intersections();
 

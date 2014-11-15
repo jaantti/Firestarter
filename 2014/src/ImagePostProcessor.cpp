@@ -26,25 +26,11 @@ ImagePostProcessor::~ImagePostProcessor() {
 void ImagePostProcessor::run(){   
     
     while(!codeEnd){
-        struct timeval start, end;
-
-        long mtime, seconds, useconds;    
-
-        gettimeofday(&start, NULL);
-        
         loadBlobVectors();
         processBlobVectors();
         
-        usleep(20000);        
-        gettimeofday(&end, NULL);
+        usleep(15000);
         
-        seconds  = end.tv_sec  - start.tv_sec;
-        useconds = end.tv_usec - start.tv_usec;
-        
-        mtime = ((seconds) * 1000 + useconds/1000.0) + 0.5;
-
-        //printf("Per second: %ld frames\n", mtime);
-    
     }
 }
 
@@ -175,6 +161,13 @@ void ImagePostProcessor::processOrangeBlobsFront(){
             count++;            
         }
     }
+    
+    /*
+    for(int i = 0; i<temp_holder_front.o_ball.size(); i++){
+        orange_ball ball = temp_holder_front.o_ball.at(i);
+        std::cout << " BALL X:" << ball.orange_cen_x << " ; BALL Y:" << ball.orange_cen_y << " BALL WIDTH" << ball.orange_w << std::endl;
+    }
+    */
     frontLock.lock();
     blob_structure_front.o_ball.clear();
     blob_structure_front.o_ball = temp_holder_front.o_ball;
@@ -235,11 +228,9 @@ void ImagePostProcessor::processBlueBlobsFront() {
 
     gate.blue_w = gate.blue_x2 - gate.blue_x1;
     gate.blue_cen_x = gate.blue_x2 - gate.blue_w/2;
+       
     
-    
-    //std::cout << "BLUE_W : " << gate.blue_w << " ; BLUE_CEN_X:" << gate.blue_cen_x << std::endl;
-    //std::cout << "BLUE_H:" << gate.blue_h << " ; BLUE_CEN_Y:" << gate.blue_cen_y << std::endl;
-        
+    //std::cout << " Blue gate X :" << gate.blue_cen_x << " ; Y :" << gate.blue_cen_y << " WIDTH :" << gate.blue_w << " HEIGHT :" << gate.blue_h << std::endl;
     
     frontLock.lock();
     blob_structure_front.b_gate.clear();
@@ -303,9 +294,7 @@ void ImagePostProcessor::processBlueBlobsBack() {
 	gate.blue_w = gate.blue_x2 - gate.blue_x1;
 	gate.blue_cen_x = gate.blue_x2 - gate.blue_w/2;
 
-        std::cout << "BLUE_W : " << gate.blue_w << " ; BLUE_CEN_X:" << gate.blue_cen_x << " ; BLUE_HEIGHT:" << gate.blue_h << std::endl;
-        
-	backLock.lock();
+        backLock.lock();
         blob_structure_back.b_gate.clear();
         blob_structure_back.b_gate.push_back(blue_gate());
 	blob_structure_back.b_gate[0] = gate;
@@ -360,20 +349,22 @@ void ImagePostProcessor::processYellowBlobsFront(){
             yellow_blob blob = temp_vector.at(i);
             if(blob.yellow_w < (gate.yellow_h*0.33)){
             break;
-		    }
+        }
 
-		gate = mergeYellowGateStructure(gate, blob);
-		}
+	gate = mergeYellowGateStructure(gate, blob);
+	}
 
-		gate.yellow_w = gate.yellow_x2 - gate.yellow_x1;
-		gate.yellow_cen_x = gate.yellow_x2 - gate.yellow_w/2;
+	gate.yellow_w = gate.yellow_x2 - gate.yellow_x1;
+	gate.yellow_cen_x = gate.yellow_x2 - gate.yellow_w/2;
 
-                frontLock.lock();
-                blob_structure_front.y_gate.clear();
-                blob_structure_front.y_gate.push_back(yellow_gate());
-		blob_structure_front.y_gate[0] = gate;
-		blob_structure_front.yellows_postprocessed = 1;
-		frontLock.unlock();
+        //std::cout << " Yellow gate X :" << gate.yellow_cen_x << " ; Y :" << gate.yellow_cen_y << " WIDTH :" << gate.yellow_w << " HEIGHT :" << gate.yellow_h << std::endl;
+                
+        frontLock.lock();
+        blob_structure_front.y_gate.clear();
+        blob_structure_front.y_gate.push_back(yellow_gate());
+	blob_structure_front.y_gate[0] = gate;
+	blob_structure_front.yellows_postprocessed = 1;
+	frontLock.unlock();
 }
 
 void ImagePostProcessor::processYellowBlobsBack(){
@@ -428,7 +419,7 @@ void ImagePostProcessor::processYellowBlobsBack(){
 
 		gate.yellow_w = gate.yellow_x2 - gate.yellow_x1;
 		gate.yellow_cen_x = gate.yellow_x2 - gate.yellow_w/2;
-                
+                                
                 backLock.lock();
                 blob_structure_back.y_gate.clear();
                 blob_structure_back.y_gate.push_back(yellow_gate());
@@ -508,8 +499,8 @@ blue_gate ImagePostProcessor::mergeBlueGateStructure(blue_gate gate, blue_blob m
 
 yellow_gate ImagePostProcessor::mergeYellowGateStructure(yellow_gate gate, yellow_blob merger){
 	if(merger.yellow_w < (gate.yellow_h*0.33)){
-			return gate;
-		}
+            return gate;
+	}
 	int x1, x2, newx, y1, y2, newy;
 	x1 = gate.yellow_x1;
 	x2 = gate.yellow_x2;

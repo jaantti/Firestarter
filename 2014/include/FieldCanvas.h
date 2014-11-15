@@ -8,6 +8,8 @@
 #ifndef FIELDCANVAS_H
 #define FIELDCANVAS_H
 
+#include "highgui.h"
+
 class FieldCanvas {
 public:
 	FieldCanvas();

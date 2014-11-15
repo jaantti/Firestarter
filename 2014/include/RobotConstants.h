@@ -9,6 +9,7 @@
 #define	ROBOTCONSTANTS_H
 
 #include <vector>
+#include <string>
 
 #define NR_OF_WHEELS 4
 #define CAMERA_PATH /dev/video1
@@ -155,6 +156,15 @@ namespace RobotConstants{
 	// field dimensions
 	const float fieldWidth = 4.5f;
 	const float fieldHeight = 3.0f;
+        
+        //Image files for debug display initializers
+        const std::string initFile = "Init.jpg";
+        const std::string fieldFile = "Field.jpg";
+        
+        const std::string frontCamImgWinName = "front";
+        const std::string backCamImgWinName = "back";
+        
+        const int frameSize = 640*480*2;
 }
 
 

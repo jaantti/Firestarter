@@ -22,6 +22,12 @@ void ImageProcessor::init() {
     
     std::system("./config.sh");
     
+    workingFrontFrame = (uchar*)calloc(RobotConstants::frameSize, 1);
+    workingBackFrame = (uchar*)calloc(RobotConstants::frameSize, 1);
+    
+    workingFrontThresh = (uchar*)calloc(RobotConstants::frameSize/2, 1);
+    workingBackThresh = (uchar*)calloc(RobotConstants::frameSize/2, 1);
+    
     switchCameras = chooseCameras();
     if(switchCameras){
         front = "/dev/video0";
@@ -114,16 +120,24 @@ void ImageProcessor::processFrontCamera(char *cam) {
     cap1.start_capturing();
     std::cout << " Successfully initialized Front camera " << cam << std::endl;
     segm.readThresholds("conf1");
- 
+    int tim = 0;
     while(!codeEnd){
         frame = cap1.read_frame();
         if(frame){
-            segm.processImage(frame);            
+            std::clock_t begin = std::clock();
+            segm.processImage(frame);
+            
+            lockFrontFrame();            
+            memcpy(workingFrontFrame, frame, RobotConstants::frameSize);
+            memcpy(workingFrontThresh, segm.th_data, RobotConstants::frameSize/2);
+            unlockFrontFrame();
+            
             processOrange(true);
             processBlue(true);
             processYellow(true);
-            processGreens(true);
-            
+            processGreens(true);            
+            std::clock_t end = std::clock();
+            tim = (int)(double(end - begin) / CLOCKS_PER_SEC * 1000);
         }
     }
     cap1.close_device();
@@ -136,19 +150,26 @@ void ImageProcessor::processBackCamera(char *cam) {
     cap2.start_capturing();
     std::cout << " Successfully initialized Back camera " << cam << std::endl;
     segm2.readThresholds("conf1");   
-    
+    int tim = 0;
     while(!codeEnd){        
         frame = cap2.read_frame();
         if(frame){
             
+            std::clock_t begin = std::clock();
+            segm2.processImage(frame);
             
-            segm2.processImage(frame);            
+            lockBackFrame();
+            memcpy(workingBackFrame, frame, RobotConstants::frameSize);
+            memcpy(workingBackThresh, segm2.th_data, RobotConstants::frameSize/2);
+            unlockBackFrame();
+            
             processOrange(false);
             processBlue(false);
             processYellow(false);
-            processGreens(false);
-            
-        }
+            processGreens(false);            
+            std::clock_t end = std::clock();
+            tim = (int)(double(end - begin) / CLOCKS_PER_SEC * 1000);
+        }  
     }    
     cap2.close_device();
 }
@@ -259,7 +280,6 @@ void ImageProcessor::processOrange(bool front) {
                     blob_data_back.oranges_processed = orangeCounter+1;
                     backLock.unlock();
                 }
-                std::cout << orangeCounter+1 << std::endl;
                 break;
             }
         }        
@@ -282,7 +302,6 @@ void ImageProcessor::processBlue(bool front) {
         }
     }
     if(seg_exist_selector){
-        //std::cout << "I AM PROCESSING BLUE" << front << std::endl;
         int blueCounter = 0;
         struct region *tempRegion;
         if(front){
@@ -526,24 +545,38 @@ void ImageProcessor::unlockBack(){
 void ImageProcessor::stopProcessor(){
     codeEnd = true;
 }
-//Legacy image displaying code.
- /*
-    //Imshow initialization block.    
-    IMAGE_CONTEXT *video, *thresh;
-    IMAGE_CONTEXT *thresholds;
-    CAM_SETTINGS cs;
-    SUPPORTED_SETTINGS ss;
-    CAMERA_CONTROLS cam_ctl[100];
-    char menu_names[32][100];
-    int cam_ctl_c = 0;
-    int menu_c = 0;    
-    uchar **fr;
-    cap2.get_camera_settings( &cs );
-    cap2.get_camera_controls( cam_ctl, menu_names, &cam_ctl_c, &menu_c );
-    cap2.get_supported_settings( cs, &ss );
-    int gw = cs.width;
-    int gh = cs.height;
-    int vx = 640, vy = 480, tx = 1279, ty = 298;
-    //video = cap2.new_window( "Video", vx, vy, gw, gh );
-*/
+
+void ImageProcessor::lockBackFrame() {
+    backFrameLock.lock();
+}
+
+
+void ImageProcessor::unlockBackFrame(){
+    backFrameLock.unlock();
+}
+
+void ImageProcessor::lockFrontFrame() {
+    frontFrameLock.lock();
+}
+
+void ImageProcessor::unlockFrontFrame() {
+    frontFrameLock.unlock();
+}
+
+uchar* ImageProcessor::getWorkingBackFrame() {
+    return this->workingBackFrame;
+}
+
+
+uchar* ImageProcessor::getWorkingBackThresh() {
+    return this->workingBackThresh;
+}
+
+uchar* ImageProcessor::getWorkingFrontFrame() {
+    return this->workingFrontFrame;
+}
+
+uchar* ImageProcessor::getWorkingFrontThresh() {
+    return this->workingFrontThresh;
+}
 

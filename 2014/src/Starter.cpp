@@ -50,6 +50,7 @@ bool Starter::start() {
     iFrontThread.join();
     iBackThread.join();
     rController.closeSerial();
+    rController.driveRobot(0,0,0);
 
     return true;
 }

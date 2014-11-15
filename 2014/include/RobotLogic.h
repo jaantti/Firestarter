@@ -36,6 +36,7 @@ public:
     void run(Role role);
 private:
     Goal goal;
+    int startCounter=0;
     void runAttack();
     void runDefend();
     RobotController *rController;
@@ -47,6 +48,7 @@ private:
     
     bool isGreen(blobs_processed blobsFront, blobs_processed blobsBack);
     
+    void idle();
     void findBall(blobs_processed blobsFront, blobs_processed blobsBack);
     void ballTimeout(blobs_processed blobsFront, blobs_processed blobsBack);
     void findGate(blobs_processed blobsFront, blobs_processed blobsBack);

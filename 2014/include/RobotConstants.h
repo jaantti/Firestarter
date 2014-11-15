@@ -126,6 +126,7 @@ struct blobs_processed{
 };
 
 enum RobotState{
+    IDLE,
     FIND_BALL,
     FIND_GATE,
     BALL_TIMEOUT,

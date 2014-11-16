@@ -55,12 +55,12 @@ bool Starter::start() {
     boost::thread iBackThread(&ImageProcessor::runBackCamera, &iProcessor);
     boost::thread pProcTread(&ImagePostProcessor::run, &pProcessor);
     boost::thread codeEndThread(&Starter::codeEndListener, this);
-    rController.driveRobot(50,PI/-2.0,0);
+    //rController.driveRobot(50,PI/-2.0,0);
     //Runs robot logic
     while(!codeEnd){
         canvas1.refreshFrame();
         canvas2.refreshFrame();
-        //rLogic.run(Role::rATTACK);
+        rLogic.run(Role::rATTACK);
         usleep(1000);        
     }
     

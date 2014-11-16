@@ -34,11 +34,9 @@ public:
     void unlockBackSystem();
     void unlockFrontSystem();
 
-    blue_gate getFrontBlue();
-    blue_gate getBackBlue();
+    big_yellow_gate getBiggestYellow();
+    big_blue_gate getBiggestBlue();
 
-    yellow_gate getFrontYellow();
-    yellow_gate getBackYellow();
 
 private:
     void loadBlobVectors();
@@ -52,6 +50,14 @@ private:
     void processYellowBlobsBack();
     void processBlueBlobsBack();
     
+    void runGateDecisionSystem();
+    // 0 - no gates 1 - blue gate, 2 - yellow gate, 3 - both gates
+    int getFrontGates();
+    int getBackGates();
+
+    void eliminateFalseGates(int front, int back);
+    void assignBigGates();
+
     bool orangeFitsInFrontList(int x, int y, int w);
     bool orangeFitsInBackList(int x, int y, int w);
     
@@ -63,6 +69,9 @@ private:
 
     blue_gate expandBlueGate(blue_gate gate, blue_blob expander);
     
+    big_blue_gate biggestBlueGate = {};
+    big_yellow_gate biggestYellowGate = {};
+
     blobs_processed blob_structure_front;
     blobs_processed blob_structure_back;
 
@@ -77,6 +86,8 @@ private:
     boost::mutex frontLock;
     boost::mutex backLock;
     
+    boost::mutex yGateLock;
+    boost::mutex bGateLock;
 
 };
 

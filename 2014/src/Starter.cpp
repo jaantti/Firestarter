@@ -21,21 +21,17 @@ Starter::~Starter() {
 
 bool Starter::init() {
     
-    std::string t;
+    char t;
     std::cout << " Do you wish to start the image display system?(y/n)" << std::endl;
     std::cin >> t;
-    while(true){
-        if(t.compare("n")){
-            canvas1.chooseCamera(true);
-            canvas2.chooseCamera(false);
-            break;
-        } else if(t.compare("y")) {
-            canvas1.switchOff();
-            canvas2.switchOff();
-            break;
-        } else {
-            std::cout << "Input not understood." << std::endl;
-        }
+    if(t=='y')){
+    	canvas1.chooseCamera(true);
+        canvas2.chooseCamera(false);
+        break;
+    } else {
+        canvas1.switchOff();
+        canvas2.switchOff();
+        break;
     }
     canvas1.assignPostProcessor(&pProcessor);
     canvas2.assignPostProcessor(&pProcessor);

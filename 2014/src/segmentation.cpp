@@ -25,8 +25,8 @@ SEGMENTATION::SEGMENTATION(){
 SEGMENTATION::SEGMENTATION( int width, int height ) {        
 	this->width = width;
 	this->height = height;
-	this->max_runs = width*height;
-	this->max_reg = width*height;
+	this->max_runs = width*height/4;
+	this->max_reg = width*height/16;
 
 	this->data = NULL;
 	this->th_data = new unsigned char[ width*height ];

@@ -8,7 +8,7 @@
 #include "CameraCanvas.h"
 
 CameraCanvas::CameraCanvas(std::string Name, ImageProcessor* iProcessor){
-    cv::namedWindow(Name, cv::WINDOW_AUTOSIZE);
+    std::cout << " Creating canvas " << canvasName << "." << std::endl;
     this->canvasName = Name;
     this->iProcessor = iProcessor;
     
@@ -18,7 +18,7 @@ CameraCanvas::CameraCanvas(std::string Name, ImageProcessor* iProcessor){
     std::stringstream stream;
     stream << this->canvasName << "_Threshold";
     t_str = stream.str();
-    std::cout << " Creating canvas " << canvasName << "." << std::endl;
+    std::cout << " Canvas " << canvasName << " created." << std::endl;
 }
 
 CameraCanvas::CameraCanvas(const CameraCanvas& orig) {
@@ -77,16 +77,15 @@ void CameraCanvas::waitForRealInput(){
 }
 
 void CameraCanvas::refreshFrame(){
-    if(!hasStreamInput) waitForRealInput();
-    if(isSwitchedOn){
-        loadNewFrame();
-        processNewData();
+    if(!isSwitchedOn) return;
+	if(!hasStreamInput) waitForRealInput();
+    loadNewFrame();
+    processNewData();
         
-        cv::imshow(this->canvasName, working_matrix);
-        cv::imshow(t_str, working_threshold);
-        int tog = cv::waitKey(1);
-        usleep(15);
-    }
+    cv::imshow(this->canvasName, working_matrix);
+    cv::imshow(t_str, working_threshold);
+    int tog = cv::waitKey(1);
+    usleep(15);
 }
 //Processes the raw data into something that we can display.
 void CameraCanvas::processNewData() {
@@ -120,9 +119,9 @@ void CameraCanvas::convert_thresh_displayable() {
     int yellow_r = 255, yellow_g = 255, yellow_b = 0;
     int blue_r = 0, blue_g = 0, blue_b = 255;
     int white_r = 255, white_g = 255, white_b = 255;
-    int black_r = 0, black_g = 0, black_b = 0;
-    int nocolor_r = 255, nocolor_g = 0, nocolor_b = 128;
-    //int nocolor_r = 0, nocolor_g = 0, nocolor_b = 0;
+    int black_r = 20, black_g = 20, black_b = 20;
+    //int nocolor_r = 255, nocolor_g = 0, nocolor_b = 128;
+    int nocolor_r = 0, nocolor_g = 0, nocolor_b = 0;
     
     int work_count = 0;
     for(int i = 0; i<RobotConstants::frameSize/2; i++){
@@ -233,7 +232,7 @@ void CameraCanvas::overlayObjects() {
     }
     for(int i=0; i<blobs.o_ball.size(); i++){
         orange_ball ball = blobs.o_ball.at(i);
-        cv::circle(working_matrix, cv::Point(ball.orange_cen_x, ball.orange_cen_y), ball.orange_w/2, cv::Scalar(255, 0, 255), 1, 8, 0);
+        cv::circle(working_matrix, cv::Point(ball.orange_cen_x, ball.orange_cen_y), ball.orange_w/2, cv::Scalar(0, 128, 255), 3, 8, 0);
     }
     
     if(blobs.blues_postprocessed>0){

@@ -30,6 +30,7 @@
 #define MIN_BLOB_SIZE 3
 #define MIN_GREEN_AREA 1000
 #define MIN_GATE_WIDTH 80
+#define MIN_GATE_SIZE 600
 
 #define SEG_BLACK 0
 #define SEG_WHITE 1
@@ -102,6 +103,25 @@ struct blue_gate{
     int blue_y2 = -1;
 };
 
+struct big_blue_gate{
+	int blue_cen_x = -1;
+	int blue_cen_y = -1;
+	//Direction dictates the side from which the gate was observed - front being true and back being false.
+	bool direction = true;
+	int blue_w = -1;
+	int blue_h = -1;
+};
+
+
+struct big_yellow_gate{
+	int yellow_cen_x = -1;
+	int yellow_cen_y = -1;
+	//Direction dictates the side from which the gate was observed - front being true and back being false.
+	bool direction = true;
+	int yellow_w = -1;
+	int yellow_h = -1;
+};
+
 struct blobs{
     int oranges_processed = 0;
     std::vector<orange_blob> o_blob;
@@ -162,14 +182,22 @@ namespace RobotConstants{
 	const float fieldWidth = 4.5f;
 	const float fieldHeight = 3.0f;
         
-        //Image files for debug display initializers
-        const std::string initFile = "Init.jpg";
-        const std::string fieldFile = "Field.jpg";
-        
-        const std::string frontCamImgWinName = "front";
-        const std::string backCamImgWinName = "back";
-        
-        const int frameSize = 640*480*2;
+    //Image files for debug display initializers
+    const std::string initFile = "Init.jpg";
+    const std::string fieldFile = "Field.jpg";
+
+    const std::string frontCamImgWinName = "front";
+    const std::string backCamImgWinName = "back";
+
+    const float angleMotor1 = 45.0f;
+    const float angleMotor2 = 135.0f;
+    const float angleMotor4 = -135.0f;
+    const float angleMotor3 = -45.0f;
+
+    const float wheelRadius = 0.035f;
+    const float wheelOffset;
+
+    const int frameSize = 640*480*2;
 }
 
 

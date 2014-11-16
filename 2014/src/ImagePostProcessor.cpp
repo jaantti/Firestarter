@@ -192,8 +192,17 @@ void ImagePostProcessor::processBlueBlobsFront() {
     // Initialize first gate vector, all other blobs will be placed according to
     // this one.
     int count = 0;
-    blue_blob init = temp_vector.at(count);
-    
+    blue_blob init;
+    while(true){
+    	init = temp_vector.at(count);
+    	if(init.blue_cen_y>CAM_H/2) break;
+    	else {
+    	    count++;
+    	}
+    }
+    if(count==size){
+       	return;
+    }
     int x1, x2, y1, y2;
     
     //Calculate the x1, x2, y1, y2 based on centerpoint and width
@@ -256,8 +265,17 @@ void ImagePostProcessor::processBlueBlobsBack() {
 	// Initialize first gate vector, all other blobs will be placed according to
 	// this one.
 	int count = 0;
-	blue_blob init = temp_vector.at(count);
-
+	blue_blob init;
+	while(true){
+	   	init = temp_vector.at(count);
+	    if(init.blue_cen_y>CAM_H/2) break;
+	    else {
+	       	count++;
+	    }
+	}
+	if(count==size){
+	   	return;
+	}
 	int x1, x2, y1, y2;
 
 	    //Calculate the x1, x2, y1, y2 based on centerpoint and width
@@ -318,7 +336,19 @@ void ImagePostProcessor::processYellowBlobsFront(){
 	// Initialize first gate vector, all other blobs will be placed according to
 	// this one.
 	int count = 0;
-	yellow_blob init = temp_vector.at(count);
+	yellow_blob init;
+	while(true){
+		init = temp_vector.at(count);
+		if(init.yellow_cen_y>CAM_H/2) break;
+		else {
+			count++;
+		}
+	}
+	if(count==size){
+		return;
+	}
+
+
 
 	int x1, x2, y1, y2;
 
@@ -372,18 +402,28 @@ void ImagePostProcessor::processYellowBlobsBack(){
 		std::vector<yellow_blob> temp_vector = blob_container_back.y_blob;
 		int size = temp_vector.size();
 
-                if(size==0){
-                    backLock.lock();
-                    blob_structure_back.y_gate.clear();
-                    blob_structure_back.yellows_postprocessed = 0;
-                    backLock.unlock();
+        if(size==0){
+        	backLock.lock();
+            blob_structure_back.y_gate.clear();
+            blob_structure_back.yellows_postprocessed = 0;
+            backLock.unlock();
 		    return;
 		}
 
 		// Initialize first gate vector, all other blobs will be placed according to
 		// this one.
-		int count = 0;
-		yellow_blob init = temp_vector.at(count);
+        int count = 0;
+        yellow_blob init;
+        while(true){
+        	init = temp_vector.at(count);
+        	if(init.yellow_cen_y>CAM_H/2) break;
+        	else {
+        		count++;
+        	}
+        }
+        if(count==size){
+        	return;
+        }
 
 		int x1, x2, y1, y2;
 
@@ -420,9 +460,9 @@ void ImagePostProcessor::processYellowBlobsBack(){
 		gate.yellow_w = gate.yellow_x2 - gate.yellow_x1;
 		gate.yellow_cen_x = gate.yellow_x2 - gate.yellow_w/2;
                                 
-                backLock.lock();
-                blob_structure_back.y_gate.clear();
-                blob_structure_back.y_gate.push_back(yellow_gate());
+        backLock.lock();
+        blob_structure_back.y_gate.clear();
+        blob_structure_back.y_gate.push_back(yellow_gate());
 		blob_structure_back.y_gate[0] = gate;
 		blob_structure_back.yellows_postprocessed = 1;
 		backLock.unlock();
@@ -538,8 +578,133 @@ yellow_gate ImagePostProcessor::expandYellowGate(yellow_gate gate, yellow_blob e
 
 }
 
+void ImagePostProcessor::runGateDecisionSystem(){
+	int front, back;
+	frontLock.lock();
+	backLock.lock();
+
+	front = getFrontGates();
+	back = getBackGates();
+	eliminateFalseGates(front, back);
+	assignBigGates();
+
+	frontLock.unlock();
+	backLock.unlock();
+
+}
+
+int ImagePostProcessor::getFrontGates(){
+	if(blob_structure_front.blues_postprocessed>0 && blob_structure_front.yellows_postprocessed>0) return 3;
+	if(blob_structure_front.yellows_postprocessed>0) return 2;
+	if(blob_structure_front.blues_postprocessed>0) return 1;
+	else return 0;
+}
+
+int ImagePostProcessor::getBackGates(){
+	if(blob_structure_back.blues_postprocessed>0 && blob_structure_back.yellows_postprocessed>0) return 3;
+	if(blob_structure_back.yellows_postprocessed>0) return 2;
+	if(blob_structure_back.blues_postprocessed>0) return 1;
+	else return 0;
+}
+
+void ImagePostProcessor::eliminateFalseGates(int front, int back){
+	if(front==3){
+		int gates = 2;
+		yellow_gate f_y_g = blob_structure_front.y_gate.at(0);
+		blue_gate f_b_g = blob_structure_front.b_gate.at(0);
+		if(f_y_g.yellow_h * f_y_g.yellow_w < MIN_GATE_SIZE){
+			gates--;
+			f_y_g = {};
+			blob_structure_front.yellows_postprocessed = 0;
+		}
+		if(f_b_g.blue_h * f_b_g.blue_w < MIN_GATE_SIZE){
+			gates--;
+			blob_structure_front.blues_postprocessed = 0;
+			f_b_g = {};
+		}
+		//Eliminate the smaller gate.
+		if(gates==2){
+			if(f_b_g.blue_h * f_b_g.blue_w > f_y_g.yellow_h * f_y_g.yellow_w){
+				blob_structure_front.yellows_postprocessed = 0;
+				f_b_g = {};
+			} else {
+				blob_structure_front.yellows_postprocessed = 0;
+				f_y_g = {};
+			}
+		}
+	}
+
+	if(back==3){
+		int gates = 2;
+		yellow_gate b_y_g = blob_structure_back.y_gate.at(0);
+		blue_gate b_b_g = blob_structure_back.b_gate.at(0);
+		if(b_y_g.yellow_h * b_y_g.yellow_w < MIN_GATE_SIZE){
+			gates--;
+			b_y_g = {};
+			blob_structure_back.yellows_postprocessed = 0;
+		}
+		if(b_b_g.blue_h * b_b_g.blue_w < MIN_GATE_SIZE){
+			gates--;
+			blob_structure_back.blues_postprocessed = 0;
+			b_b_g = {};
+		}
+		//Eliminate the smaller gate.
+		if(gates==2){
+			if(b_b_g.blue_h * b_b_g.blue_w > b_y_g.yellow_h * b_y_g.yellow_w){
+				blob_structure_back.yellows_postprocessed = 0;
+				b_b_g = {};
+			} else {
+				blob_structure_back.yellows_postprocessed = 0;
+				b_y_g = {};
+			}
+		}
+	}
+}
+
+void ImagePostProcessor::assignBigGates(){
+	bGateLock.lock();
+	yGateLock.lock();
+	if(blob_structure_front.blues_postprocessed>0){
+		biggestBlueGate = {};
+		blue_gate gate_t = blob_structure_front.b_gate.at(0);
+		biggestBlueGate.blue_cen_x = gate_t.blue_cen_x;
+		biggestBlueGate.blue_cen_y = gate_t.blue_cen_y;
+		biggestBlueGate.blue_h = gate_t.blue_h;
+		biggestBlueGate.blue_w = gate_t.blue_w;
+		biggestBlueGate.direction = true;
+	} else if(blob_structure_front.yellows_postprocessed>0){
+		biggestYellowGate = {};
+		yellow_gate gate_t = blob_structure_front.b_gate.at(0);
+		biggestYellowGate.yellow_cen_x = gate_t.yellow_cen_x;
+		biggestYellowGate.yellow_cen_y = gate_t.yellow_cen_y;
+		biggestYellowGate.yellow_h = gate_t.yellow_h;
+		biggestYellowGate.yellow_w = gate_t.yellow_w;
+		biggestYellowGate.direction = true;
+	}
+	if(blob_structure_back.blues_postprocessed>0){
+		biggestBlueGate = {};
+		blue_gate gate_t = blob_structure_back.b_gate.at(0);
+		biggestBlueGate.blue_cen_x = gate_t.blue_cen_x;
+		biggestBlueGate.blue_cen_y = gate_t.blue_cen_y;
+		biggestBlueGate.blue_h = gate_t.blue_h;
+		biggestBlueGate.blue_w = gate_t.blue_w;
+		biggestBlueGate.direction = false;
+	} else if(blob_structure_back.yellows_postprocessed>0){
+		biggestYellowGate = {};
+		yellow_gate gate_t = blob_structure_back.b_gate.at(0);
+		biggestYellowGate.yellow_cen_x = gate_t.yellow_cen_x;
+		biggestYellowGate.yellow_cen_y = gate_t.yellow_cen_y;
+		biggestYellowGate.yellow_h = gate_t.yellow_h;
+		biggestYellowGate.yellow_w = gate_t.yellow_w;
+		biggestYellowGate.direction = back;
+	}
+	yGateLock.unlock();
+	bGateLock.unlock();
+
+}
+
 blobs_processed ImagePostProcessor::getBackSystem(){
-        blobs_processed temp;
+    blobs_processed temp;
 	backLock.lock();
 	temp = blob_structure_back;
         backLock.unlock();
@@ -547,51 +712,27 @@ blobs_processed ImagePostProcessor::getBackSystem(){
 }
 
 blobs_processed ImagePostProcessor::getFrontSystem(){
-        blobs_processed temp;
+    blobs_processed temp;
 	frontLock.lock();
 	temp = blob_structure_front;
-        frontLock.unlock();
-        return temp;
+    frontLock.unlock();
+    return temp;
 }
 
-blue_gate ImagePostProcessor::getFrontBlue(){
-	frontLock.lock();
-	blue_gate blueGate = {};
-	if(blob_structure_front.blues_postprocessed>0){
-		blueGate = blob_structure_front.b_gate.at(0);
-	}
-	frontLock.unlock();
-	return blueGate;
+big_blue_gate ImagePostProcessor::getBiggestBlue(){
+	big_blue_gate gate = {};
+	bGateLock.lock();
+	gate = biggestBlueGate;
+	bGateLock.unlock();
+	return gate;
 }
 
-blue_gate ImagePostProcessor::getBackBlue(){
-	backLock.lock();
-	blue_gate blueGate= {};
-	if(blob_structure_back.blues_postprocessed>0){
-		blueGate = blob_structure_back.b_gate.at(0);
-	}
-	backLock.unlock();
-	return blueGate;
-}
-
-yellow_gate ImagePostProcessor::getFrontYellow(){
-	frontLock.lock();
-	yellow_gate yellowGate = {};
-	if(blob_structure_front.yellows_postprocessed>0){
-		yellowGate = blob_structure_front.y_gate.at(0);
-	}
-	frontLock.unlock();
-	return yellowGate;
-}
-
-yellow_gate ImagePostProcessor::getBackYellow(){
-	backLock.lock();
-	yellow_gate yellowGate = {};
-	if(blob_structure_back.yellows_postprocessed>0){
-		yellowGate = blob_structure_back.y_gate.at(0);
-	}
-	backLock.unlock();
-	return yellowGate;
+big_yellow_gate ImagePostProcessor::getBiggestBlue(){
+	big_yellow_gate gate = {};
+	yGateLock.lock();
+	gate = biggestYellowGate;
+	yGateLock.unlock();
+	return gate;
 }
 
 void ImagePostProcessor::lockBackSystem(){

@@ -263,7 +263,7 @@ void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack)
                 cout << "blue x: " << goalX << endl;
                 goalY = blobsFront.b_gate.at(0).blue_cen_y;
                 aimThresh = blobsFront.b_gate.at(0).blue_w * 0.1+5;
-                turnSpeed = getAngle(goalX)*0.5;
+                turnSpeed = getAngle(goalX)*0.8+3;
                 //turnSpeed = (CAM_W/2.0 - blobsFront.b_gate.at(0).blue_cen_x)*0.05 + 5;
             }
             
@@ -282,7 +282,7 @@ void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack)
                 cout << "yellow x: " << goalX << endl;
                 goalY = blobsFront.y_gate.at(0).yellow_cen_y;
                 aimThresh = blobsFront.y_gate.at(0).yellow_w * 0.1+5;
-                turnSpeed = getAngle(goalX)*0.5;
+                turnSpeed = getAngle(goalX)*0.8+3;
                 //turnSpeed = (CAM_W/2.0 - blobsFront.y_gate.at(0).yellow_cen_x)*0.05 + 5;
             }
             
@@ -312,7 +312,7 @@ void RobotLogic::gateTimeout(blobs_processed blobsFront, blobs_processed blobsBa
 void RobotLogic::kickBall(blobs_processed blobsFront, blobs_processed blobsBack) {
     cout << "!!!KICKBALL!!!" << "\n";
     rController->stopDribbler();
-    rController->kickBall(10000);
+    rController->kickBall(770);
     cout << "STATE: FIND_BALL" << endl;
     rState = RobotState::FIND_BALL;
     

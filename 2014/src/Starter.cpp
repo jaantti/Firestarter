@@ -61,8 +61,7 @@ bool Starter::start() {
     while(!codeEnd){
         canvas1.refreshFrame();
         canvas2.refreshFrame();
-        //rLogic.run(Role::rATTACK);
-        usleep(1000);        
+        rLogic.run(Role::rATTACK);
     }
     
     pProcessor.stopProcessor();

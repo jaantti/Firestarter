@@ -28,13 +28,24 @@ public:
      */
     void init(RobotController *rCont, ImageProcessor *iProc);
     void init(RobotController *rCont, ImagePostProcessor *pProc);
-    
+    void loadOdometer(Odometer *odometer);
+    void loadOdometryLocalizer();
+    void loadParticleFilterLocalizer(ParticleFilterLocalizer *localizer);
+    void setPosition(float x, float y, float orientation);
     /**
      * Run code
      * @param role Robot role
      */
     void run(Role role);
 private:
+
+    float posX = 0.0f;
+    float posY = 0.0f;
+    float orientation = 0.0f;
+
+    Odometer *odometer;
+    ParticleFilterLocalizer *localizer;
+
     Goal goal;
     int startCounter=0;
     void runAttack();

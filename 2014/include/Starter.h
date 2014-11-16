@@ -18,6 +18,9 @@
 class Starter {
 private:
     
+
+	Odometer odometer;
+	ParticleFilterLocalizer localizer;
     CameraCanvas canvas1;
     CameraCanvas canvas2;
     RobotLogic rLogic;
@@ -33,6 +36,9 @@ public:
     RobotController rController;
     NetworkConnector nConnector;    
     
+    void setupParticleFilter();
+    void setupOdometer();
+
     Starter();
     virtual ~Starter();
     bool init();

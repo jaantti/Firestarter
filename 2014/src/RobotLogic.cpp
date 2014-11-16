@@ -31,6 +31,25 @@ void RobotLogic::init(RobotController* rCont, ImagePostProcessor* pProc) {
     pProcessor = pProc;
 }
 
+void RobotLogic::loadOdometer(Odometer *odometer){
+	this->odometer = odometer;
+}
+
+void RobotLogic::loadOdometryLocalizer(){
+
+}
+
+void RobotLogic::setPosition(float x, float y, float orientation){
+	this->localizer->setPosition(x, y, orientation);
+	this->posX = x;
+	this->posY = y;
+	this->orientation = Math::floatModulus(orientation, Math::TWO_PI);
+}
+
+void RobotLogic::loadParticleFilterLocalizer(ParticleFilterLocalizer *localizer){
+	this->localizer = localizer;
+}
+
 void RobotLogic::setGoal() {
     char gate = rController->getAttackedGoal();
     if (gate=='B') {
@@ -63,7 +82,6 @@ void RobotLogic::runAttack() {
     pProcessor->unlockFrontSystem();
     blobs_processed blobsBack = pProcessor->getBackSystem();
     pProcessor->unlockBackSystem();
-    //usleep(400000);
     
     switch (rState) {
         case RobotState::IDLE:

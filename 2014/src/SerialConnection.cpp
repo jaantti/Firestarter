@@ -31,7 +31,7 @@ bool SerialConnection::init() {
         for (int i = 5; i < 15; i++) {
             //cout << "for" << endl;
             if (!RS232_OpenComport(i, 19200, "8N1")) {
-                unsigned char buf[100] = {0};
+                unsigned char buf[1300] = {0};
                 sendCommand(i, "?\n", buf);
                 //cout << i << ":" << string((const char *) buf);
                 if (buf[0] == 'd' || buf[4] == '0') serialDevice[0] = i;
@@ -76,7 +76,7 @@ void SerialConnection::sendCommand(int comport, const char* command) {
 
 void SerialConnection::setSpeed(int motor, int speed) {
     if(motor == -1) return;
-    char out[10] = {0};
+    char out[1300] = {0};
     sprintf(out, "sd%d\n", speed);
     RS232_cputs(serialDevice[motor], (const char*) out);
     
@@ -90,7 +90,7 @@ void SerialConnection::kickBall(int power) {
         RS232_cputs(serialDevice[i+1], (const char*)("sd0\n"));
     }
     
-    char out[10] = {0};
+    char out[1300] = {0};
     sprintf(out, "k%d\n", power);
     RS232_cputs(serialDevice[0], (const char*) out);
     
@@ -98,7 +98,7 @@ void SerialConnection::kickBall(int power) {
 
 bool SerialConnection::hasBall() {
     
-    unsigned char answer[20] = {0};
+    unsigned char answer[1300] = {0};
     sendCommand(serialDevice[GET_BALL_BOARD_ID], "gb\n", answer);
     
     if (answer[3] == '1') {
@@ -111,7 +111,7 @@ bool SerialConnection::hasBall() {
 
 char SerialConnection::getGoal() {
     
-    unsigned char answer[20] = {0};
+    unsigned char answer[1300] = {0};
     sendCommand(serialDevice[GET_SWITCH_BOARD_ID], "s1\n", answer);
     
     if (answer[4] == '1') {
@@ -127,7 +127,7 @@ char SerialConnection::getGoal() {
 
 bool SerialConnection::getStart() {
     
-    unsigned char answer[20] = {0};
+    unsigned char answer[1300] = {0};
     sendCommand(serialDevice[GET_SWITCH_BOARD_ID], "s4\n", answer);
     
     if (answer[4] == '1') {
@@ -177,7 +177,7 @@ void SerialConnection::closeSerial(){
 vector<float> SerialConnection::getAllMotorSpeed(){
     
     for(int i = 0; i < NR_OF_WHEELS; i++){
-        char resp[10] = {0};
+        char resp[1300] = {0};
         sendCommand(serialDevice[i], "s\n", (unsigned char *)resp);
         int spd = atoi(resp);
         float spd2 = spd * 0.052;

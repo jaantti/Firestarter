@@ -6,8 +6,6 @@
  */
 
 #include "OdometerLocalizer.h"
-
-
 #include "RobotLogic.h"
 #include <iostream>
 
@@ -330,7 +328,7 @@ void RobotLogic::gateTimeout(blobs_processed blobsFront, blobs_processed blobsBa
 void RobotLogic::kickBall(blobs_processed blobsFront, blobs_processed blobsBack) {
     cout << "!!!KICKBALL!!!" << "\n";
     rController->stopDribbler();
-    rController->kickBall(770);
+    rController->kickBall(2000);
     cout << "STATE: FIND_BALL" << endl;
     rState = RobotState::FIND_BALL;
     

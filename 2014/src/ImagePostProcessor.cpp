@@ -709,16 +709,16 @@ void ImagePostProcessor::assignBigGates(){
 
 blobs_processed ImagePostProcessor::getBackSystem(){
     blobs_processed temp;
-	backLock.lock();
-	temp = blob_structure_back;
-        backLock.unlock();
-        return temp;
+    backLock.lock();
+    temp = blob_structure_back;
+    backLock.unlock();
+    return temp;
 }
 
 blobs_processed ImagePostProcessor::getFrontSystem(){
     blobs_processed temp;
-	frontLock.lock();
-	temp = blob_structure_front;
+    frontLock.lock();
+    temp = blob_structure_front;
     frontLock.unlock();
     return temp;
 }

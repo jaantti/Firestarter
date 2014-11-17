@@ -25,8 +25,10 @@ private:
     Odometer *odometer;
     ParticleFilterLocalizer *localizer;
     OdometerLocalizer *odometryLocalizer;
+    
     CameraCanvas canvas1;
     CameraCanvas canvas2;
+    
     RobotLogic rLogic;
     ImageProcessor iProcessor;
     ImagePostProcessor pProcessor;

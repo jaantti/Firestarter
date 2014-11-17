@@ -61,13 +61,16 @@ bool Starter::start() {
     long unsigned int time = 1000000 * tv.tv_sec + tv.tv_usec;
     rLogic.setInitialTime(time);
     
+    unsigned long int serialDif;
+    
+    //TODO : Measure time for main loop AND measure time between serial communications.
     while(!codeEnd){
         gettimeofday(&tv, NULL);
         time = 1000000 * tv.tv_sec + tv.tv_usec;
         canvas1.refreshFrame();
         canvas2.refreshFrame();
         rLogic.run(Role::rATTACK, 0.0f);
-        //rLogic.timeSinceLastSerial(time);
+        //rLogic.timeSinceLastSerial();
     }
     
     pProcessor.stopProcessor();
@@ -129,5 +132,8 @@ float Starter::translateMicrosToSec(unsigned long timeDiffMicros) {
 
 void Starter::sleepForDifference(float f){
     if(f>RobotConstants::minimumDeltaT) return;
+    int dif = ( (int) 1000000 * RobotConstants::minimumDeltaT) - ( (int) 1000000*f);
+    usleep(dif);
+    
     
 }

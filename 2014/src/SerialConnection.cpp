@@ -11,6 +11,7 @@
 #include <boost/algorithm/string.hpp>
 #include "RobotConstants.h"
 #include <cstdlib>
+#include <sys/time.h>
 
 using namespace std;
 
@@ -183,6 +184,12 @@ vector<float> SerialConnection::getAllMotorSpeed(){
         float spd2 = spd * 0.052;
         motorSpeeds.push_back(spd2);
     }
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    unsigned long int timeMicros = 1000000*tv.tv_sec + tv.tv_usec;
+    
+    timedif = timeMicros-initialTime;
+    initialTime = timeMicros;
     
     return motorSpeeds;
 }
@@ -191,6 +198,6 @@ void SerialConnection::initSerialTime(unsigned long int initTime) {
     this->initialTime = initTime;
 }
 
-unsigned long int SerialConnection::getTimeSinceLastLoop(unsigned long int lastTime) {
-    return lastTime-temp;
+unsigned long int SerialConnection::getTimeSinceLastLoop() {
+    return timedif;
 }

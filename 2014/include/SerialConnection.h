@@ -39,7 +39,7 @@ public:
     vector<float> getAllMotorSpeed();
     
     void initSerialTime(unsigned long int initTime);
-    unsigned long int getTimeSinceLastLoop(unsigned long int lastTime);
+    unsigned long int getTimeSinceLastLoop();
     
     
 private:

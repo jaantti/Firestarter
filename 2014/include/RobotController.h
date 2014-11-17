@@ -58,7 +58,7 @@ public:
     vector<float> getAllMotorSpeeds();
     
     void initSerialTime(unsigned long timeInMicros);
-    unsigned long timeSinceLastLoop(unsigned long lastTime);
+    unsigned long timeSinceLastLoop();
     
     
 private:

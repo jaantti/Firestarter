@@ -39,7 +39,7 @@ public:
     void setPosition(float x, float y, float orientation);
     
     void setInitialTime(unsigned long int time);
-    unsigned long timeSinceLastSerial(unsigned long int lastSerial);
+    unsigned long timeSinceLastSerial();
     /**
      * Run code
      * @param role Robot role

@@ -92,6 +92,7 @@ void RobotController::driveThree(float spd, float angle, float rotSpd) {
             motorSpeeds[i] = (motorSpeeds[i] / (float) maxSpeed) * MAX_MOTOR_SPEED;
         }
     }
+    
     for(int i = 0; i < 3; i++){
         connection.setSpeed(i+1, motorSpeeds[i]);
     }   
@@ -135,6 +136,6 @@ void RobotController::initSerialTime(unsigned long int timeInMicros) {
     connection.initSerialTime(timeInMicros);
 }
 
-unsigned long RobotController::timeSinceLastLoop(unsigned long int lastTime) {
-    connection.getTimeSinceLastLoop(lastTime);
+unsigned long RobotController::timeSinceLastLoop() {
+    connection.getTimeSinceLastLoop();
 }

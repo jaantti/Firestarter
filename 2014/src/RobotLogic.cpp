@@ -26,8 +26,8 @@ void RobotLogic::setInitialTime(long unsigned int time) {
     rController->initSerialTime(time);
 }
 
-unsigned long RobotLogic::timeSinceLastSerial(long unsigned int lastSerial) {
-    return rController->timeSinceLastLoop(lastSerial);
+unsigned long RobotLogic::timeSinceLastSerial() {
+    return rController->timeSinceLastLoop();
 }
 
 

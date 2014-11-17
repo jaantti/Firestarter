@@ -5,14 +5,14 @@
 #include <sstream>
 
 Odometer::Odometer(float angle1, float angle2, float angle3, float angle4, float wheelOffset, float wheelRadius) : wheelOffset(wheelOffset), wheelRadius(wheelRadius) {
-	wheelAngles[0] = Math::degToRad(angle1);
+    wheelAngles[0] = Math::degToRad(angle1);
     wheelAngles[1] = Math::degToRad(angle2);
     wheelAngles[2] = Math::degToRad(angle3);
     wheelAngles[3] = Math::degToRad(angle4);
 
     wheelRadiusInv = 1.0f / wheelRadius;
 
-	omegaMatrix = Math::Matrix4x3(
+    omegaMatrix = Math::Matrix4x3(
         -Math::sin(wheelAngles[0]), Math::cos(wheelAngles[0]), wheelOffset,
 		-Math::sin(wheelAngles[1]), Math::cos(wheelAngles[1]), wheelOffset,
 		-Math::sin(wheelAngles[2]), Math::cos(wheelAngles[2]), wheelOffset,

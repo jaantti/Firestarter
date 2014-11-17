@@ -25,15 +25,12 @@ bool Starter::init() {
     char t;
     std::cout << " Do you wish to start the image display system?(y/n)" << std::endl;
     std::cin >> t;
-
-    if(t=='y')){
+    if(t=='y'){
     	canvas1.chooseCamera(true);
         canvas2.chooseCamera(false);
-        break;
     } else {
         canvas1.switchOff();
         canvas2.switchOff();
-        break;
     }
 
     canvas1.assignPostProcessor(&pProcessor);

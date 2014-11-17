@@ -70,6 +70,8 @@ void ImagePostProcessor::processBlobVectors() {
     processBlueBlobsBack();
     processYellowBlobsFront();
     processYellowBlobsBack();
+    runGateDecisionSystem();
+    
     
 }
 
@@ -180,7 +182,6 @@ void ImagePostProcessor::processBlueBlobsFront() {
     //Create temporary datastore for processing purposes
     std::vector<blue_blob> temp_vector = blob_container_front.b_blob;
     int size = temp_vector.size();
-    
     if(size==0){
     	frontLock.lock();
         blob_structure_front.b_gate.clear();
@@ -195,27 +196,25 @@ void ImagePostProcessor::processBlueBlobsFront() {
     blue_blob init;
     while(true){
     	init = temp_vector.at(count);
-    	if(init.blue_cen_y>CAM_H/2) break;
+    	if(init.blue_cen_y<CAM_H/2) break;
     	else {
     	    count++;
     	}
-    }
-    if(count==size){
-       	return;
+        if(count==size){
+            return;
+        }
     }
     int x1, x2, y1, y2;
     
     //Calculate the x1, x2, y1, y2 based on centerpoint and width
-    int half_w = init.blue_w/2;
+       x1 = init.blue_x1;
+    x2 = init.blue_x2;
+    y1 = init.blue_y1;
+    y2 = init.blue_y2;
 
-    x1 = init.blue_cen_x-half_w;
-    x2 = init.blue_cen_x+half_w;
-    y1 = init.blue_cen_y-half_w;
-    y2 = init.blue_cen_y+half_w;
-        
     //Initialize the new blue gate.
     blue_gate gate = {};
-    
+
     gate.blue_cen_x = init.blue_cen_x;
     gate.blue_cen_y = init.blue_cen_y;
     gate.blue_h = init.blue_w;
@@ -228,7 +227,7 @@ void ImagePostProcessor::processBlueBlobsFront() {
     for(int i = 1; i<size; i++){
 
         blue_blob blob = temp_vector.at(i);
-        if(blob.blue_w < (gate.blue_h*0.33)){
+        if(blob.blue_w < (gate.blue_h*0.2)){
         	break;
         }
 
@@ -238,8 +237,6 @@ void ImagePostProcessor::processBlueBlobsFront() {
     gate.blue_w = gate.blue_x2 - gate.blue_x1;
     gate.blue_cen_x = gate.blue_x2 - gate.blue_w/2;
        
-    
-    //std::cout << " Blue gate X :" << gate.blue_cen_x << " ; Y :" << gate.blue_cen_y << " WIDTH :" << gate.blue_w << " HEIGHT :" << gate.blue_h << std::endl;
     
     frontLock.lock();
     blob_structure_front.b_gate.clear();
@@ -267,24 +264,24 @@ void ImagePostProcessor::processBlueBlobsBack() {
 	int count = 0;
 	blue_blob init;
 	while(true){
-	   	init = temp_vector.at(count);
-	    if(init.blue_cen_y>CAM_H/2) break;
-	    else {
-	       	count++;
-	    }
-	}
-	if(count==size){
-	   	return;
-	}
+            init = temp_vector.at(count);
+            if(init.blue_cen_y<CAM_H/2) break;
+            else {
+                count++;
+            }
+            if(count==size){
+                return;
+            }
+        }
+	
 	int x1, x2, y1, y2;
 
-	    //Calculate the x1, x2, y1, y2 based on centerpoint and width
-	int half_w = init.blue_w/2;
-
-	x1 = init.blue_cen_x-half_w;
-	x2 = init.blue_cen_x+half_w;
-	y1 = init.blue_cen_y-half_w;
-	y2 = init.blue_cen_y+half_w;
+	//Calculate the x1, x2, y1, y2 based on centerpoint and width
+	
+        x1 = init.blue_x1;
+	x2 = init.blue_x2;
+	y1 = init.blue_y1;
+	y2 = init.blue_y2;
 
 	//Initialize the new blue gate.
 	blue_gate gate = {};
@@ -301,7 +298,7 @@ void ImagePostProcessor::processBlueBlobsBack() {
 	// Iterate over the remaining blobs, placing them in the gate structure or discarding them if they do not qualify.
 	for(int i = 1; i<size; i++){
 
-		blue_blob blob = temp_vector.at(i);
+            blue_blob blob = temp_vector.at(i);
 	    if(blob.blue_w < (gate.blue_h*0.33)){
 	    	break;
 	    }
@@ -323,8 +320,7 @@ void ImagePostProcessor::processBlueBlobsBack() {
 void ImagePostProcessor::processYellowBlobsFront(){
 	//Create temporary datastore for processing purposes
 	std::vector<yellow_blob> temp_vector = blob_container_front.y_blob;
-	int size = temp_vector.size();
-               
+	int size = temp_vector.size();    
 	if(size==0){
             frontLock.lock();
             blob_structure_front.y_gate.clear();
@@ -337,31 +333,31 @@ void ImagePostProcessor::processYellowBlobsFront(){
 	// this one.
 	int count = 0;
 	yellow_blob init;
+        //std::cout << " Beginning size : " << size << std::endl;
+        
 	while(true){
-		init = temp_vector.at(count);
-		if(init.yellow_cen_y>CAM_H/2) break;
-		else {
-			count++;
-		}
-	}
+            init = temp_vector.at(count);
+            if(init.yellow_cen_y<CAM_H/2) break;
+            else {
+		count++;
+            }
 	if(count==size){
 		return;
 	}
 
-
+        }
+	
+        
 
 	int x1, x2, y1, y2;
 
 	//Calculate the x1, x2, y1, y2 based on centerpoint and width
 	int half_w = init.yellow_w/2;
 
-	x1 = init.yellow_cen_x-half_w;
-	x2 = init.yellow_cen_x+half_w;
-	y1 = init.yellow_cen_y-half_w;
-	y2 = init.yellow_cen_y+half_w;
-
-	frontLock.lock();
-	frontLock.unlock();
+	x1 = init.yellow_x1;
+	x2 = init.yellow_x2;
+	y1 = init.yellow_y1;
+	y2 = init.yellow_y2;
 
 	//Initialize the new blue gate.
 	yellow_gate gate = {};
@@ -374,6 +370,12 @@ void ImagePostProcessor::processYellowBlobsFront(){
 	gate.yellow_y1 = y1;
 	gate.yellow_y2 = y2;
 
+        /*
+        std::cout << " Initial data for merging : " <<std::endl<<
+                " x1 : " << x1 << " y1 : " << y1 << " x2 : " << x2 << " y2 : " << y2 << std::endl <<
+                " cen_x : " << gate.yellow_cen_x << " cen_y : " << gate.yellow_cen_y << " height :" << gate.yellow_h << std::endl;                
+        */
+        
 	// Iterate over the remaining blobs, placing them in the gate structure or discarding them if they do not qualify.
 	for(int i = 1; i<size; i++){
             yellow_blob blob = temp_vector.at(i);
@@ -415,14 +417,14 @@ void ImagePostProcessor::processYellowBlobsBack(){
         int count = 0;
         yellow_blob init;
         while(true){
-        	init = temp_vector.at(count);
-        	if(init.yellow_cen_y>CAM_H/2) break;
-        	else {
-        		count++;
-        	}
+            init = temp_vector.at(count);
+            if(init.yellow_cen_y<CAM_H/2) break;
+        else {
+            count++;
         }
-        if(count==size){
+            if(count==size){
         	return;
+            }
         }
 
 		int x1, x2, y1, y2;
@@ -549,6 +551,8 @@ yellow_gate ImagePostProcessor::mergeYellowGateStructure(yellow_gate gate, yello
 
 	newx = merger.yellow_cen_x;
 	newy = merger.yellow_cen_y;
+        
+        
 
 	// If the new blob is outside the already existing x1-x2, and inside the existing y-zone, expand the existing gate.
 	if( (newx < x1 || newx > x2) && (newy > y1 && newy < y2) ){
@@ -674,7 +678,7 @@ void ImagePostProcessor::assignBigGates(){
 		biggestBlueGate.direction = true;
 	} else if(blob_structure_front.yellows_postprocessed>0){
 		biggestYellowGate = {};
-		yellow_gate gate_t = blob_structure_front.b_gate.at(0);
+		yellow_gate gate_t = blob_structure_front.y_gate.at(0);
 		biggestYellowGate.yellow_cen_x = gate_t.yellow_cen_x;
 		biggestYellowGate.yellow_cen_y = gate_t.yellow_cen_y;
 		biggestYellowGate.yellow_h = gate_t.yellow_h;
@@ -691,12 +695,12 @@ void ImagePostProcessor::assignBigGates(){
 		biggestBlueGate.direction = false;
 	} else if(blob_structure_back.yellows_postprocessed>0){
 		biggestYellowGate = {};
-		yellow_gate gate_t = blob_structure_back.b_gate.at(0);
+		yellow_gate gate_t = blob_structure_back.y_gate.at(0);
 		biggestYellowGate.yellow_cen_x = gate_t.yellow_cen_x;
 		biggestYellowGate.yellow_cen_y = gate_t.yellow_cen_y;
 		biggestYellowGate.yellow_h = gate_t.yellow_h;
 		biggestYellowGate.yellow_w = gate_t.yellow_w;
-		biggestYellowGate.direction = back;
+		biggestYellowGate.direction = false;
 	}
 	yGateLock.unlock();
 	bGateLock.unlock();
@@ -727,7 +731,7 @@ big_blue_gate ImagePostProcessor::getBiggestBlue(){
 	return gate;
 }
 
-big_yellow_gate ImagePostProcessor::getBiggestBlue(){
+big_yellow_gate ImagePostProcessor::getBiggestYellow(){
 	big_yellow_gate gate = {};
 	yGateLock.lock();
 	gate = biggestYellowGate;

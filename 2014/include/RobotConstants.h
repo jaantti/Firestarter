@@ -27,7 +27,7 @@
 #define MAX_MOTOR_SPEED 250
 #define GET_BALL_BOARD_ID 3
 #define GET_SWITCH_BOARD_ID 2
-#define MIN_BLOB_SIZE 3
+#define MIN_BLOB_SIZE 10
 #define MIN_GREEN_AREA 1000
 #define MIN_GATE_WIDTH 80
 #define MIN_GATE_SIZE 600
@@ -71,6 +71,10 @@ struct yellow_blob{
     int yellow_w = 0;
     int yellow_cen_x = -1;
     int yellow_cen_y = -1;
+    int yellow_x1 = -1;
+    int yellow_x2 = -1;
+    int yellow_y1 = -1;
+    int yellow_y2 = -1;
 };
 
 struct yellow_gate{
@@ -89,6 +93,10 @@ struct blue_blob{
     int blue_w = 0;
     int blue_cen_x = -1;
     int blue_cen_y = -1;
+    int blue_x1 = -1;
+    int blue_x2 = -1;
+    int blue_y1 = -1;
+    int blue_y2 = -1;
     
 };
 
@@ -104,22 +112,21 @@ struct blue_gate{
 };
 
 struct big_blue_gate{
-	int blue_cen_x = -1;
-	int blue_cen_y = -1;
-	//Direction dictates the side from which the gate was observed - front being true and back being false.
-	bool direction = true;
-	int blue_w = -1;
-	int blue_h = -1;
+    int blue_cen_x = -1;
+    int blue_cen_y = -1;
+    //Direction dictates the side from which the gate was observed - front being true and back being false.
+    bool direction = true;
+    int blue_w = -1;
+    int blue_h = -1;
 };
 
-
 struct big_yellow_gate{
-	int yellow_cen_x = -1;
-	int yellow_cen_y = -1;
-	//Direction dictates the side from which the gate was observed - front being true and back being false.
-	bool direction = true;
-	int yellow_w = -1;
-	int yellow_h = -1;
+    int yellow_cen_x = -1;
+    int yellow_cen_y = -1;
+    //Direction dictates the side from which the gate was observed - front being true and back being false.
+    bool direction = true;
+    int yellow_w = -1;
+    int yellow_h = -1;
 };
 
 struct blobs{
@@ -195,7 +202,7 @@ namespace RobotConstants{
     const float angleMotor3 = -45.0f;
 
     const float wheelRadius = 0.035f;
-    const float wheelOffset;
+    const float wheelOffset = 0.05f;
 
     const int frameSize = 640*480*2;
 }

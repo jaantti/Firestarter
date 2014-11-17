@@ -12,6 +12,7 @@
 
 #include "RobotConstants.h"
 #include "SerialConnection.h"
+#include <vector>
 
 class RobotController {
     SerialConnection connection;
@@ -45,23 +46,18 @@ public:
      * @param angle Moving angle
      * @param rotSpd Rotation speed
      */
-    void detectSerial(bool serial);
-   
-    void pingCoil();
-    
-    void chargeCoil();
-    
-    void dischargeCoil();
-    
-    void runDribbler();
-    
-    void stopDribbler();
-    
-    char getAttackedGoal();
-    
-    bool getStart();
-    
+    void detectSerial(bool serial);   
+    void pingCoil();    
+    void chargeCoil();    
+    void dischargeCoil();    
+    void runDribbler();    
+    void stopDribbler();    
+    char getAttackedGoal();    
+    bool getStart();    
     void closeSerial(){connection.closeSerial();}
+    vector<float> getAllMotorSpeeds();
+    
+    
     
     
 private:

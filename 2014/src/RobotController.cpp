@@ -127,3 +127,6 @@ void RobotController::detectSerial(bool serial){
     connection.setDetectSerial(serial);
 }
 
+vector<float> RobotController::getAllMotorSpeeds(){
+    return connection.getAllMotorSpeed();
+}

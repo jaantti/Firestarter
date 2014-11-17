@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <boost/algorithm/string.hpp>
 #include "RobotConstants.h"
+#include <cstdlib>
 
 using namespace std;
 
@@ -171,4 +172,17 @@ void SerialConnection::closeSerial(){
     for(int i = 0; i < NR_OF_WHEELS + 1; i++){
         RS232_CloseComport(serialDevice[i]);
     }
+}
+
+vector<float> SerialConnection::getAllMotorSpeed(){
+    
+    for(int i = 0; i < NR_OF_WHEELS; i++){
+        char resp[10] = {0};
+        sendCommand(serialDevice[i], "s\n", (unsigned char *)resp);
+        int spd = atoi(resp);
+        float spd2 = spd * 0.052;
+        motorSpeeds.push_back(spd2);
+    }
+    
+    return motorSpeeds;
 }

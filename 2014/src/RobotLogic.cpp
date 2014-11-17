@@ -155,6 +155,11 @@ void RobotLogic::idle() {
 
 void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack) {
     //std::cout << " Finding ball nemo." << std::endl;
+    vector<float> speeds = rController->getAllMotorSpeeds();
+    cout << "motor speeds (rad/s):" << endl;
+    for (float i : speeds){
+        cout << i << endl;
+    }
     startCounter++;
     rController->stopDribbler();
     if (startCounter>=5) {

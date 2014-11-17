@@ -10,6 +10,7 @@
 
 #include "RobotConstants.h"
 #include <array>
+#include <vector>
 #include <unordered_map>
 
 using namespace std;
@@ -35,10 +36,12 @@ public:
     void runDribbler();
     void stopDribbler();
     void closeSerial();
+    vector<float> getAllMotorSpeed();
     
     
 private:
     array<int, NR_OF_WHEELS + 1> serialDevice;
+    vector<float> motorSpeeds;
     bool detectSerial = true;
     void sendCommand(int comport, const char* command, unsigned char* answer);
     void sendCommand(int comport, const char* command);

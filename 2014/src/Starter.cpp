@@ -12,7 +12,7 @@
 #include "boost/thread.hpp"
 
 Starter::Starter() :pProcessor(&iProcessor), canvas1(RobotConstants::frontCamImgWinName, &iProcessor),
-					canvas2(RobotConstants::backCamImgWinName, &iProcessor), odometer(NULL),  localizer(NULL)
+    canvas2(RobotConstants::backCamImgWinName, &iProcessor), odometer(NULL),  localizer(NULL), odometryLocalizer(NULL)
 {
     rLogic = RobotLogic();
 }
@@ -38,6 +38,7 @@ bool Starter::init() {
     
     setupOdometer();
     setupParticleFilter();
+    setupOdometryLocalizer();
 
     rController.init();
     iProcessor.init();
@@ -49,7 +50,6 @@ bool Starter::init() {
 
 bool Starter::start() {
     
-    
     boost::thread iFrontThread(&ImageProcessor::runFrontCamera, &iProcessor);
     boost::thread iBackThread(&ImageProcessor::runBackCamera, &iProcessor);
     boost::thread pProcTread(&ImagePostProcessor::run, &pProcessor);
@@ -58,7 +58,7 @@ bool Starter::start() {
     while(!codeEnd){
         canvas1.refreshFrame();
         canvas2.refreshFrame();
-        rLogic.run(Role::rATTACK);
+        //rLogic.run(Role::rATTACK);
     }
     
     pProcessor.stopProcessor();
@@ -77,13 +77,17 @@ bool Starter::start() {
 
 void Starter::setupOdometer() {
 	odometer = new Odometer(
-		RobotConstants::angleMotor1,
-		RobotConstants::angleMotor2,
-		RobotConstants::angleMotor3,
-		RobotConstants::angleMotor4,
-		RobotConstants::wheelOffset,
-		RobotConstants::wheelRadius
+            RobotConstants::angleMotor1,
+            RobotConstants::angleMotor2,
+            RobotConstants::angleMotor3,
+            RobotConstants::angleMotor4,
+            RobotConstants::wheelOffset,
+            RobotConstants::wheelRadius
 	);
+}
+
+void Starter::setupOdometryLocalizer() {
+    odometryLocalizer = new OdometerLocalizer();
 }
 
 
@@ -93,7 +97,7 @@ void Starter::setupParticleFilter(){
 	localizer->addLandmark(
 		"yellow-center",
 		0.0f,
-		Config::fieldHeight / 2.0f
+		RobotConstants::fieldHeight / 2.0f
 	);
 
 	localizer->addLandmark(

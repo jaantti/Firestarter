@@ -8,10 +8,14 @@
 #ifndef ROBOTLOGIC_H
 #define	ROBOTLOGIC_H
 
+
 #include "RobotConstants.h"
 #include "ImageProcessor.h"
 #include "RobotController.h"
 #include "ImagePostProcessor.h"
+#include "ParticleFilterLocalizer.h"
+#include "Odometer.h"
+#include "OdometerLocalizer.h"
 
 class RobotLogic {
 
@@ -29,7 +33,7 @@ public:
     void init(RobotController *rCont, ImageProcessor *iProc);
     void init(RobotController *rCont, ImagePostProcessor *pProc);
     void loadOdometer(Odometer *odometer);
-    void loadOdometryLocalizer();
+    void loadOdometryLocalizer(OdometerLocalizer *odoLocalizer);
     void loadParticleFilterLocalizer(ParticleFilterLocalizer *localizer);
     void setPosition(float x, float y, float orientation);
     /**
@@ -45,6 +49,7 @@ private:
 
     Odometer *odometer;
     ParticleFilterLocalizer *localizer;
+    OdometerLocalizer *odometryLocalizer;
 
     Goal goal;
     int startCounter=0;

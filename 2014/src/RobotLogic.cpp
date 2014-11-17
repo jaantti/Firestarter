@@ -5,6 +5,9 @@
  * Created on September 7, 2014, 12:24 PM
  */
 
+#include "OdometerLocalizer.h"
+
+
 #include "RobotLogic.h"
 #include <iostream>
 
@@ -35,15 +38,16 @@ void RobotLogic::loadOdometer(Odometer *odometer){
 	this->odometer = odometer;
 }
 
-void RobotLogic::loadOdometryLocalizer(){
-
+void RobotLogic::loadOdometryLocalizer(OdometerLocalizer *odometerLocalizer){
+    this->odometryLocalizer = odometerLocalizer;
 }
 
 void RobotLogic::setPosition(float x, float y, float orientation){
-	this->localizer->setPosition(x, y, orientation);
-	this->posX = x;
-	this->posY = y;
-	this->orientation = Math::floatModulus(orientation, Math::TWO_PI);
+    this->odometryLocalizer->setPosition(x, y, orientation);
+    this->localizer->setPosition(x, y, orientation);
+    this->posX = x;
+    this->posY = y;
+    this->orientation = Math::floatModulus(orientation, Math::TWO_PI);
 }
 
 void RobotLogic::loadParticleFilterLocalizer(ParticleFilterLocalizer *localizer){

@@ -13,7 +13,7 @@
 
 namespace Math {
 
-const float PI = 3.14159265358979f;
+const float MATHPI = 3.14159265358979f;
 const float TWO_PI = 6.283185307f;
 
 static float max(float a, float b) {
@@ -53,11 +53,11 @@ static float round(float r, int places = 1) {
 }
 
 static float degToRad(float degrees) {
-    return degrees * Math::PI / 180.0f;
+    return degrees * Math::MATHPI / 180.0f;
 }
 
 static float radToDeg(float radians) {
-    return radians * 180.0f / Math::PI;
+    return radians * 180.0f / Math::MATHPI;
 }
 
 static float sin(float a) {
@@ -138,11 +138,11 @@ static float standardDeviation(std::vector<float> elements, float& mean) {
 static float getAngleDir(float from, float to) {
     float dir = from - to;
 
-	if (dir > 0 && abs(dir) <= Math::PI) {
+	if (dir > 0 && abs(dir) <= Math::MATHPI) {
 	    return -1;
-	} else if (dir > 0 && abs(dir) > Math::PI) {
+	} else if (dir > 0 && abs(dir) > Math::MATHPI) {
 	    return 1;
-	} else if (dir < 0 && abs(dir) <= Math::PI) {
+	} else if (dir < 0 && abs(dir) <= Math::MATHPI) {
 	    return 1;
 	} else {
 	    return -1;
@@ -152,19 +152,19 @@ static float getAngleDir(float from, float to) {
 static float getAngleAvg(float a, float b) {
 	float x = floatModulus(abs(a - b), Math::TWO_PI);
 
-	if (x >= 0 && x <= Math::PI) {
+	if (x >= 0 && x <= Math::MATHPI) {
 		return floatModulus((a + b) / 2, Math::TWO_PI);
-	} else if (x > Math::PI && x < Math::PI * 6.0 / 4.0) {
-		return floatModulus((a + b) / 2, Math::TWO_PI) + Math::PI;
+	} else if (x > Math::MATHPI && x < Math::MATHPI * 6.0 / 4.0) {
+		return floatModulus((a + b) / 2, Math::TWO_PI) + Math::MATHPI;
 	} else {
-		return floatModulus((a + b) / 2, Math::TWO_PI) - Math::PI;
+		return floatModulus((a + b) / 2, Math::TWO_PI) - Math::MATHPI;
 	}
 };
 
 static float getAngleDiff(float source, float target) {
     float diff = target - source;
 
-    diff += (diff > Math::PI) ? -Math::TWO_PI : (diff < -Math::PI) ? Math::TWO_PI : 0;
+    diff += (diff > Math::MATHPI) ? -Math::TWO_PI : (diff < -Math::MATHPI) ? Math::TWO_PI : 0;
 
     return diff;
 }
@@ -184,7 +184,7 @@ static float randomGaussian(float deviation = 0.5f, float mean = 0.0f) {
 }
 
 static float getGaussian(float mu, float sigma, float x) {
-    return Math::exp(-Math::pow(mu - x,  2.0f) / Math::pow(sigma, 2.0f) / 2.0f) / Math::sqrt(2.0f * Math::PI * Math::pow(sigma, 2.0f));
+    return Math::exp(-Math::pow(mu - x,  2.0f) / Math::pow(sigma, 2.0f) / 2.0f) / Math::sqrt(2.0f * Math::MATHPI * Math::pow(sigma, 2.0f));
 }
 
 class Matrix3x1;
@@ -393,10 +393,10 @@ static float getAngleBetween(Math::Position pointA, Math::Position pointB, float
 
 	float angle = atan2(dirVec.y, dirVec.x) - atan2(forwardVec.y, forwardVec.x);
 
-	if (angle < -Math::PI) {
-		angle += Math::PI * 2;
-	} else if (angle > Math::PI) {
-		angle -= Math::PI * 2;
+	if (angle < -Math::MATHPI) {
+		angle += Math::MATHPI * 2;
+	} else if (angle > Math::MATHPI) {
+		angle -= Math::MATHPI * 2;
 	}
 
 	return angle;

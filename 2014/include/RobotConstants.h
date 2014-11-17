@@ -45,8 +45,9 @@
 
 //Magic curve fitting constants
 //y=a*x^b
-#define CURVE_FIT_A 15370
-#define CURVE_FIT_B -1.142
+//Front fits
+#define F_CURVE_FIT_A 15370
+#define F_CURVE_FIT_B -1.142
 
 struct orange_blob{
     int orange_area = 0;

@@ -186,3 +186,11 @@ vector<float> SerialConnection::getAllMotorSpeed(){
     
     return motorSpeeds;
 }
+
+void SerialConnection::initSerialTime(unsigned long int initTime) {
+    this->initialTime = initTime;
+}
+
+unsigned long int SerialConnection::getTimeSinceLastLoop(unsigned long int lastTime) {
+    return lastTime-temp;
+}

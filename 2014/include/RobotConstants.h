@@ -196,15 +196,19 @@ namespace RobotConstants{
     const std::string frontCamImgWinName = "front";
     const std::string backCamImgWinName = "back";
 
-    const float angleMotor1 = 45.0f;
-    const float angleMotor2 = 135.0f;
-    const float angleMotor4 = -135.0f;
-    const float angleMotor3 = -45.0f;
+    const float angleMotor1 = -45.0f;
+    const float angleMotor2 = -135.0f;
+    const float angleMotor3 = 135.0f;
+    const float angleMotor4 = 45.0f;
 
     const float wheelRadius = 0.035f;
     const float wheelOffset = 0.05f;
 
     const int frameSize = 640*480*2;
+    
+    
+    //Robot logic cannot run faster than this.
+    const float minimumDeltaT = 0.0166666f;
 }
 
 

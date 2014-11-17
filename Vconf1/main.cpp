@@ -633,6 +633,7 @@ void end()
         fclose( out );
     }
 
+	system("copyConf.sh");
 
     gtk_main_quit();
     video_cleanup( video, thresholds );

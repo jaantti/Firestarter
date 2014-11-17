@@ -32,14 +32,15 @@ bool Starter::init() {
         canvas1.switchOff();
         canvas2.switchOff();
     }
-
+    
     canvas1.assignPostProcessor(&pProcessor);
     canvas2.assignPostProcessor(&pProcessor);
     
     setupOdometer();
     setupParticleFilter();
     setupOdometryLocalizer();
-
+    
+    
     rController.init();
     iProcessor.init();
     rLogic.init(&rController, &pProcessor);
@@ -55,10 +56,18 @@ bool Starter::start() {
     boost::thread pProcTread(&ImagePostProcessor::run, &pProcessor);
     boost::thread codeEndThread(&Starter::codeEndListener, this);
     //Runs robot logic
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    long unsigned int time = 1000000 * tv.tv_sec + tv.tv_usec;
+    rLogic.setInitialTime(time);
+    
     while(!codeEnd){
+        gettimeofday(&tv, NULL);
+        time = 1000000 * tv.tv_sec + tv.tv_usec;
         canvas1.refreshFrame();
         canvas2.refreshFrame();
-        //rLogic.run(Role::rATTACK);
+        rLogic.run(Role::rATTACK, 0.0f);
+        //rLogic.timeSinceLastSerial(time);
     }
     
     pProcessor.stopProcessor();
@@ -76,7 +85,7 @@ bool Starter::start() {
 }
 
 void Starter::setupOdometer() {
-	odometer = new Odometer(
+    odometer = new Odometer(
             RobotConstants::angleMotor1,
             RobotConstants::angleMotor2,
             RobotConstants::angleMotor3,
@@ -111,4 +120,14 @@ void Starter::codeEndListener(){
     int i;
     std::cin >> i;
     codeEnd = true;
+}
+
+float Starter::translateMicrosToSec(unsigned long timeDiffMicros) {
+    float f = (float)timeDiffMicros / 1000000.0;
+    return f;
+}
+
+void Starter::sleepForDifference(float f){
+    if(f>RobotConstants::minimumDeltaT) return;
+    
 }

@@ -106,7 +106,7 @@ int main (int argc, char *argv[])
 
     memset( path, '\0', 100 );
     strcat( path, robot_dir );
-    strcat( path, "conf2" );
+    strcat( path, "conf1" );
 
     in = fopen( path, "r" );
 
@@ -578,7 +578,7 @@ void end()
 
     memset( path, '\0', 100 );
     strcat( path, robot_dir );
-    strcat( path, "conf2" );
+    strcat( path, "conf1" );
 
     // Creating the threshold file
     out = fopen( path, "w" );
@@ -633,6 +633,7 @@ void end()
         fclose( out );
     }
 
+	system("copyConf.sh");
 
     gtk_main_quit();
     video_cleanup( video, thresholds );

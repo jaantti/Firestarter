@@ -57,10 +57,12 @@ public:
     void closeSerial(){connection.closeSerial();}
     vector<float> getAllMotorSpeeds();
     
-    
+    void initSerialTime(unsigned long timeInMicros);
+    unsigned long timeSinceLastLoop(unsigned long lastTime);
     
     
 private:
+    unsigned long timeSinceLastSerial = 0;
     void driveThree(float spd, float angle, float rotSpd);
     void driveFour(float spd, float angle, float rotSpd);
 };

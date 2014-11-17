@@ -50,6 +50,9 @@ public:
     virtual ~Starter();
     bool init();
     bool start();
+    
+    float translateMicrosToSec(long unsigned int timeDiffMicros);
+    void sleepForDifference(float f);
 };
 
 #endif	/* STARTER_H */

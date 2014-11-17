@@ -32,15 +32,19 @@ public:
      */
     void init(RobotController *rCont, ImageProcessor *iProc);
     void init(RobotController *rCont, ImagePostProcessor *pProc);
+    
     void loadOdometer(Odometer *odometer);
     void loadOdometryLocalizer(OdometerLocalizer *odoLocalizer);
     void loadParticleFilterLocalizer(ParticleFilterLocalizer *localizer);
     void setPosition(float x, float y, float orientation);
+    
+    void setInitialTime(unsigned long int time);
+    unsigned long timeSinceLastSerial(unsigned long int lastSerial);
     /**
      * Run code
      * @param role Robot role
      */
-    void run(Role role);
+    void run(Role role, float deltaTime);
 private:
 
     float posX = 0.0f;
@@ -55,12 +59,15 @@ private:
     int startCounter=0;
     void runAttack();
     void runDefend();
+    
     RobotController *rController;
     ImageProcessor *iProcessor;
     ImagePostProcessor *pProcessor;
+    
     void moveToBall(int x, int y);
     void setRState(RobotState state);
     RobotState rState = RobotState::FIND_BALL;
+    RobotState lastState = RobotState::IDLE;
     
     bool isGreen(blobs_processed blobsFront, blobs_processed blobsBack);
     
@@ -71,7 +78,7 @@ private:
     void gateTimeout(blobs_processed blobsFront, blobs_processed blobsBack);
     void kickBall(blobs_processed blobsFront, blobs_processed blobsBack);
     void notGreen(blobs_processed blobsFront, blobs_processed blobsBack);    
-    
+        
 };
 
 #endif	/* ROBOTLOGIC_H */

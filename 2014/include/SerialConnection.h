@@ -38,8 +38,15 @@ public:
     void closeSerial();
     vector<float> getAllMotorSpeed();
     
+    void initSerialTime(unsigned long int initTime);
+    unsigned long int getTimeSinceLastLoop(unsigned long int lastTime);
+    
     
 private:
+    unsigned long int initialTime;
+    unsigned long int temp;
+    unsigned long int timedif;
+    
     array<int, NR_OF_WHEELS + 1> serialDevice;
     vector<float> motorSpeeds;
     bool detectSerial = true;

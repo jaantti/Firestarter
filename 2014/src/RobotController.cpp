@@ -130,3 +130,11 @@ void RobotController::detectSerial(bool serial){
 vector<float> RobotController::getAllMotorSpeeds(){
     return connection.getAllMotorSpeed();
 }
+
+void RobotController::initSerialTime(unsigned long int timeInMicros) {
+    connection.initSerialTime(timeInMicros);
+}
+
+unsigned long RobotController::timeSinceLastLoop(unsigned long int lastTime) {
+    connection.getTimeSinceLastLoop(lastTime);
+}

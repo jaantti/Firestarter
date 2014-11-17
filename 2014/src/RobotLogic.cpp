@@ -24,6 +24,15 @@ RobotLogic::RobotLogic(Goal gl) {
 RobotLogic::~RobotLogic() {
 }
 
+void RobotLogic::setInitialTime(long unsigned int time) {
+    rController->initSerialTime(time);
+}
+
+unsigned long RobotLogic::timeSinceLastSerial(long unsigned int lastSerial) {
+    return rController->timeSinceLastLoop(lastSerial);
+}
+
+
 void RobotLogic::init(RobotController* rCont, ImageProcessor* iProc) {
     rController = rCont;
     iProcessor = iProc;
@@ -71,7 +80,7 @@ float RobotLogic::getAngle(int x_coor) {
 	return (((float)x_coor-(float)CAM_W/2.0)/(float)CAM_W*(float)CAM_HFOV*-1.0);
 }
 
-void RobotLogic::run(Role role) {
+void RobotLogic::run(Role role, float deltaTime) {
     if (role == Role::rATTACK) {
         runAttack();
     }
@@ -155,11 +164,11 @@ void RobotLogic::idle() {
 
 void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack) {
     //std::cout << " Finding ball nemo." << std::endl;
-    vector<float> speeds = rController->getAllMotorSpeeds();
-    cout << "motor speeds (rad/s):" << endl;
-    for (float i : speeds){
-        cout << i << endl;
-    }
+    //vector<float> speeds = rController->getAllMotorSpeeds();
+    //cout << "motor speeds (rad/s):" << endl;
+    //for (float i : speeds){
+    //    cout << i << endl;
+    //}
     startCounter++;
     rController->stopDribbler();
     if (startCounter>=5) {

@@ -20,7 +20,7 @@ RAKNETDIR = /home/antti/Desktop/RakNet-master
 
 # Use the directory that *contains* the boost directory
 BOOST_HEADERS = /usr/include/boost
-BOOST_LIBRARIES = /usr/lib/i386-linux-gnu
+BOOST_LIBRARIES = /usr/lib/x86_64-linux-gnu/
 # The flavour is the suffix in the library name
 # For example: if the library is libboost_filesystem-mt.a, then FLAVOUR is -mt
 BOOST_FLAVOUR =
@@ -38,7 +38,7 @@ SRC = $(wildcard $(SRCDIR)*.cpp)
 OBJS = $(SRC:$(SRCDIR)%.cpp=$(OBJDIR)%.o)
 
 build: $(OBJS) obj/rs232.o
-	$(CXX) $(OBJS) obj/rs232.o -o $(APP) $(LIBS) -pthread
+	$(CXX) $(OBJS) obj/rs232.o -o $(APP) $(LIBS)
 
 $(OBJDIR)%.o: $(SRCDIR)%.cpp
 	$(CXX) $(CFLAGS) -c $(SRCDIR)$*.cpp -o $(OBJDIR)$*.o

@@ -28,7 +28,6 @@ void BlobDistanceCalculator::calcFrontBallDist(blobs_processed blobsFront) {
     
     frontLock.lock();
     ballsFront = {};
-    frontLock.unlock();
         
     vector<orange_ball> balls = blobsFront.o_ball;
     int size = balls.size();
@@ -42,7 +41,6 @@ void BlobDistanceCalculator::calcFrontBallDist(blobs_processed blobsFront) {
         
         Ball tempBall = Ball(tempDist, tempAngle, oBall.orange_cen_x, oBall.orange_cen_y);
         
-        frontLock.lock();
         ballsFront.push_back(tempBall);
         frontLock.unlock();
         

@@ -90,9 +90,7 @@ void RobotLogic::run(Role role, float deltaTime) {
 void RobotLogic::runAttack() {
 
     blobs_processed blobsFront = pProcessor->getFrontSystem();
-    pProcessor->unlockFrontSystem();
     blobs_processed blobsBack = pProcessor->getBackSystem();
-    pProcessor->unlockBackSystem();
     
     switch (rState) {
         case RobotState::IDLE:
@@ -151,10 +149,11 @@ void RobotLogic::idle() {
     rController->driveRobot(0,0,0);
     rController->dischargeCoil();
     setGoal();
+    //cout << " GetStart status : " << rController->getStart() << " . " << std::endl;
     if (rController->getStart()) {
         rController->chargeCoil();
-        cout << "STATE: FIND_BALL" << endl;
         rState = RobotState::FIND_BALL;
+        usleep(250000);
         return;
     }
     usleep(500000);
@@ -163,10 +162,15 @@ void RobotLogic::idle() {
 void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack) {
     //std::cout << " Finding ball nemo." << std::endl;
     //vector<float> speeds = rController->getAllMotorSpeeds();
-    //cout << "motor speeds (rad/s):" << endl;
-    //for (float i : speeds){
-    //    cout << i << endl;
-    //}
+    //isGreen(blobsFront, blobsBack);    
+    if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
+    vector<float> speeds = rController->getAllMotorSpeeds();
+    cout << "motor speeds (rad/s):" << endl;
+    for (float i : speeds){
+        cout << i << ", ";
+    }
+    cout << endl;
+    
     startCounter++;
     rController->stopDribbler();
     if (startCounter>=5) {
@@ -183,13 +187,7 @@ void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack)
         //setGoal();
         return;        
     }
-    /*    
-    if (!isGreen(blobsFront, blobsBack)) {
-        cout << "STATE: NOT_GREEN" << endl;
-        rState = RobotState::NOT_GREEN;
-        return;
-    }
-    */
+    
     if (false) {
         cout << "STATE: BALL_TIMEOUT" << endl;
         rState = RobotState::BALL_TIMEOUT;
@@ -210,7 +208,7 @@ void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack)
         //cout << "ball angle:" << getAngle(x) << endl;
         int turnSpd = getAngle(x)*0.8;
         int moveDir = getAngle(x)/180*PI*0.8;
-        int moveSpd = 15 + 800/oBall.orange_w;
+        int moveSpd = 15 + 1600/oBall.orange_w;
         
         /*
         if (oBall.orange_w > 5) {
@@ -232,7 +230,7 @@ void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack)
         }
         
         //If ball is near, turn on dribbler
-        if (oBall.orange_w > 30) {
+        if (oBall.orange_w > 15) {
             rController->runDribbler();
         } else {
             //rController->stopDribbler();
@@ -252,14 +250,13 @@ void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack)
     if (startCounter>=5) {
         startCounter=0;
         if (!(rController->getStart())) {
-            cout << "STATE: IDLE" << endl;
             rState = RobotState::IDLE;
             return;
         }
     }
     
     if(!rController->hasBall()) {
-        cout << "STATE: FIND_BALL" << endl;
+        //cout << "STATE: FIND_BALL" << endl;
         rState = RobotState::FIND_BALL;
         return;
     }
@@ -270,16 +267,18 @@ void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack)
     int goalX = -2, goalY;
     //cout << "blue size:" << blobsFront.b_gate.size() << endl;
     if(blobsFront.b_gate.size() > 0)
-        cout << "blue size: " << blobsFront.b_gate.at(0).blue_w << endl;
 
     if (goal == Goal::gBLUE) {
         if (blobsFront.b_gate.size() > 0) {
             if (blobsFront.b_gate.at(0).blue_w > MIN_GATE_WIDTH) {
                 goalX = blobsFront.b_gate.at(0).blue_cen_x;
-                cout << "blue x: " << goalX << endl;
                 goalY = blobsFront.b_gate.at(0).blue_cen_y;
-                aimThresh = blobsFront.b_gate.at(0).blue_w * 0.1+5;
-                turnSpeed = getAngle(goalX)*0.8+3;
+                aimThresh = blobsFront.b_gate.at(0).blue_w * 0.25+5;
+                float angleSpd = getAngle(goalX)*0.8;
+                float turn = 0;
+                if (angleSpd < 0) turn = -12;
+                if (angleSpd > 0) turn = 12;
+                turnSpeed = angleSpd+turn;
                 //turnSpeed = (CAM_W/2.0 - blobsFront.b_gate.at(0).blue_cen_x)*0.05 + 5;
             }
             
@@ -292,19 +291,21 @@ void RobotLogic::findGate(blobs_processed blobsFront, blobs_processed blobsBack)
     
     if (goal == Goal::gYELLOW) {
         if (blobsFront.y_gate.size() > 0) {
-            cout << "yellow size: " << blobsFront.y_gate.at(0).yellow_w << endl;
             if (blobsFront.y_gate.at(0).yellow_w > MIN_GATE_WIDTH) {
                 goalX = blobsFront.y_gate.at(0).yellow_cen_x;
-                cout << "yellow x: " << goalX << endl;
                 goalY = blobsFront.y_gate.at(0).yellow_cen_y;
-                aimThresh = blobsFront.y_gate.at(0).yellow_w * 0.1+5;
-                turnSpeed = getAngle(goalX)*0.8+3;
+                aimThresh = blobsFront.y_gate.at(0).yellow_w * 0.25+5;
+                float angleSpd = getAngle(goalX)*0.8;
+                float turn = 0;
+                if (angleSpd < 0) turn = -12;
+                if (angleSpd > 0) turn = 12;
+                turnSpeed = angleSpd+turn;
                 //turnSpeed = (CAM_W/2.0 - blobsFront.y_gate.at(0).yellow_cen_x)*0.05 + 5;
             }
             
         } else {
             //rState = RobotState.GATE_TIMEOUT;
-            rController->driveRobot(0, 0, 15);
+            rController->driveRobot(0, 0, 40);
             return;
         }
     }
@@ -326,10 +327,11 @@ void RobotLogic::gateTimeout(blobs_processed blobsFront, blobs_processed blobsBa
 }
 
 void RobotLogic::kickBall(blobs_processed blobsFront, blobs_processed blobsBack) {
-    cout << "!!!KICKBALL!!!" << "\n";
+    //cout << "!!!KICKBALL!!!" << "\n";
     rController->stopDribbler();
     rController->kickBall(2000);
-    cout << "STATE: FIND_BALL" << endl;
+    usleep(16667);
+    //cout << "STATE: FIND_BALL" << endl;
     rState = RobotState::FIND_BALL;
     
     //if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;

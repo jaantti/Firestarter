@@ -50,26 +50,13 @@ public:
      * @return 
      */
     blobs getBlobsBack();
-    /**
-     * Releases mutex lock, must be used after getBlobsFront() or code will be in a deadlock
-     */
-    void unlockFront();
-    /**
-     * Releases mutex lock, must be used after getBlobsBack() of code will be in a deadlock
-     */
-    void unlockBack();
     
-    void lockBackFrame();
-    void unlockBackFrame();
+    void getWorkingBackFrame(uchar *dst);
+    void getWorkingBackThresh(uchar *dst);
     
-    void lockFrontFrame();
-    void unlockFrontFrame();
+    void getWorkingFrontFrame(uchar *dst);
+    void getWorkingFrontThresh(uchar *dst);
     
-    uchar* getWorkingFrontFrame();
-    uchar* getWorkingBackFrame();
-    
-    uchar* getWorkingFrontThresh();
-    uchar* getWorkingBackThresh();
     
 private:
     // if switchCamers = true, then video0 is front, if false, video0 is back.
@@ -79,8 +66,8 @@ private:
     bool switchCameras;
     bool chooseCameras();
     bool codeEnd = false;
-    mutex frontLock;
-    mutex backLock;
+    mutex iProcFrontLock;
+    mutex iProcBackLock;
     
     uchar* workingFrontFrame;
     uchar* workingFrontThresh;

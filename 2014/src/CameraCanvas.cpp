@@ -12,6 +12,9 @@ CameraCanvas::CameraCanvas(std::string Name, ImageProcessor* iProcessor){
     this->canvasName = Name;
     this->iProcessor = iProcessor;
     
+    frame = (uchar*)malloc(RobotConstants::frameSize);
+    thresholds = (uchar*)malloc(RobotConstants::frameSize/2);
+    
     workingFrameRGB = (uchar*)malloc(640*480*3);
     workingFrameThresholds = (uchar*)malloc(640*480*3);
     
@@ -47,13 +50,9 @@ void CameraCanvas::waitForRealInput(){
     while(true){
         cv::imshow(this->canvasName, initImg);
         if(frontCamera){
-            iProcessor->lockFrontFrame();
-            this->frame = iProcessor->getWorkingFrontFrame();
-            iProcessor->unlockFrontFrame();
+            iProcessor->getWorkingFrontFrame(frame);
         } else {
-            iProcessor->lockBackFrame();
-            this->frame = iProcessor->getWorkingBackFrame();
-            iProcessor->unlockBackFrame();
+            iProcessor->getWorkingBackFrame(frame);
         }
         int pixel_real = 0;
         for(int i=0; i<RobotConstants::frameSize; i++)
@@ -78,13 +77,13 @@ void CameraCanvas::waitForRealInput(){
 
 void CameraCanvas::refreshFrame(){
     if(!isSwitchedOn) return;
-	if(!hasStreamInput) waitForRealInput();
+    if(!hasStreamInput) waitForRealInput();
     loadNewFrame();
     processNewData();
         
     cv::imshow(this->canvasName, working_matrix);
     cv::imshow(t_str, working_threshold);
-    int tog = cv::waitKey(1);
+    cv::waitKey(1);
     usleep(15);
 }
 //Processes the raw data into something that we can display.
@@ -101,15 +100,11 @@ void CameraCanvas::processNewData() {
 
 void CameraCanvas::loadNewFrame() {
     if(frontCamera){
-        iProcessor->lockFrontFrame();
-        frame = iProcessor->getWorkingFrontFrame();
-        thresholds = iProcessor->getWorkingFrontThresh();
-        iProcessor->unlockFrontFrame();
+        iProcessor->getWorkingFrontFrame(frame);
+        iProcessor->getWorkingFrontThresh(thresholds);
     } else {
-        iProcessor->lockBackFrame();
-        frame = iProcessor->getWorkingBackFrame();
-        thresholds = iProcessor->getWorkingBackThresh();
-        iProcessor->unlockBackFrame();
+        iProcessor->getWorkingBackFrame(frame);
+        iProcessor->getWorkingBackThresh(thresholds);
     }
 }
 
@@ -120,7 +115,6 @@ void CameraCanvas::convert_thresh_displayable() {
     int blue_r = 0, blue_g = 0, blue_b = 255;
     int white_r = 255, white_g = 255, white_b = 255;
     int black_r = 20, black_g = 20, black_b = 20;
-    //int nocolor_r = 255, nocolor_g = 0, nocolor_b = 128;
     int nocolor_r = 0, nocolor_g = 0, nocolor_b = 0;
     
     int work_count = 0;

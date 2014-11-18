@@ -52,25 +52,37 @@ bool Starter::init() {
 bool Starter::start() {
     
     boost::thread iFrontThread(&ImageProcessor::runFrontCamera, &iProcessor);
+    usleep(500000);
     boost::thread iBackThread(&ImageProcessor::runBackCamera, &iProcessor);
+    usleep(500000);
     boost::thread pProcTread(&ImagePostProcessor::run, &pProcessor);
     boost::thread codeEndThread(&Starter::codeEndListener, this);
+    
+    usleep(1000000);
+    
     //Runs robot logic
-    struct timeval tv;
+    struct timeval tv, tv2;
     gettimeofday(&tv, NULL);
-    long unsigned int time = 1000000 * tv.tv_sec + tv.tv_usec;
-    rLogic.setInitialTime(time);
+    unsigned long int tim1 = 1000000 * tv.tv_sec + tv.tv_usec;
+    rLogic.setInitialTime(tim1);
+    unsigned long int tim2;
     
     unsigned long int serialDif;
     
     //TODO : Measure time for main loop AND measure time between serial communications.
     while(!codeEnd){
         gettimeofday(&tv, NULL);
-        time = 1000000 * tv.tv_sec + tv.tv_usec;
+        tim1 = 1000000 * tv.tv_sec + tv.tv_usec;
         canvas1.refreshFrame();
-        canvas2.refreshFrame();
-        rLogic.run(Role::rATTACK, 0.0f);
-        //rLogic.timeSinceLastSerial();
+        canvas2.refreshFrame();        
+        float f = translateMicrosToSec(rLogic.timeSinceLastSerial());
+        rLogic.run(Role::rATTACK, f);
+        
+        gettimeofday(&tv2, NULL);
+        tim2 = 1000000 * tv2.tv_sec + tv2.tv_usec;
+        unsigned long int timeDif = tim2-tim1;
+        
+        sleepForDifference(translateMicrosToSec(timeDif));
     }
     
     pProcessor.stopProcessor();
@@ -81,9 +93,10 @@ bool Starter::start() {
     iFrontThread.join();
     iBackThread.join();
 
-    rController.closeSerial();
+    rController.stopDribbler();
     rController.driveRobot(0,0,0);
-
+    rController.closeSerial();
+    
     return true;
 }
 
@@ -133,6 +146,7 @@ float Starter::translateMicrosToSec(unsigned long timeDiffMicros) {
 void Starter::sleepForDifference(float f){
     if(f>RobotConstants::minimumDeltaT) return;
     int dif = ( (int) 1000000 * RobotConstants::minimumDeltaT) - ( (int) 1000000*f);
+    std::cout << " Sleeping for " << dif << " microseconds." << std::endl;
     usleep(dif);
     
     

@@ -8,6 +8,7 @@
 #include "ImagePostProcessor.h"
 
 ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor) {
+    std::cout << " I AM THE CONSTRUCTOR " << std::endl;
     iProc = imageProcessor;
     backLock.lock();
     blob_structure_back = {};
@@ -23,8 +24,8 @@ ImagePostProcessor::~ImagePostProcessor() {
 }
 
 
-void ImagePostProcessor::run(){   
-    
+void ImagePostProcessor::run(){
+    std::cout << " Starting ImagePostProcessor." << std::endl;
     while(!codeEnd){
         loadBlobVectors();
         processBlobVectors();
@@ -52,15 +53,17 @@ void ImagePostProcessor::loadBlobVectors() {
     blob_container_back = {};
     
     blob_container_front = iProc->getBlobsFront();
-    iProc->unlockFront();
     blob_container_back = iProc->getBlobsBack();
-    iProc->unlockBack();
-    frontLock.lock();
-    blob_structure_front.total_green = blob_container_front.total_green;
-    frontLock.unlock();
+       
     backLock.lock();
     blob_structure_back.total_green = blob_container_back.total_green;
-    backLock.unlock();        
+    backLock.unlock();
+    
+    frontLock.try_lock();
+    
+    //frontLock.lock();
+    blob_structure_front.total_green = blob_container_front.total_green;
+    frontLock.unlock();
 }
 
 void ImagePostProcessor::processBlobVectors() {
@@ -405,7 +408,7 @@ void ImagePostProcessor::processYellowBlobsBack(){
 		int size = temp_vector.size();
 
         if(size==0){
-        	backLock.lock();
+            backLock.lock();
             blob_structure_back.y_gate.clear();
             blob_structure_back.yellows_postprocessed = 0;
             backLock.unlock();
@@ -465,9 +468,9 @@ void ImagePostProcessor::processYellowBlobsBack(){
         backLock.lock();
         blob_structure_back.y_gate.clear();
         blob_structure_back.y_gate.push_back(yellow_gate());
-		blob_structure_back.y_gate[0] = gate;
-		blob_structure_back.yellows_postprocessed = 1;
-		backLock.unlock();
+	blob_structure_back.y_gate[0] = gate;
+	blob_structure_back.yellows_postprocessed = 1;
+	backLock.unlock();
 }
 
 //These processes iterate over the existing processed list
@@ -739,18 +742,3 @@ big_yellow_gate ImagePostProcessor::getBiggestYellow(){
 	return gate;
 }
 
-void ImagePostProcessor::lockBackSystem(){
-	backLock.lock();
-}
-
-void ImagePostProcessor::lockFrontSystem(){
-	frontLock.lock();
-}
-
-void ImagePostProcessor::unlockBackSystem(){
-	backLock.unlock();
-}
-
-void ImagePostProcessor::unlockFrontSystem(){
-	frontLock.unlock();
-}

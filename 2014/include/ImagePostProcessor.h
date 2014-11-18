@@ -25,14 +25,8 @@ public:
 
     void stopProcessor();
     
-    void lockBackSystem();
-    void lockFrontSystem();
-
     blobs_processed getFrontSystem();
     blobs_processed getBackSystem();
-
-    void unlockBackSystem();
-    void unlockFrontSystem();
 
     big_yellow_gate getBiggestYellow();
     big_blue_gate getBiggestBlue();

@@ -65,14 +65,14 @@ void SerialConnection::sendCommand(int comport, const char* command, unsigned ch
 
     if(comport == -1) return;
     RS232_cputs(comport, command);
-    usleep(10000);
+    usleep(7000);
     RS232_PollComport(comport, answer, 100);
 }
 
 void SerialConnection::sendCommand(int comport, const char* command) {
     if(comport == -1) return;
     RS232_cputs(comport, command);
-    usleep(5000);
+    //usleep(5000);
 }
 
 void SerialConnection::setSpeed(int motor, int speed) {
@@ -176,12 +176,16 @@ void SerialConnection::closeSerial(){
 }
 
 vector<float> SerialConnection::getAllMotorSpeed(){
-    
+    motorSpeeds.clear();
     for(int i = 0; i < NR_OF_WHEELS; i++){
         char resp[1300] = {0};
         sendCommand(serialDevice[i], "s\n", (unsigned char *)resp);
-        int spd = atoi(resp);
+        //std::cout << resp << " is the speed we got." << std::endl;
+        //cout << "speed char: "<< string(resp) << endl;
+        int spd = atoi(&resp[3]);
+        //cout << "speed int: " << spd << endl;
         float spd2 = spd * 0.052;
+        //cout << "speed float: " << spd2 << endl;
         motorSpeeds.push_back(spd2);
     }
     struct timeval tv;

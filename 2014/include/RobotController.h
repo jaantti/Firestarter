@@ -17,6 +17,13 @@
 class RobotController {
     SerialConnection connection;
 public:
+
+    struct StallComparator {
+    	int motorId = -1;
+    	float wantedSpeed = 0.0f;
+    	float realSpeed = 0.0f;
+    };
+
     RobotController();
     ~RobotController();
     /**
@@ -46,6 +53,8 @@ public:
      * @param angle Moving angle
      * @param rotSpd Rotation speed
      */
+    void stallStep();
+
     void detectSerial(bool serial);   
     void pingCoil();    
     void chargeCoil();    
@@ -62,6 +71,7 @@ public:
     
     
 private:
+    std::vector<StallComparator> stallings;
     unsigned long timeSinceLastSerial = 0;
     void driveThree(float spd, float angle, float rotSpd);
     void driveFour(float spd, float angle, float rotSpd);

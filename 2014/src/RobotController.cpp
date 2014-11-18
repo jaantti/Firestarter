@@ -99,7 +99,7 @@ void RobotController::driveThree(float spd, float angle, float rotSpd) {
 }
 
 void RobotController::driveFour(float spd, float angle, float rotSpd) {
-    
+    stallings.clear();
     int speed0 = spd * sin(angle - PI / 4.0) + rotSpd;
     int speed1 = spd * -sin(angle + PI / 4.0) + rotSpd;
     int speed2 = spd * -sin(angle - PI / 4.0) + rotSpd;
@@ -121,6 +121,10 @@ void RobotController::driveFour(float spd, float angle, float rotSpd) {
     }
     for(int i = 0; i < 4; i++){
         connection.setSpeed(i+1, motorSpeeds[i]);
+        StallComparator comp = {};
+        comp.motorId = i+1;
+        comp.wantedSpeed = motorSpeeds[i];
+        stallings.push_back(comp);
     }
 }
 
@@ -129,7 +133,13 @@ void RobotController::detectSerial(bool serial){
 }
 
 vector<float> RobotController::getAllMotorSpeeds(){
-    return connection.getAllMotorSpeed();
+	vector<float> speeds = connection.getAllMotorSpeed();
+	for (int i=0; i<speeds.size(); i++){
+		StallComparator comp = stallings.at(i);
+		comp.realSpeed = speeds.at(i);
+		std::cout << "Wanted speed for devId"<<comp.motorId << " :"<<comp.wantedSpeed<<" ; RealSpeed:" << comp.realSpeed << std::endl;
+	}
+    return speeds;
 }
 
 void RobotController::initSerialTime(unsigned long int timeInMicros) {
@@ -139,3 +149,5 @@ void RobotController::initSerialTime(unsigned long int timeInMicros) {
 unsigned long RobotController::timeSinceLastLoop() {
     connection.getTimeSinceLastLoop();
 }
+
+

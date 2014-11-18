@@ -122,6 +122,7 @@ void RobotLogic::runAttack() {
             notGreen(blobsFront, blobsBack);
             break;
     }
+    rController->getAllMotorSpeeds();
 }
 
 void RobotLogic::runDefend() {
@@ -139,12 +140,17 @@ void RobotLogic::setRState(RobotState state) {
 }
 
 bool RobotLogic::isGreen(blobs_processed blobsFront, blobs_processed blobsBack) {
-    cout << "total green area: " << blobsFront.total_green << endl;
+    //cout << "total green area: " << blobsFront.total_green << endl;
     if (blobsFront.total_green < MIN_GREEN_AREA) return false;
     else return true; 
 }
 
 void RobotLogic::idle() {
+	struct timeval tv, tv2;
+	gettimeofday(&tv, NULL);
+	unsigned long int tim1 = 1000000 * tv.tv_sec + tv.tv_usec;
+	rController->initSerialTime(tim1);
+
     rController->stopDribbler();
     rController->driveRobot(0,0,0);
     rController->dischargeCoil();
@@ -160,16 +166,8 @@ void RobotLogic::idle() {
 }
 
 void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack) {
-    //std::cout << " Finding ball nemo." << std::endl;
-    //vector<float> speeds = rController->getAllMotorSpeeds();
     //isGreen(blobsFront, blobsBack);    
     if (!isGreen(blobsFront, blobsBack)) rState = RobotState::NOT_GREEN;
-    vector<float> speeds = rController->getAllMotorSpeeds();
-    cout << "motor speeds (rad/s):" << endl;
-    for (float i : speeds){
-        cout << i << ", ";
-    }
-    cout << endl;
     
     startCounter++;
     rController->stopDribbler();

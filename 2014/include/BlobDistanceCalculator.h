@@ -43,6 +43,8 @@ private:
     void calcFrontBallDist(blobs_processed blobsFront);
     void calcBackBallDist(blobs_processed blobsBack);
     
+    void sortBalls(bool side);
+    
     boost::mutex frontLock;
     boost::mutex backLock;
 

@@ -54,6 +54,9 @@
 #define B_CURVE_FIT_A 27140.0f
 #define B_CURVE_FIT_B -1.324f
 
+#define B_CURVE_FIT_A 0 //Need to be filled
+#define B_CURVE_FIT_B 0 //Need to be filled
+
 struct orange_blob{
     int orange_area = 0;
     int orange_w = 0;

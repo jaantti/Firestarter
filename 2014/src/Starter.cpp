@@ -45,6 +45,10 @@ bool Starter::init() {
     iProcessor.init();
     rLogic.init(&rController, &pProcessor);
     rLogic.setGoal();
+    rLogic.loadOdometer(odometer);
+    rLogic.loadOdometryLocalizer(odometryLocalizer);
+    rLogic.loadParticleFilterLocalizer(localizer);
+    
     std::cout << "Initialization successful." << std::endl;
     return true;
 }

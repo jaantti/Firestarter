@@ -7,6 +7,7 @@
 
 #include "RobotController.h"
 #include "SerialConnection.h"
+#include "Maths.h"
 #include <iostream>
 #include <cmath>
 
@@ -123,7 +124,7 @@ void RobotController::driveFour(float spd, float angle, float rotSpd) {
         connection.setSpeed(i+1, motorSpeeds[i]);
         StallComparator comp = {};
         comp.motorId = i+1;
-        comp.wantedSpeed = motorSpeeds[i];
+        comp.wantedSpeed = motorSpeeds[i] * 0.05208333f * Math::TWO_PI;
         stallings.push_back(comp);
     }
 }
@@ -133,14 +134,36 @@ void RobotController::detectSerial(bool serial){
 }
 
 vector<float> RobotController::getAllMotorSpeeds(){
-	vector<float> speeds = connection.getAllMotorSpeed();
-	for (int i=0; i<speeds.size(); i++){
-		StallComparator comp = stallings.at(i);
-		comp.realSpeed = speeds.at(i);
-		std::cout << "Wanted speed for devId"<<comp.motorId << " :"<<comp.wantedSpeed<<" ; RealSpeed:" << comp.realSpeed << std::endl;
-	}
+    vector<float> speeds = connection.getAllMotorSpeed();
+    for (int i=0; i<speeds.size(); i++){
+	StallComparator comp = stallings.at(i);
+	comp.realSpeed = speeds.at(i);
+    }
+    stallStep();
     return speeds;
 }
+
+void RobotController::stallStep() {
+    for(int i=0; i<4; i++){
+        StallComparator comp = stallings.at(i);
+        if(Math::abs(comp.wantedSpeed)/Math::abs(comp.realSpeed) > 2.0f && Math::abs(comp.wantedSpeed) > Math::MATHPI){
+            stallCounters[i]++;
+        } else {
+            stallCounters[i] = 0;
+        }
+    }
+}
+
+bool RobotController::isStalled() {
+    for(int i=0; i<4; i++){
+        if(stallCounters[i]>RobotConstants::stallThreshold){
+            std::cout << " The robot has stalled." << std::endl;
+            return true;
+        }
+    }
+    return false;
+}
+
 
 void RobotController::initSerialTime(unsigned long int timeInMicros) {
     connection.initSerialTime(timeInMicros);

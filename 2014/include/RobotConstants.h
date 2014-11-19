@@ -48,8 +48,11 @@
 //Magic curve fitting constants
 //y=a*x^b
 //Front fits
-#define F_CURVE_FIT_A 15370
-#define F_CURVE_FIT_B -1.142
+#define F_CURVE_FIT_A 15370.0f
+#define F_CURVE_FIT_B -1.142f
+
+#define B_CURVE_FIT_A 27140.0f
+#define B_CURVE_FIT_B -1.324f
 
 struct orange_blob{
     int orange_area = 0;
@@ -121,6 +124,10 @@ struct big_blue_gate{
     bool direction = true;
     int blue_w = -1;
     int blue_h = -1;
+    int blue_x1 = -1;
+    int blue_x2 = -1;
+    int blue_y1 = -1;
+    int blue_y2 = -1;
 };
 
 struct big_yellow_gate{
@@ -130,6 +137,10 @@ struct big_yellow_gate{
     bool direction = true;
     int yellow_w = -1;
     int yellow_h = -1;
+    int yellow_x1 = -1;
+    int yellow_x2 = -1;
+    int yellow_y1 = -1;
+    int yellow_y2 = -1;
 };
 
 struct blobs{
@@ -181,16 +192,17 @@ enum class Role : int{
 };
 
 namespace RobotConstants{
+    
 	// particle filter robot localizer parameters
-	const int robotLocalizerParticleCount = 1000;
-	const float robotLocalizerForwardNoise = 0.25f;
-	const float robotLocalizerTurnNoise = 0.3f; // 45deg
-	const float robotLocalizerDistanceNoise = 0.35f;
-	const float robotLocalizerAngleNoise = 0.2f; // ~~11deg
+    const int robotLocalizerParticleCount = 1000;
+    const float robotLocalizerForwardNoise = 0.25f;
+    const float robotLocalizerTurnNoise = 0.3f; // 45deg
+    const float robotLocalizerDistanceNoise = 0.35f;
+    const float robotLocalizerAngleNoise = 0.2f; // ~~11deg
 
 	// field dimensions
-	const float fieldWidth = 4.5f;
-	const float fieldHeight = 3.0f;
+    const float fieldWidth = 4.5f;
+    const float fieldHeight = 3.0f;
         
     //Image files for debug display initializers
     const std::string initFile = "Init.jpg";
@@ -201,14 +213,15 @@ namespace RobotConstants{
 
     const float angleMotor1 = -45.0f;
     const float angleMotor2 = -135.0f;
-    const float angleMotor3 = 135.0f;
-    const float angleMotor4 = 45.0f;
+    const float angleMotor3 = 45.0f;
+    const float angleMotor4 = 135.0f;
 
     const float wheelRadius = 0.035f;
-    const float wheelOffset = 0.05f;
+    const float wheelOffset = 0.1375f;
 
     const int frameSize = 640*480*2;
     
+    const int stallThreshold = 20;
     
     //Robot logic cannot run faster than this.
     const float minimumDeltaT = 0.0166666f;

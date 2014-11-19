@@ -240,3 +240,13 @@ void CameraCanvas::overlayObjects() {
      
     }
 }
+
+void CameraCanvas::overlayText() {
+    blobs_processed blobs;
+    if(frontCamera){
+        blobs = pProcessor->getFrontSystem();
+    } else {
+        blobs = pProcessor->getBackSystem();
+    }
+}
+

@@ -103,14 +103,14 @@ void ImagePostProcessor::processOrangeBlobsBack(){
             //Calculate the x1, x2, y1, y2 based on centerpoint and width
             int half_w = blob.orange_w/2;
             int x1, x2, y1, y2;
-            x1 = blob.orange_cen_x-half_w*MAGIC;
-            x2 = blob.orange_cen_x+half_w*MAGIC;
+            x1 = blob.orange_cen_x-half_w;
+            x2 = blob.orange_cen_x+half_w;
             y1 = blob.orange_cen_y-half_w;
             y2 = blob.orange_cen_y+half_w;
             
             temp_holder_back.o_ball[count].orange_cen_x = blob.orange_cen_x;
             temp_holder_back.o_ball[count].orange_cen_y = blob.orange_cen_y;
-            temp_holder_back.o_ball[count].orange_w = blob.orange_w*MAGIC;
+            temp_holder_back.o_ball[count].orange_w = blob.orange_w;
             temp_holder_back.o_ball[count].orange_h = blob.orange_w;
             temp_holder_back.o_ball[count].orange_x1 = x1;
             temp_holder_back.o_ball[count].orange_x2 = x2;
@@ -150,14 +150,14 @@ void ImagePostProcessor::processOrangeBlobsFront(){
             //Calculate the x1, x2, y1, y2 based on centerpoint and width
             int half_w = blob.orange_w/2;
             int x1, x2, y1, y2;
-            x1 = blob.orange_cen_x-half_w*MAGIC;
-            x2 = blob.orange_cen_x+half_w*MAGIC;
+            x1 = blob.orange_cen_x-half_w;
+            x2 = blob.orange_cen_x+half_w;
             y1 = blob.orange_cen_y-half_w;
             y2 = blob.orange_cen_y+half_w;
             
             temp_holder_front.o_ball[count].orange_cen_x = blob.orange_cen_x;
             temp_holder_front.o_ball[count].orange_cen_y = blob.orange_cen_y;
-            temp_holder_front.o_ball[count].orange_w = blob.orange_w*MAGIC;
+            temp_holder_front.o_ball[count].orange_w = blob.orange_w;
             temp_holder_front.o_ball[count].orange_h = blob.orange_w;
             temp_holder_front.o_ball[count].orange_x1 = x1;
             temp_holder_front.o_ball[count].orange_x2 = x2;
@@ -210,7 +210,7 @@ void ImagePostProcessor::processBlueBlobsFront() {
     int x1, x2, y1, y2;
     
     //Calculate the x1, x2, y1, y2 based on centerpoint and width
-       x1 = init.blue_x1;
+    x1 = init.blue_x1;
     x2 = init.blue_x2;
     y1 = init.blue_y1;
     y2 = init.blue_y2;
@@ -572,16 +572,29 @@ blue_gate ImagePostProcessor::expandBlueGate(blue_gate gate, blue_blob expander)
 	} else if(gate.blue_x1 > expander.blue_cen_x){
 		gate.blue_x1 = expander.blue_cen_x;
 	}
+        if(gate.blue_y2 < expander.blue_y2 && expander.blue_y2 < CAM_H/2){
+            gate.blue_y2 = expander.blue_y2;
+        }
+        if(gate.blue_y1 > expander.blue_y1){
+            gate.blue_y1 = expander.blue_y1;
+        }
 	return gate;
 }
 
 yellow_gate ImagePostProcessor::expandYellowGate(yellow_gate gate, yellow_blob expander){
 	if(gate.yellow_x2 < expander.yellow_cen_x){
-			gate.yellow_x2 = expander.yellow_cen_x;
-		} else if(gate.yellow_x1 > expander.yellow_cen_x){
-			gate.yellow_x1 = expander.yellow_cen_x;
-		}
-		return gate;
+            gate.yellow_x2 = expander.yellow_cen_x;
+        } else if(gate.yellow_x1 > expander.yellow_cen_x){
+            gate.yellow_x1 = expander.yellow_cen_x;
+	}
+        if(gate.yellow_y2 < expander.yellow_y2 && expander.yellow_y2 < CAM_H/2){
+            gate.yellow_y2 = expander.yellow_y2;
+        }
+        if(gate.yellow_y1 > expander.yellow_y1){
+            gate.yellow_y1 = expander.yellow_y1;
+        }
+        
+	return gate;
 
 }
 
@@ -614,8 +627,8 @@ int ImagePostProcessor::getBackGates(){
 	else return 0;
 }
 
-void ImagePostProcessor::eliminateFalseGates(int front, int back){
-	if(front==3){
+void ImagePostProcessor::eliminateFalseGates(int front, int back)
+{	if(front==3){
 		int gates = 2;
 		yellow_gate f_y_g = blob_structure_front.y_gate.at(0);
 		blue_gate f_b_g = blob_structure_front.b_gate.at(0);
@@ -623,20 +636,24 @@ void ImagePostProcessor::eliminateFalseGates(int front, int back){
 			gates--;
 			f_y_g = {};
 			blob_structure_front.yellows_postprocessed = 0;
+                        blob_structure_front.y_gate.at(0) = f_y_g;
 		}
 		if(f_b_g.blue_h * f_b_g.blue_w < MIN_GATE_SIZE){
 			gates--;
 			blob_structure_front.blues_postprocessed = 0;
 			f_b_g = {};
+                        blob_structure_front.b_gate.at(0) = f_b_g;
 		}
 		//Eliminate the smaller gate.
 		if(gates==2){
 			if(f_b_g.blue_h * f_b_g.blue_w > f_y_g.yellow_h * f_y_g.yellow_w){
-				blob_structure_front.yellows_postprocessed = 0;
+				blob_structure_front.blues_postprocessed = 0;
 				f_b_g = {};
+                                blob_structure_front.b_gate.at(0) = f_b_g;
 			} else {
 				blob_structure_front.yellows_postprocessed = 0;
 				f_y_g = {};
+                                blob_structure_front.y_gate.at(0) = f_y_g;
 			}
 		}
 	}
@@ -649,20 +666,24 @@ void ImagePostProcessor::eliminateFalseGates(int front, int back){
 			gates--;
 			b_y_g = {};
 			blob_structure_back.yellows_postprocessed = 0;
+                        blob_structure_back.y_gate.at(0) = b_y_g;
 		}
 		if(b_b_g.blue_h * b_b_g.blue_w < MIN_GATE_SIZE){
 			gates--;
-			blob_structure_back.blues_postprocessed = 0;
 			b_b_g = {};
+                        blob_structure_back.blues_postprocessed = 0;
+			blob_structure_back.b_gate.at(0) = b_b_g;
 		}
 		//Eliminate the smaller gate.
 		if(gates==2){
 			if(b_b_g.blue_h * b_b_g.blue_w > b_y_g.yellow_h * b_y_g.yellow_w){
 				blob_structure_back.yellows_postprocessed = 0;
-				b_b_g = {};
-			} else {
-				blob_structure_back.yellows_postprocessed = 0;
 				b_y_g = {};
+                                blob_structure_back.y_gate.at(0) = b_y_g;
+			} else {
+				blob_structure_back.blues_postprocessed = 0;
+				b_b_g = {};
+                                blob_structure_back.b_gate.at(0) = b_b_g;
 			}
 		}
 	}

@@ -53,10 +53,10 @@ public:
      * @param angle Moving angle
      * @param rotSpd Rotation speed
      */
-    void stallStep();
 
+    bool isStalled();
     void detectSerial(bool serial);   
-    void pingCoil();    
+    void pingCoil();
     void chargeCoil();    
     void dischargeCoil();    
     void runDribbler();    
@@ -71,6 +71,9 @@ public:
     
     
 private:
+    int stallCounters[4] = {0,0,0,0};
+    
+    void stallStep();
     std::vector<StallComparator> stallings;
     unsigned long timeSinceLastSerial = 0;
     void driveThree(float spd, float angle, float rotSpd);

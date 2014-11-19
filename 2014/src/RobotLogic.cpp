@@ -122,7 +122,11 @@ void RobotLogic::runAttack() {
             notGreen(blobsFront, blobsBack);
             break;
     }
-    rController->getAllMotorSpeeds();
+    //Handle odometry, localization.
+    vector<float> speeds = rController->getAllMotorSpeeds();
+    Odometer::Movement movement = odometer->calculateMovement(speeds.at(0), speeds.at(3), speeds.at(1), speeds.at(2));
+    std::cout << " Rotated : " << movement.omega << " and moved : DirX :" << movement.velocityX << " DirY:" << movement.velocityY << std::endl;
+    
 }
 
 void RobotLogic::runDefend() {

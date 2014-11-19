@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <boost/algorithm/string.hpp>
 #include "RobotConstants.h"
+#include "Maths.h"
 #include <cstdlib>
 #include <sys/time.h>
 
@@ -179,13 +180,9 @@ vector<float> SerialConnection::getAllMotorSpeed(){
     motorSpeeds.clear();
     for(int i = 0; i < NR_OF_WHEELS; i++){
         char resp[1300] = {0};
-        sendCommand(serialDevice[i], "s\n", (unsigned char *)resp);
-        //std::cout << resp << " is the speed we got." << std::endl;
-        //cout << "speed char: "<< string(resp) << endl;
+        sendCommand(serialDevice[i+1], "s\n", (unsigned char *)resp);
         int spd = atoi(&resp[3]);
-        //cout << "speed int: " << spd << endl;
-        float spd2 = spd * 0.052;
-        //cout << "speed float: " << spd2 << endl;
+        float spd2 = spd * 0.052083333f * Math::TWO_PI;
         motorSpeeds.push_back(spd2);
     }
     struct timeval tv;

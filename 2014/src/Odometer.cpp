@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include <iostream>
 
 Odometer::Odometer(float angle1, float angle2, float angle3, float angle4, float wheelOffset, float wheelRadius) : wheelOffset(wheelOffset), wheelRadius(wheelRadius) {
     wheelAngles[0] = Math::degToRad(angle1);
@@ -10,6 +11,8 @@ Odometer::Odometer(float angle1, float angle2, float angle3, float angle4, float
     wheelAngles[2] = Math::degToRad(angle3);
     wheelAngles[3] = Math::degToRad(angle4);
 
+    std::cout << wheelAngles[0] << " for angle1 " << wheelAngles[1] << " for angle2 " << wheelAngles[2] << " for angle3 " << wheelAngles[3] << " for angle4" << std::endl;
+    
     wheelRadiusInv = 1.0f / wheelRadius;
 
     omegaMatrix = Math::Matrix4x3(
@@ -60,7 +63,7 @@ Odometer::WheelSpeeds Odometer::calculateWheelSpeeds(float targetDirX, float tar
 }
 
 Odometer::Movement Odometer::calculateMovement(float omegaFL, float omegaFR, float omegaRL, float omegaRR) {
-	Math::Matrix3x1 wheelMatrixA = Math::Matrix3x1(
+    Math::Matrix3x1 wheelMatrixA = Math::Matrix3x1(
         omegaRL,
         omegaFL,
         omegaFR
@@ -85,7 +88,8 @@ Odometer::Movement Odometer::calculateMovement(float omegaFL, float omegaFR, flo
     Math::Matrix3x1 movementB = omegaMatrixInvB.getMultiplied(wheelMatrixB).getMultiplied(wheelRadius);
     Math::Matrix3x1 movementC = omegaMatrixInvC.getMultiplied(wheelMatrixC).getMultiplied(wheelRadius);
     Math::Matrix3x1 movementD = omegaMatrixInvD.getMultiplied(wheelMatrixD).getMultiplied(wheelRadius);
-
+    
+    
     float avgVelocityX = -(movementA.a11 + movementB.a11 + movementC.a11 + movementD.a11) / 4.0f;
     float avgVelocityY = -(movementA.a21 + movementB.a21 + movementC.a21 + movementD.a21) / 4.0f;
     float avgOmega = -(movementA.a31 + movementB.a31 + movementC.a31 + movementD.a31) / 4.0f;

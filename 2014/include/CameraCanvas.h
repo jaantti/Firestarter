@@ -61,6 +61,8 @@ private:
     
     void overlayObjects();
     
+    void overlayText();
+    
 };
 
 #endif	/* CAMERACANVAS_H */

@@ -8,6 +8,7 @@
 #include "Ball.h"
 
 Ball::Ball() {
+    
 }
 
 Ball::Ball(float distance, float angle, int cen_x, int cen_y) {
@@ -42,4 +43,25 @@ Ball::~Ball() {
     delete cen_x;
     delete cen_y;
 }
+
+bool Ball::comapare(Ball & b1, Ball & b2) {
+    return b1.getDistance() < b2.getDistance();
+}
+
+int* Ball::getCen_y() {
+    return cen_y;
+}
+
+int* Ball::getCen_x() {
+    return cen_x;
+}
+
+float* Ball::getDistance() {
+    return distance;
+}
+
+float* Ball::getAngle() {
+    return angle;
+}
+
 

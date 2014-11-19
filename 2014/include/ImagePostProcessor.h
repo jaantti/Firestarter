@@ -10,13 +10,15 @@
 
 #include "RobotConstants.h"
 #include "ImageProcessor.h"
+#include "BlobDistanceCalculator.h"
 #include <boost/thread.hpp>
 #include <sys/time.h>
 #include <stdio.h>
 #include <unistd.h>
-
+class BlobDistanceCalculator;
 class ImagePostProcessor {
 public:
+    
     
     ImagePostProcessor(ImageProcessor*  imageProcessor);
     ImagePostProcessor(const ImagePostProcessor &iProc);
@@ -33,6 +35,8 @@ public:
 
 
 private:
+    BlobDistanceCalculator* calculator;
+    
     void loadBlobVectors();
     void processBlobVectors();
     

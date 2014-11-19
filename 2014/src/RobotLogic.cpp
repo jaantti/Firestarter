@@ -125,7 +125,7 @@ void RobotLogic::runAttack() {
     //Handle odometry, localization.
     vector<float> speeds = rController->getAllMotorSpeeds();
     Odometer::Movement movement = odometer->calculateMovement(speeds.at(0), speeds.at(3), speeds.at(1), speeds.at(2));
-    std::cout << " Rotated : " << movement.omega << " and moved : DirX :" << movement.velocityX << " DirY:" << movement.velocityY << std::endl;
+    //std::cout << " Rotated : " << movement.omega << " and moved : DirX :" << movement.velocityX << " DirY:" << movement.velocityY << std::endl;
     
 }
 
@@ -150,14 +150,13 @@ bool RobotLogic::isGreen(blobs_processed blobsFront, blobs_processed blobsBack) 
 }
 
 void RobotLogic::idle() {
-	struct timeval tv, tv2;
-	gettimeofday(&tv, NULL);
-	unsigned long int tim1 = 1000000 * tv.tv_sec + tv.tv_usec;
-	rController->initSerialTime(tim1);
+    struct timeval tv, tv2;
+    gettimeofday(&tv, NULL);
+    unsigned long int tim1 = 1000000 * tv.tv_sec + tv.tv_usec;
+    rController->initSerialTime(tim1);
 
     rController->stopDribbler();
     rController->driveRobot(0,0,0);
-    rController->dischargeCoil();
     setGoal();
     //cout << " GetStart status : " << rController->getStart() << " . " << std::endl;
     if (rController->getStart()) {
@@ -166,6 +165,7 @@ void RobotLogic::idle() {
         usleep(250000);
         return;
     }
+    rController->dischargeCoil();
     usleep(500000);
 }
 
@@ -211,7 +211,7 @@ void RobotLogic::findBall(blobs_processed blobsFront, blobs_processed blobsBack)
         int turnSpd = getAngle(x)*0.8;
         int moveDir = getAngle(x)/180*PI*0.8;
         int moveSpd = 15 + 1600/oBall.orange_w;
-        
+        std::cout << "Orange w:" << oBall.orange_w << " orange height: " << oBall.orange_h << std::endl;
         /*
         if (oBall.orange_w > 5) {
             if (x < CAM_W / 2 - 10) {

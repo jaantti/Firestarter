@@ -55,5 +55,5 @@ private:
 
 };
 
-#endif	/* SERIALCONNECTION_H */
+#endif	/* SERIALCONNETION_H */
 

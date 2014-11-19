@@ -14,6 +14,9 @@
 using namespace std;
 
 RobotController::RobotController() {
+    for(int i=0; i<4; i++){
+        stallings.push_back(StallComparator());
+    }
 }
 
 RobotController::~RobotController() {
@@ -135,9 +138,11 @@ void RobotController::detectSerial(bool serial){
 
 vector<float> RobotController::getAllMotorSpeeds(){
     vector<float> speeds = connection.getAllMotorSpeed();
+    std::cout << "Speeds vector size :" << speeds.size() << " stallVector size:" << stallings.size() << std::endl;
     for (int i=0; i<speeds.size(); i++){
 	StallComparator comp = stallings.at(i);
 	comp.realSpeed = speeds.at(i);
+        std::cout << "Target speed : " << comp.wantedSpeed << " . Real Speed:" << comp.realSpeed << std::endl;
     }
     stallStep();
     return speeds;

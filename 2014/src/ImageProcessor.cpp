@@ -209,7 +209,7 @@ void ImageProcessor::processOrange(bool front) {
             tempRegion = segm2.colors[SEG_ORANGE].list;
         }
         
-        int len_check = tempRegion->y2 - tempRegion->y1;
+        int len_check = tempRegion->x2 - tempRegion->x1;
         if(len_check < MIN_BLOB_WID && tempRegion->area < MIN_BLOB_SIZE){
             return;
         }
@@ -217,7 +217,7 @@ void ImageProcessor::processOrange(bool front) {
         if(front){
             iProcFrontLock.lock();
             blob_data_front.o_blob.push_back(orange_blob());
-            int len = tempRegion->y2 - tempRegion->y1;
+            int len = tempRegion->x2 - tempRegion->x1;
             blob_data_front.o_blob[orangeCounter].orange_w = len;
             blob_data_front.o_blob[orangeCounter].orange_area = tempRegion->area;
             blob_data_front.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;
@@ -227,7 +227,7 @@ void ImageProcessor::processOrange(bool front) {
         } else {
             iProcBackLock.lock();
             blob_data_back.o_blob.push_back(orange_blob());
-            int len = tempRegion->y2 - tempRegion->y1;
+            int len = tempRegion->x2 - tempRegion->x1;
             blob_data_back.o_blob[orangeCounter].orange_w = len;
             blob_data_back.o_blob[orangeCounter].orange_area = tempRegion->area;
             blob_data_back.o_blob[orangeCounter].orange_cen_x = tempRegion->cen_x;

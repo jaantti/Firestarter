@@ -15,41 +15,40 @@ public:
     Ball(const Ball &other);
     virtual ~Ball();
         
-    float* getDistance();
-    float* getAngle();
+    float getDistance();
+    float getAngle();
     
     bool comapare(Ball & b1, Ball & b2);
-    int* getCen_y();
-    int* getCen_x();
+    int getCen_y();
+    int getCen_x();
     
+    bool operator>(const Ball& other) const
+    {
+        return (distance < other.distance);
+    }
+
+    bool operator<(const Ball& other) const
+    {
+        return (distance > other.distance);
+    }
+
+    bool operator<=(const Ball& other) const
+    {
+        return !(distance < other.distance);
+    }
+
+    bool operator>=(const Ball& other) const
+    {
+        return !(distance < other.distance);
+    }
 
 private:
     
-    float *distance;
-    float *angle;
-    int *cen_x;
-    int *cen_y;
- };   
-//inline bool operator>(const Ball& other)
-//{
-//    return this->distance < other.distance;
-//}
-//
-//inline bool operator<(const Ball& other)
-//{
-//    return this->distance > other.distance;
-//}
-//
-//inline bool operator<=(const Ball& other)
-//{
-//    return !(this->distance < other.distance);
-//}
-//
-//inline bool operator>=(const Ball& other)
-//{
-//    return !(this->distance < other.distance);
-//}
-//};    
+    float distance;
+    float angle;
+    int cen_x;
+    int cen_y;
+ }; 
 
 #endif	/* BALLOBJECT_H */
 

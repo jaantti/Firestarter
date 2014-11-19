@@ -106,7 +106,7 @@ int main (int argc, char *argv[])
 
     memset( path, '\0', 100 );
     strcat( path, robot_dir );
-    strcat( path, "conf1" );
+    strcat( path, "conf2" );
 
     in = fopen( path, "r" );
 
@@ -633,7 +633,7 @@ void end()
         fclose( out );
     }
 
-	system("copyConf.sh");
+	system("./copyConf.sh");
 
     gtk_main_quit();
     video_cleanup( video, thresholds );

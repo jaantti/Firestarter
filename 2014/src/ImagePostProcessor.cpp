@@ -7,9 +7,12 @@
 
 #include "ImagePostProcessor.h"
 
-ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor) {
+ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor):calculator(NULL)
+{
+    calculator = new BlobDistanceCalculator(this);
     std::cout << " I AM THE CONSTRUCTOR " << std::endl;
     iProc = imageProcessor;
+    
     backLock.lock();
     blob_structure_back = {};
     backLock.unlock();
@@ -21,6 +24,7 @@ ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor) {
 
 
 ImagePostProcessor::~ImagePostProcessor() {
+    delete this->calculator;
 }
 
 
@@ -29,6 +33,7 @@ void ImagePostProcessor::run(){
     while(!codeEnd){
         loadBlobVectors();
         processBlobVectors();
+        calculator->run();
         
         usleep(15000);
         
@@ -485,7 +490,6 @@ bool ImagePostProcessor::orangeFitsInFrontList(int x, int y, int w) {
         return false;
     }    
 
-    int j = 0;
     for(int i=0; i<size; i++){
         orange_ball ball = ball_vector.at(i);
         bool check1 = x>=ball.orange_x1 && x<=ball.orange_x2;
@@ -493,7 +497,6 @@ bool ImagePostProcessor::orangeFitsInFrontList(int x, int y, int w) {
         if(check1 && check2){
             return true;
         }
-        j=i;
     }
     
     return false;

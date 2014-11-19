@@ -14,16 +14,18 @@
 #include <vector>
 
 using namespace std;
+class ImagePostProcessor;
 
 class BlobDistanceCalculator {
     
 public:
+    
     BlobDistanceCalculator(ImagePostProcessor* pProc);
     virtual ~BlobDistanceCalculator();
     void run();
     
     vector <Ball> getFrontBalls();
-    vector <Ball> getBackBalls();
+    vector <Ball> getBackBalls();   
     
 private:
     ImagePostProcessor *pProcessor;

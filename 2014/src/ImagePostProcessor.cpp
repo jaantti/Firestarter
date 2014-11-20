@@ -7,9 +7,9 @@
 
 #include "ImagePostProcessor.h"
 
-ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor):calculator(NULL)
+ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor)
 {
-    calculator = new BlobDistanceCalculator(this);
+    //calculator = new BlobDistanceCalculator(this);
     std::cout << " I AM THE CONSTRUCTOR " << std::endl;
     iProc = imageProcessor;
     
@@ -24,7 +24,7 @@ ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor):calculato
 
 
 ImagePostProcessor::~ImagePostProcessor() {
-    delete this->calculator;
+    //delete this->calculator;
 }
 
 
@@ -33,7 +33,7 @@ void ImagePostProcessor::run(){
     while(!codeEnd){
         loadBlobVectors();
         processBlobVectors();
-        calculator->run();
+        //calculator->run();
         
         usleep(15000);
         

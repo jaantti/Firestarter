@@ -14,6 +14,7 @@
 Starter::Starter() :pProcessor(&iProcessor), canvas1(RobotConstants::frontCamImgWinName, &iProcessor),
     canvas2(RobotConstants::backCamImgWinName, &iProcessor), odometer(NULL),  localizer(NULL), odometryLocalizer(NULL)
 {
+    
     rLogic = RobotLogic();
 }
 
@@ -42,6 +43,7 @@ bool Starter::init() {
     
     
     rController.init();
+    
     iProcessor.init();
     rLogic.init(&rController, &pProcessor);
     rLogic.setGoal();

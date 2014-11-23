@@ -77,7 +77,8 @@ private:
     void findGate(blobs_processed blobsFront, blobs_processed blobsBack);
     void gateTimeout(blobs_processed blobsFront, blobs_processed blobsBack);
     void kickBall(blobs_processed blobsFront, blobs_processed blobsBack);
-    void notGreen(blobs_processed blobsFront, blobs_processed blobsBack);    
+    void notGreen(blobs_processed blobsFront, blobs_processed blobsBack);
+    void stalled(blobs_processed blobsFront, blobs_processed blobsBack);
         
 };
 

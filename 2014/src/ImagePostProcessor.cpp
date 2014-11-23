@@ -1,4 +1,4 @@
-/* 
+ /* 
  * File:   ImagePostProcessor.cpp
  * Author: antti
  * 
@@ -7,9 +7,9 @@
 
 #include "ImagePostProcessor.h"
 
-ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor)
+ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor): calculator(NULL)
 {
-    //calculator = new BlobDistanceCalculator(this);
+    calculator = new BlobDistanceCalculator(this);
     std::cout << " I AM THE CONSTRUCTOR " << std::endl;
     iProc = imageProcessor;
     
@@ -24,7 +24,7 @@ ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor)
 
 
 ImagePostProcessor::~ImagePostProcessor() {
-    //delete this->calculator;
+    delete this->calculator;
 }
 
 
@@ -33,9 +33,15 @@ void ImagePostProcessor::run(){
     while(!codeEnd){
         loadBlobVectors();
         processBlobVectors();
-        //calculator->run();
         
-        usleep(15000);
+        frontLock.lock();
+        backLock.lock();
+        calculator->run();
+        frontLock.unlock();
+        backLock.unlock();
+        
+        
+        usleep(14000);
         
     }
 }
@@ -766,3 +772,34 @@ big_yellow_gate ImagePostProcessor::getBiggestYellow(){
 	return gate;
 }
 
+blobs_processed ImagePostProcessor::getUnlockedFront() {
+    blobs_processed front = blob_structure_front;
+    return front;
+}
+
+blobs_processed ImagePostProcessor::getUnlockedBack() {
+    blobs_processed back = blob_structure_back;
+    return back;
+}
+
+big_blue_gate ImagePostProcessor::getUnlockedBlue() {
+    return biggestBlueGate;
+}
+
+big_yellow_gate ImagePostProcessor::getUnlockedYellow() {
+    return biggestYellowGate;
+}
+
+std::vector<Ball> ImagePostProcessor::getFrontBalls() {
+    frontLock.lock();
+    std::vector<Ball> balls = calculator->getFrontBalls();
+    frontLock.unlock();
+    return balls;
+}
+
+std::vector<Ball> ImagePostProcessor::getBackBalls() {
+    backLock.lock();
+    std::vector<Ball> balls = calculator->getBackBalls();
+    backLock.unlock();
+    return balls;
+}

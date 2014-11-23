@@ -52,6 +52,7 @@ private:
     bool detectSerial = true;
     void sendCommand(int comport, const char* command, unsigned char* answer);
     void sendCommand(int comport, const char* command);
+    void readAnswer(int comport, unsigned char* answer);
 
 };
 

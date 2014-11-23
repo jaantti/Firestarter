@@ -11,6 +11,7 @@
 #include "RobotConstants.h"
 #include "ImagePostProcessor.h"
 #include "Ball.h"
+#include "Maths.h"
 #include <vector>
 
 using namespace std;
@@ -24,8 +25,8 @@ public:
     virtual ~BlobDistanceCalculator();
     void run();
     
-    vector <Ball> getFrontBalls();
-    vector <Ball> getBackBalls();   
+    vector<Ball> getFrontBalls();
+    vector<Ball> getBackBalls();   
     
 private:
     ImagePostProcessor *pProcessor;
@@ -36,8 +37,8 @@ private:
     vector<Ball> ballsFront;
     vector<Ball> ballsBack; 
     
-    float getFrontDistance(int y);
-    float getBackDistance(int y);
+    float getFrontDistance(int y, int x);
+    float getBackDistance(int y, int x);
     
     float getFrontAngle(int x);
     float getBackAngle(int x);

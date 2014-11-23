@@ -19,19 +19,17 @@ BlobDistanceCalculator::~BlobDistanceCalculator() {
 
 
 void BlobDistanceCalculator::run() {
-    blobs_processed blobsFront = pProcessor->getFrontSystem();
-    blobs_processed blobsBack = pProcessor->getBackSystem();
+    blobs_processed blobsFront = pProcessor->getUnlockedFront();
+    blobs_processed blobsBack = pProcessor->getUnlockedBack();
     calcFrontBallDist(blobsFront);
     calcBackBallDist(blobsBack);
     sortBalls(true);
     sortBalls(false);
-
 }
 
 void BlobDistanceCalculator::calcFrontBallDist(blobs_processed blobsFront) {
     
     ballsFront = {};
-        
     vector<orange_ball> balls = blobsFront.o_ball;
     int size = balls.size();
     float tempDist = 0;
@@ -39,10 +37,10 @@ void BlobDistanceCalculator::calcFrontBallDist(blobs_processed blobsFront) {
     
     for (int i = 0; i<size; i++) {
         orange_ball oBall = balls.at(i);
-        tempDist = getFrontDistance(oBall.orange_cen_y);
+        tempDist = getFrontDistance(oBall.orange_cen_y, oBall.orange_cen_x);
         tempAngle = getFrontAngle(oBall.orange_cen_x);
         
-        Ball tempBall(tempDist, tempAngle, oBall.orange_cen_x, oBall.orange_cen_y);
+        Ball tempBall(tempDist, tempAngle, oBall.orange_cen_x, oBall.orange_cen_y, (oBall.orange_x2-oBall.orange_x1) );
         
         ballsFront.push_back(tempBall);
         
@@ -60,24 +58,25 @@ void BlobDistanceCalculator::calcBackBallDist(blobs_processed blobsBack) {
     
     for (int i = 0; i<size; i++) {
         orange_ball oBall = balls.at(i);
-        tempDist = getBackDistance(oBall.orange_cen_y);
+        tempDist = getBackDistance(oBall.orange_cen_y, oBall.orange_cen_x);
         tempAngle = getBackAngle(oBall.orange_cen_x);
         
-        Ball tempBall(tempDist, tempAngle, oBall.orange_cen_x, oBall.orange_cen_y);
+        Ball tempBall(tempDist, tempAngle, oBall.orange_cen_x, oBall.orange_cen_y, (oBall.orange_x2-oBall.orange_x1) );
         
         ballsBack.push_back(tempBall);
         
     }
 }
 
-float BlobDistanceCalculator::getFrontDistance(int y) {
+float BlobDistanceCalculator::getFrontDistance(int y, int x) {
     //y=a*x^b
-    return F_CURVE_FIT_A * pow(y, F_CURVE_FIT_B);
+    return ( F_CURVE_FIT_A * pow(y, F_CURVE_FIT_B) / cos(getFrontAngle(x) * PI / 180) ) -7.0f;
 }
 
-float BlobDistanceCalculator::getBackDistance(int y) {
+float BlobDistanceCalculator::getBackDistance(int y, int x) {
     //y=a*x^b
-    return B_CURVE_FIT_A * pow(y, B_CURVE_FIT_B);
+    
+    return B_CURVE_FIT_A * pow(y, B_CURVE_FIT_B) / cos(getBackAngle(x)* PI / 180);
 }
 
 float BlobDistanceCalculator::getFrontAngle(int x) {
@@ -99,22 +98,12 @@ void BlobDistanceCalculator::sortBalls(bool side) {
 
 
 vector <Ball> BlobDistanceCalculator::getFrontBalls() {
-    frontLock.lock();
     vector<Ball> temp = ballsFront;
-    for(int i = 0; i<temp.size(); i++){
-        Ball ball = temp.at(i);
-        cout << "Ball distance : " << ball.getDistance() << " ball angle : " << ball.getAngle() << " BallX:" << ball.getCen_x() << " BallY:" << ball.getCen_y() << endl;
-    }
-    frontLock.unlock();
-    
     return temp;
 }
 
 vector <Ball> BlobDistanceCalculator::getBackBalls() {
-    backLock.lock();
-    vector<Ball> temp = ballsBack;
-    backLock.unlock();
-    
+    vector<Ball> temp = ballsBack;    
     return temp;
 }
 

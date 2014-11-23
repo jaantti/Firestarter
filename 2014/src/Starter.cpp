@@ -87,7 +87,6 @@ bool Starter::start() {
         gettimeofday(&tv2, NULL);
         tim2 = 1000000 * tv2.tv_sec + tv2.tv_usec;
         unsigned long int timeDif = tim2-tim1;
-        
         sleepForDifference(translateMicrosToSec(timeDif));
     }
     
@@ -152,7 +151,6 @@ float Starter::translateMicrosToSec(unsigned long timeDiffMicros) {
 void Starter::sleepForDifference(float f){
     if(f>RobotConstants::minimumDeltaT) return;
     int dif = ( (int) 1000000 * RobotConstants::minimumDeltaT) - ( (int) 1000000*f);
-    std::cout << " Sleeping for " << dif << " microseconds." << std::endl;
     usleep(dif);
     
     

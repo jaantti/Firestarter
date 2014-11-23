@@ -31,12 +31,26 @@ void RobotController::init() {
 
 void RobotController::driveRobot(float spd, float angle, float rotSpd) {
     pingCoil();
+    lastSpeed = spd;
+    lastAngle = angle;
+    lastRotationSpeed = rotSpd;
     if (NR_OF_WHEELS == 3) {
         driveThree(spd, angle, rotSpd);
     }
     
     if (NR_OF_WHEELS == 4) {
         driveFour(spd, angle, rotSpd);
+    }
+}
+
+void RobotController::driveReverse(){
+    pingCoil();
+    if (NR_OF_WHEELS == 3) {
+        driveThree( (lastSpeed*-1.0f), (lastAngle*-1.0f) , (lastRotationSpeed*-1.0f) );
+    }
+    
+    if (NR_OF_WHEELS == 4) {
+        driveFour( (lastSpeed*-1.0f), (lastAngle*-1.0f) , (lastRotationSpeed*-1.0f) );
     }
 }
 
@@ -138,11 +152,8 @@ void RobotController::detectSerial(bool serial){
 
 vector<float> RobotController::getAllMotorSpeeds(){
     vector<float> speeds = connection.getAllMotorSpeed();
-    std::cout << "Speeds vector size :" << speeds.size() << " stallVector size:" << stallings.size() << std::endl;
     for (int i=0; i<speeds.size(); i++){
-	StallComparator comp = stallings.at(i);
-	comp.realSpeed = speeds.at(i);
-        std::cout << "Target speed : " << comp.wantedSpeed << " . Real Speed:" << comp.realSpeed << std::endl;
+        stallings.at(i).realSpeed = speeds.at(i);
     }
     stallStep();
     return speeds;
@@ -151,7 +162,7 @@ vector<float> RobotController::getAllMotorSpeeds(){
 void RobotController::stallStep() {
     for(int i=0; i<4; i++){
         StallComparator comp = stallings.at(i);
-        if(Math::abs(comp.wantedSpeed)/Math::abs(comp.realSpeed) > 2.0f && Math::abs(comp.wantedSpeed) > Math::MATHPI){
+        if(Math::abs(comp.wantedSpeed)/Math::abs(comp.realSpeed) > 1.7f && Math::abs(comp.wantedSpeed) > Math::MATHPI){
             stallCounters[i]++;
         } else {
             stallCounters[i] = 0;

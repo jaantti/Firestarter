@@ -79,8 +79,8 @@ void CameraCanvas::refreshFrame(){
     if(!isSwitchedOn) return;
     if(!hasStreamInput) waitForRealInput();
     loadNewFrame();
-    processNewData();
-        
+    processNewData();   
+    
     cv::imshow(this->canvasName, working_matrix);
     cv::imshow(t_str, working_threshold);
     cv::waitKey(1);
@@ -92,7 +92,7 @@ void CameraCanvas::processNewData() {
     
     working_matrix = convertToCvMatrix();
     overlayObjects();
-    
+    overlayText();
     convert_thresh_displayable();
     
     working_threshold = convertThresholdMatrix();    
@@ -177,7 +177,7 @@ void CameraCanvas::convert_to_rgb() {
 }
 
 void CameraCanvas::pixel_conversion(uchar y, uchar u, uchar v, uchar* r, uchar* g, uchar* b) {
-        int amp = 255;
+    int amp = 255;
 	double R, G, B;
 
 	//conversion equations
@@ -198,7 +198,6 @@ void CameraCanvas::pixel_conversion(uchar y, uchar u, uchar v, uchar* r, uchar* 
 	*g = (uchar) G;
 	*b = (uchar) B;
 }
-
 
 cv::Mat CameraCanvas::convertToCvMatrix() {
     
@@ -237,16 +236,56 @@ void CameraCanvas::overlayObjects() {
     if(blobs.yellows_postprocessed>0){
        yellow_gate gate = blobs.y_gate.at(0);
        cv::rectangle(working_matrix, cv::Point(gate.yellow_x1, gate.yellow_y1), cv::Point(gate.yellow_x2, gate.yellow_y2), cv::Scalar(0,255,255), 3, 8);
-     
     }
 }
 
 void CameraCanvas::overlayText() {
-    blobs_processed blobs;
+    std::vector<Ball> balls;
     if(frontCamera){
-        blobs = pProcessor->getFrontSystem();
+        balls = pProcessor->getFrontBalls();
     } else {
-        blobs = pProcessor->getBackSystem();
+        balls = pProcessor->getBackBalls();
+    }
+    for (Ball ball : balls){
+        putText(ball);
     }
 }
 
+void CameraCanvas::putText(Ball ball){    
+    int halflen = ball.getLen()/2;
+    int xCoord = 0, yCoord = 0;
+    if(ball.getCen_x()>600){
+        xCoord = ball.getCen_x()-halflen;
+    } else {
+        xCoord = ball.getCen_x()+halflen;
+    }
+    yCoord = ball.getCen_y()-halflen;
+    compileObjectString(ball.getDistance(), ball.getAngle(), 0, xCoord, yCoord);
+    
+    }
+
+void CameraCanvas::putText(YellowGate gate){    
+}
+
+void CameraCanvas::putText(BlueGate gate){
+    
+}
+
+//TODO : Rework it into putText functions.
+void CameraCanvas::compileObjectString(float distance, float angle, int objectType, int xPoint, int yPoint) {
+    std::stringstream distanceStream;
+    std::stringstream angleStream;
+    std::stringstream objectStream;
+    distanceStream << "Distance :" << distance;
+    angleStream << "Angle :" << angle;
+    objectStream << " Object :";
+    if(objectType==0) objectStream << "Ball";
+    else if(objectType==1) objectStream << "YellowGate";
+    else objectStream << "BlueGate";
+    
+    cv::putText(working_matrix, distanceStream.str(), cv::Point(xPoint, yPoint) , cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
+    cv::putText(working_matrix, angleStream.str(), cv::Point(xPoint, yPoint+10) , cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
+    cv::putText(working_matrix, objectStream.str(), cv::Point(xPoint, yPoint+20) , cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
+
+    
+}

@@ -25,8 +25,8 @@
 #define FRONT_CAM_ANGLE 21
 
 #define MAX_MOTOR_SPEED 250
-#define GET_BALL_BOARD_ID 3
-#define GET_SWITCH_BOARD_ID 2
+#define GET_BALL_BOARD_ID 2
+#define GET_SWITCH_BOARD_ID 3
 #define MIN_BLOB_SIZE 10
 #define MIN_GATE_HEIGHT 10
 #define MIN_BLOB_WID 4
@@ -44,6 +44,7 @@
 
 //DO NOT TOUCH. MISSION CRITICAL SYSTEMS
 #define MAGIC 1.15
+#define PI 3.14159265f
 
 //Magic curve fitting constants
 //y=a*x^b
@@ -53,9 +54,6 @@
 
 #define B_CURVE_FIT_A 27140.0f
 #define B_CURVE_FIT_B -1.324f
-
-#define B_CURVE_FIT_A 0 //Need to be filled
-#define B_CURVE_FIT_B 0 //Need to be filled
 
 struct orange_blob{
     int orange_area = 0;
@@ -181,7 +179,9 @@ enum RobotState{
     BALL_TIMEOUT,
     GATE_TIMEOUT,
     NOT_GREEN,
-    KICK_BALL
+    KICK_BALL,
+    STALLING,
+    REAR_BALL_DRIVE
 };
 
 enum class Goal : int{
@@ -194,7 +194,14 @@ enum class Role : int{
     rDEFEND = 2
 };
 
+ 
+
 namespace RobotConstants{
+    
+    enum Direction {
+        FRONT = 201,
+        REAR = 202
+    };
     
 	// particle filter robot localizer parameters
     const int robotLocalizerParticleCount = 1000;
@@ -224,7 +231,7 @@ namespace RobotConstants{
 
     const int frameSize = 640*480*2;
     
-    const int stallThreshold = 20;
+    const int stallThreshold = 10;
     
     //Robot logic cannot run faster than this.
     const float minimumDeltaT = 0.0166666f;

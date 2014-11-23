@@ -8,8 +8,6 @@
 #ifndef ROBOTCONTROLLER_H
 #define	ROBOTCONTROLLER_H
 
-#define PI 3.14159265
-
 #include "RobotConstants.h"
 #include "SerialConnection.h"
 #include <vector>
@@ -68,10 +66,15 @@ public:
     
     void initSerialTime(unsigned long timeInMicros);
     unsigned long timeSinceLastLoop();
+    void driveReverse();
     
     
 private:
     int stallCounters[4] = {0,0,0,0};
+    
+    float lastSpeed = 0.0f;
+    float lastAngle = 0.0f;
+    float lastRotationSpeed = 0.0f;
     
     void stallStep();
     std::vector<StallComparator> stallings;

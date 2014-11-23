@@ -11,6 +11,9 @@
 #include "RobotConstants.h"
 #include "ImageProcessor.h"
 #include "BlobDistanceCalculator.h"
+#include "YellowGate.h"
+#include "BlueGate.h"
+#include "Ball.h"
 #include <boost/thread.hpp>
 #include <sys/time.h>
 #include <stdio.h>
@@ -32,7 +35,18 @@ public:
 
     big_yellow_gate getBiggestYellow();
     big_blue_gate getBiggestBlue();
+    
+    blobs_processed getUnlockedFront();
+    blobs_processed getUnlockedBack();
+    
+    big_yellow_gate getUnlockedYellow();
+    big_blue_gate getUnlockedBlue();
 
+    std::vector<Ball> getFrontBalls();
+    std::vector<Ball> getBackBalls();
+    
+    YellowGate getYellowGate();
+    BlueGate getBlueGate();
 
 private:
     BlobDistanceCalculator* calculator;

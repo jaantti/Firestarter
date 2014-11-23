@@ -10,8 +10,7 @@
 
 class Ball {    
 public:
-    Ball();
-    Ball(float distance, float angle, int cen_x, int cen_y);
+    Ball(float distance, float angle, int cen_x, int cen_y, int len);
     Ball(const Ball &other);
     virtual ~Ball();
         
@@ -21,6 +20,8 @@ public:
     bool comapare(Ball & b1, Ball & b2);
     int getCen_y();
     int getCen_x();
+    
+    int getLen();
     
     bool operator>(const Ball& other) const
     {
@@ -48,6 +49,7 @@ private:
     float angle;
     int cen_x;
     int cen_y;
+    int len;
  }; 
 
 #endif	/* BALLOBJECT_H */

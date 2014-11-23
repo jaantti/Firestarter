@@ -7,25 +7,22 @@
 
 #include "Ball.h"
 
-Ball::Ball() {
-}
 
-Ball::Ball(float distance, float angle, int cen_x, int cen_y) {
+Ball::Ball(float distance, float angle, int cen_x, int cen_y, int len) {
     
     this->distance = distance;
     this->angle = angle;
     this->cen_x = cen_x;
     this->cen_y = cen_y;
-    
+    this->len = len;
 }
 
-Ball::Ball(const Ball &other){
-    
-    
+Ball::Ball(const Ball &other){    
     distance = other.distance;
     angle = other.angle;
     cen_x = other.cen_x;
     cen_y = other.cen_y;
+    len = other.len;
 }
 
 Ball::~Ball() {
@@ -51,4 +48,7 @@ float Ball::getAngle() {
     return angle;
 }
 
+int Ball::getLen() {
+    return len;
+}
 

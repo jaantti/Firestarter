@@ -8,33 +8,52 @@
 #ifndef BLUEGATE_H
 #define	BLUEGATE_H
 
+#include "RobotConstants.h"
+
+
 class BlueGate {
-public:
+public:    
+       
+    BlueGate(RobotConstants::Direction dir);
     
-    enum Direction{
-        FRONT = 201,
-        REAR = 202
-    };
-    
-    BlueGate();
-        
     virtual ~BlueGate();
+    void SetDistance(float distance);
+    float GetDistance() const;
+    void SetAngle(float angle);
+    float GetAngle() const;
+    RobotConstants::Direction GetDir() const;
+    void SetHeight(int height);
+    int GetHeight() const;
+    void SetWidth(int width);
+    int GetWidth() const;
+    void SetCen_y(int cen_y);
+    int GetCen_y() const;
+    void SetCen_x(int cen_x);
+    int GetCen_x() const;
+    void SetY2(int y2);
+    int GetY2() const;
+    void SetY1(int y1);
+    int GetY1() const;
+    void SetX2(int x2);
+    int GetX2() const;
+    void SetX1(int x1);
+    int GetX1() const;
     
-    int *x1;
-    int *x2;
-    int *y1;
-    int *y2;
+    int x1 =-1;
+    int x2 =-1;
+    int y1 =-1;
+    int y2 =-1;
     
-    int *cen_x;
-    int *cen_y;
+    int cen_x =-1;
+    int cen_y =-1;
     
-    int *width;
-    int *height;
+    int width =-1;
+    int height =-1;
     
-    Direction *dir;
+    RobotConstants::Direction dir;
     
-    float *angle;
-    float *distance;
+    float angle = 0.0f;
+    float distance = 0.0f;
     
 private:
     

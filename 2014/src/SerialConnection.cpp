@@ -26,10 +26,8 @@ SerialConnection::~SerialConnection() {
 }
 
 bool SerialConnection::init() {
-    //cout << "init" << endl;
-
     //detectSerial = false;
-    for (int j = 0; j < NR_OF_WHEELS; j++) {
+    for (int j = 0; j < NR_OF_WHEELS+1; j++) {
         for (int i = 5; i < 15; i++) {
             //cout << "for" << endl;
             if (!RS232_OpenComport(i, 19200, "8N1")) {
@@ -41,16 +39,6 @@ bool SerialConnection::init() {
             }
         }
     }
-    /*vector<string> device;
-    FILE *in;
-    char buffer[512];
-    if ((in = popen("ls /dev/ttyACM*", "r"))) {
-        while (fgets(buffer, sizeof (buffer), in)) {
-            string name = (string) buffer;
-            boost::trim(name);
-            device.push_back(name);
-        }
-    }*/
     for(int i=0; i < NR_OF_WHEELS + 1; i++){
         cout << i << ":" << serialDevice[i] << endl;
     }
@@ -66,9 +54,14 @@ void SerialConnection::sendCommand(int comport, const char* command, unsigned ch
 
     if(comport == -1) return;
     RS232_cputs(comport, command);
-    usleep(7000);
+    usleep(8000);
     RS232_PollComport(comport, answer, 100);
 }
+
+void SerialConnection::readAnswer(int comport, unsigned char* answer) {
+    RS232_PollComport(comport, answer, 100);
+}
+
 
 void SerialConnection::sendCommand(int comport, const char* command) {
     if(comport == -1) return;
@@ -178,13 +171,22 @@ void SerialConnection::closeSerial(){
 
 vector<float> SerialConnection::getAllMotorSpeed(){
     motorSpeeds.clear();
+    for(int i = 0; i<NR_OF_WHEELS; i++){
+        
+    }
+    for(int i = 0; i < NR_OF_WHEELS; i++){
+        sendCommand(serialDevice[i+1], "s\n");
+        }
+    
+    usleep(8000);
     for(int i = 0; i < NR_OF_WHEELS; i++){
         char resp[1300] = {0};
-        sendCommand(serialDevice[i+1], "s\n", (unsigned char *)resp);
+        readAnswer(serialDevice[i+1], (unsigned char *) resp);
         int spd = atoi(&resp[3]);
         float spd2 = spd * 0.052083333f * Math::TWO_PI;
         motorSpeeds.push_back(spd2);
     }
+    
     struct timeval tv;
     gettimeofday(&tv, NULL);
     unsigned long int timeMicros = 1000000*tv.tv_sec + tv.tv_usec;

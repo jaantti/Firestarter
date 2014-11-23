@@ -12,6 +12,10 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "ImagePostProcessor.h"
+#include "Ball.h"
+#include "YellowGate.h"
+#include "BlueGate.h"
+#include <sstream>
 #include <string>
 #include <ctime>
 
@@ -50,6 +54,7 @@ private:
     void loadNewFrame();
     void processNewData();
     
+    
     void pixel_conversion(uchar y, uchar u, uchar v, uchar *r, uchar *g, uchar *b);
     void convert_to_rgb();
     void convert_thresh_displayable();
@@ -62,6 +67,16 @@ private:
     void overlayObjects();
     
     void overlayText();
+    
+    void putText(Ball ball);
+    
+    void putText(YellowGate gate);
+    
+    void putText(BlueGate gate);
+    
+    //objectType - 0 : ball, 1:yellow gate, 2:blue gate 
+    // dir : true - front, false : back
+    void compileObjectString(float distance, float angle, int objectType, int xPoint, int yPoint);
     
 };
 

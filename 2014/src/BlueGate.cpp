@@ -32,6 +32,10 @@ float BlueGate::GetAngle() const {
     return angle;
 }
 
+void BlueGate::SetDir(RobotConstants::Direction dir){
+    this->dir = dir;
+}
+
 RobotConstants::Direction BlueGate::GetDir() const {
     return dir;
 }

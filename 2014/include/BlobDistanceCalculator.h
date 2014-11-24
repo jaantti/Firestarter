@@ -36,6 +36,9 @@ private:
     blobs_processed blobsFront = {};
     blobs_processed blobsBack = {};
     
+    big_blue_gate b_bGate;
+    big_yellow_gate b_yGate;
+    
     vector<Ball> balls; 
     
     YellowGate yGate;
@@ -46,6 +49,9 @@ private:
     
     float getFrontAngle(int x);
     float getBackAngle(int x);
+    
+    void calcYellowGateDistance();
+    void calcBlueGateDistance();
     
     void calcFrontBallDist(blobs_processed blobsFront);
     void calcBackBallDist(blobs_processed blobsBack);

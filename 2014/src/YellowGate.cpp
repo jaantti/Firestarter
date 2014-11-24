@@ -30,6 +30,10 @@ float YellowGate::GetAngle() const {
     return angle;
 }
 
+void YellowGate::SetDir(RobotConstants::Direction dir){
+    this->dir = dir;
+}
+
 RobotConstants::Direction YellowGate::GetDir() const {
     return dir;
 }

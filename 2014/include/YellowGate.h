@@ -20,6 +20,7 @@ public:
     float GetDistance() const;
     void SetAngle(float angle);
     float GetAngle() const;
+    void SetDir(RobotConstants::Direction dir);
     RobotConstants::Direction GetDir() const;
     void SetHeight(int height);
     int GetHeight() const;

@@ -52,8 +52,14 @@
 #define F_CURVE_FIT_A 15370.0f
 #define F_CURVE_FIT_B -1.142f
 
-#define B_CURVE_FIT_A 27140.0f
-#define B_CURVE_FIT_B -1.324f
+//Back fits
+#define B_CURVE_FIT_A 32110.0f
+#define B_CURVE_FIT_B -1.337f
+
+struct GreenContainer{
+    int front_green = 0;
+    int back_green = 0;
+};
 
 struct orange_blob{
     int orange_area = 0;

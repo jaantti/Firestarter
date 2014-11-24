@@ -42,6 +42,7 @@ public:
     YellowGate getYellowGate();
     BlueGate getBlueGate();
 
+    GreenContainer getGreen();
 private:
     BlobDistanceCalculator* calculator;
     
@@ -90,11 +91,14 @@ private:
     YellowGate yGate;
     BlueGate bGate;
     std::vector<Ball> balls;
+    GreenContainer green = {};
     
     ImageProcessor* iProc;
     blobs blob_container_front;
     blobs blob_container_back;
     bool codeEnd = false;
+    
+    boost::mutex greenLock;
     
     boost::mutex ballLock;
     

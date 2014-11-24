@@ -56,10 +56,10 @@ void ImagePostProcessor::loadBlobVectors() {
     blob_container_front = iProc->getBlobsFront();
     blob_container_back = iProc->getBlobsBack();
        
-    blob_structure_back.total_green = blob_container_back.total_green;
-    
-    //frontLock.lock();
-    blob_structure_front.total_green = blob_container_front.total_green;
+    greenLock.lock();
+    green.back_green = blob_container_back.total_green;
+    green.front_green = blob_container_front.total_green;
+    greenLock.unlock();
 }
 
 void ImagePostProcessor::processBlobVectors() {
@@ -718,4 +718,11 @@ BlueGate ImagePostProcessor::getBlueGate() {
     BlueGate temp = this->bGate;
     bGateLock.unlock();
     return temp;
+}
+
+GreenContainer ImagePostProcessor::getGreen() {
+    greenLock.lock();
+    GreenContainer temp = green;
+    greenLock.unlock();
+    return green;
 }

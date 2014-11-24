@@ -64,21 +64,29 @@ private:
     ImageProcessor *iProcessor;
     ImagePostProcessor *pProcessor;
     
+    std::vector<Ball> balls;
+    YellowGate yGate;
+    BlueGate bGate;
+    GreenContainer greens;
+    
+    
     void moveToBall(int x, int y);
     void setRState(RobotState state);
     RobotState rState = RobotState::FIND_BALL;
     RobotState lastState = RobotState::IDLE;
     
-    bool isGreen(blobs_processed blobsFront, blobs_processed blobsBack);
+    bool isGreen();
     
     void idle();
-    void findBall(blobs_processed blobsFront, blobs_processed blobsBack);
-    void ballTimeout(blobs_processed blobsFront, blobs_processed blobsBack);
-    void findGate(blobs_processed blobsFront, blobs_processed blobsBack);
-    void gateTimeout(blobs_processed blobsFront, blobs_processed blobsBack);
-    void kickBall(blobs_processed blobsFront, blobs_processed blobsBack);
-    void notGreen(blobs_processed blobsFront, blobs_processed blobsBack);
-    void stalled(blobs_processed blobsFront, blobs_processed blobsBack);
+    void findBall();
+    void ballTimeout();
+    void findGate();
+    void gateTimeout();
+    void kickBall();
+    void notGreen();
+    void stalled();
+    
+    void loadOperationalData();
         
 };
 

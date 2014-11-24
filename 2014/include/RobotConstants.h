@@ -186,8 +186,32 @@ enum RobotState{
     GATE_TIMEOUT,
     NOT_GREEN,
     KICK_BALL,
-    STALLING,
-    REAR_BALL_DRIVE
+    STALLING
+};
+
+enum DriveDirection{
+    FRONT,
+    REAR
+};
+
+enum BallFindState{
+    BALL_FRONT,
+    BALL_REAR,
+    BALL_NOT_FOUND,
+    ROBOT_ROTATE
+};
+
+enum GateFindState{
+    GATE_VISIBLE_FRONT,
+    GATE_VISIBLE_REAR,
+    OPPOSING_GATE_FRONT,
+    OPPOSING_GATE_REAR,
+    GATE_INVISIBLE    
+};
+
+enum TimeoutGateDir{
+    FRONT,
+    REAR
 };
 
 enum class Goal : int{

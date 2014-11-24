@@ -95,6 +95,7 @@ void RobotLogic::run(Role role, float deltaTime) {
 void RobotLogic::runAttack(float dt) {
 
     loadOperationalData();
+    countBallData();
     
     switch (rState) {
         case RobotState::IDLE:
@@ -187,9 +188,12 @@ void RobotLogic::idle() {
     usleep(1000000);
 }
 
+
+//2 options : Robot drives to the closest ball, then locates the gate and kicks.
+// OR : Look where there are more balls, drive there and proceed to shoot goals.
 void RobotLogic::findBall() {
-    //isGreen(blobsFront, blobsBack);    
-    if (!isGreen()) rState = RobotState::NOT_GREEN;
+    
+    
     
     startCounter++;
     rController->stopDribbler();
@@ -214,40 +218,44 @@ void RobotLogic::findBall() {
         return;
     }
     
-    if (blobsFront.o_ball.size() > 0) {
-
-        orange_ball oBall = blobsFront.o_ball.at(0);
-
-        int x = oBall.orange_cen_x;
-        int y = oBall.orange_cen_y;
+    switch(ballState){
+        case BallFindState::BALL_FRONT:
+            break;
+        case BallFindState::BALL_REAR:
+            break;
+        case BallFindState::BALL_NOT_FOUNT:
+            break;
+        case BallFindState::ROBOT_ROTATE:
+            break;
+    }
+    
+    
+        int x = 9;
+        int y = 9;
         
         int turnSpd = getAngle(x)*0.8;
         int moveDir = getAngle(x)/180*PI*0.8;
         int moveSpd = 22 + 1600/oBall.orange_w;
         
-        if (oBall.orange_w > 5) {
-            rController->driveRobot(moveSpd, moveDir, turnSpd);
-        } else {
-            rController->driveRobot(0, 0, 30);
-        }
+        rController->driveRobot(moveSpd, moveDir, turnSpd);
         
         //If ball is near, turn on dribbler
         if (oBall.orange_w > 15) {
             rController->runDribbler();
         } else {
             //rController->stopDribbler();
-        }
-    } else {
-        rController->driveRobot(0, 0, 30);
-    }
-    
+        }    
 }
 
+//Neither camera saw balls for 1 second.
+//This function should keep the robot in timeout state until both gates can be seen.
 void RobotLogic::ballTimeout() {
 
 }
 
+
 void RobotLogic::findGate() {
+
     startCounter++;
     if (startCounter>=5) {
         startCounter=0;
@@ -261,7 +269,22 @@ void RobotLogic::findGate() {
         rState = RobotState::FIND_BALL;
         return;
     }
-    rController->runDribbler();
+    
+    gateState = getGateState();
+    
+    switch(gateState){
+        case GateFindState::GATE_VISIBLE_FRONT:
+            break;
+        case GateFindState::GATE_VISIBLE_REAR:
+            break;
+        case GateFindState::OPPOSING_GATE_FRONT:
+            break;
+        case GateFindState::OPPOSING_GATE_REAR:
+            break;
+        case GateFindState::GATE_INVISIBLE:
+            break;
+    }
+    
     int aimThresh = -1;
     int turnSpeed = -1;
     int goalX = -2, goalY;
@@ -317,6 +340,7 @@ void RobotLogic::findGate() {
     //rController->stopDribbler();
 }
 
+//Drive the robot closer to own goal.
 void RobotLogic::gateTimeout() {
 
 }
@@ -347,4 +371,32 @@ void RobotLogic::loadOperationalData() {
     this->bGate = pProcessor->getBlueGate();
     this->yGate = pProcessor->getYellowGate();
     this->greens = pProcessor->getGreen();
+}
+
+GateFindState RobotLogic::getGateState() {
+    if(goal == Goal::gBLUE){
+        if(bGate.GetDir()==RobotConstants::Direction::FRONT){
+            return GateFindState::GATE_VISIBLE_FRONT;
+        } else if (bGate.GetDir()==RobotConstants::Direction::REAR){
+            return GateFindState::GATE_VISIBLE_REAR;
+        } else if (yGate.GetDir()==RobotConstants::Direction::FRONT){
+            return GateFindState::OPPOSING_GATE_FRONT;
+        } else if (yGate.GetDir()==RobotConstants::Direction::REAR){
+            return GateFindState::OPPOSING_GATE_REAR;
+        } else {
+            return GateFindState::GATE_INVISIBLE;
+        }
+    } else {
+        if(yGate.GetDir()==RobotConstants::Direction::FRONT){
+            return GateFindState::GATE_VISIBLE_FRONT;
+        } else if (yGate.GetDir()==RobotConstants::Direction::REAR){
+            return GateFindState::GATE_VISIBLE_REAR;
+        } else if (bGate.GetDir()==RobotConstants::Direction::FRONT){
+            return GateFindState::OPPOSING_GATE_FRONT;
+        } else if (bGate.GetDir()==RobotConstants::Direction::REAR){
+            return GateFindState::OPPOSING_GATE_REAR;
+        } else {
+            return GateFindState::GATE_INVISIBLE;
+        }
+    }
 }

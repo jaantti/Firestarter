@@ -69,11 +69,18 @@ private:
     BlueGate bGate;
     GreenContainer greens;
     
+    int ballsFront = 0;
+    int ballsBack = 0;
     
     void moveToBall(int x, int y);
     void setRState(RobotState state);
     RobotState rState = RobotState::FIND_BALL;
     RobotState lastState = RobotState::IDLE;
+    
+    DriveDirection driveDir;
+    BallFindState ballState;
+    GateFindState gateState;
+    TimeoutGateDir timeoutGateDir;
     
     bool isGreen();
     
@@ -86,6 +93,9 @@ private:
     void notGreen();
     void stalled();
     
+    GateFindState getGateState();
+    
+    void countBallData();   
     void loadOperationalData();
         
 };

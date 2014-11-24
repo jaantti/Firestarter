@@ -223,28 +223,28 @@ void RobotLogic::findBall() {
             break;
         case BallFindState::BALL_REAR:
             break;
-        case BallFindState::BALL_NOT_FOUNT:
+        case BallFindState::BALL_NOT_FOUND:
             break;
         case BallFindState::ROBOT_ROTATE:
             break;
     }
     
     
-        int x = 9;
-        int y = 9;
+    int x = 9;
+    int y = 9;
         
-        int turnSpd = getAngle(x)*0.8;
-        int moveDir = getAngle(x)/180*PI*0.8;
-        int moveSpd = 22 + 1600/oBall.orange_w;
+    int turnSpd = getAngle(x)*0.8;
+    int moveDir = getAngle(x)/180*PI*0.8;
+    int moveSpd = 22 + 1600/oBall.orange_w;
         
-        rController->driveRobot(moveSpd, moveDir, turnSpd);
+    rController->driveRobot(moveSpd, moveDir, turnSpd);
         
-        //If ball is near, turn on dribbler
-        if (oBall.orange_w > 15) {
-            rController->runDribbler();
-        } else {
-            //rController->stopDribbler();
-        }    
+    //If ball is near, turn on dribbler
+    if (oBall.orange_w > 15) {
+        rController->runDribbler();
+    } else {
+        //rController->stopDribbler();
+    }    
 }
 
 //Neither camera saw balls for 1 second.
@@ -272,6 +272,12 @@ void RobotLogic::findGate() {
     
     gateState = getGateState();
     
+    
+    /*TODO:
+     visible front - aim, shoot.
+     visible rear - rotate, shoot
+     opposing gate front - drive until a certain distance has been reached, turn around, locate gate again
+     opposing gate rear - drive toward opposing gate*/
     switch(gateState){
         case GateFindState::GATE_VISIBLE_FRONT:
             break;

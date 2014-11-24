@@ -82,6 +82,11 @@ private:
     GateFindState gateState;
     TimeoutGateDir timeoutGateDir;
     
+    bool gate_rear_turn;
+    bool ball_rear_turn;
+    bool ball_rear_drive;
+    bool ball_front_drive;
+    
     bool isGreen();
     
     void idle();

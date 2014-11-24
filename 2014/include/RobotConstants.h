@@ -55,6 +55,11 @@
 #define B_CURVE_FIT_A 32110.0f
 #define B_CURVE_FIT_B -1.337f
 
+struct GreenContainer{
+    int front_green = 0;
+    int back_green = 0;
+};
+
 struct orange_blob{
     int orange_area = 0;
     int orange_w = 0;
@@ -204,8 +209,8 @@ enum GateFindState{
 };
 
 enum TimeoutGateDir{
-    FRONT,
-    REAR
+    FRONT_TIMEOUT,
+    REAR_TIMEOUT
 };
 
 enum class Goal : int{

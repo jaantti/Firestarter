@@ -43,6 +43,7 @@ public:
     BlueGate getBlueGate();
 
     GreenContainer getGreen();
+    
 private:
     BlobDistanceCalculator* calculator;
     

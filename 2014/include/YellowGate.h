@@ -13,7 +13,7 @@ class YellowGate {
 public:
     
     
-    YellowGate(RobotConstants::Direction dir);
+    YellowGate();
         
     virtual ~YellowGate();
     void SetDistance(float distance);

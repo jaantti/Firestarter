@@ -11,7 +11,8 @@
 #include "RobotConstants.h"
 #include "ImagePostProcessor.h"
 #include "Ball.h"
-#include "Maths.h"
+#include "YellowGate.h"
+#include "BlueGate.h"
 #include <vector>
 
 using namespace std;
@@ -25,8 +26,9 @@ public:
     virtual ~BlobDistanceCalculator();
     void run();
     
-    vector<Ball> getFrontBalls();
-    vector<Ball> getBackBalls();   
+    vector<Ball> getBalls();
+    YellowGate getYellowGate();
+    BlueGate getBlueGate();
     
 private:
     ImagePostProcessor *pProcessor;
@@ -34,8 +36,10 @@ private:
     blobs_processed blobsFront = {};
     blobs_processed blobsBack = {};
     
-    vector<Ball> ballsFront;
-    vector<Ball> ballsBack; 
+    vector<Ball> balls; 
+    
+    YellowGate yGate;
+    BlueGate bGate;
     
     float getFrontDistance(int y, int x);
     float getBackDistance(int y, int x);
@@ -46,11 +50,8 @@ private:
     void calcFrontBallDist(blobs_processed blobsFront);
     void calcBackBallDist(blobs_processed blobsBack);
     
-    void sortBalls(bool side);
+    void sortBalls();
     
-    boost::mutex frontLock;
-    boost::mutex backLock;
-
 };
 
 #endif	/* BLOBDISTANCECALCULATOR_H */

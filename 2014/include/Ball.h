@@ -8,9 +8,11 @@
 #ifndef BALLOBJECT_H
 #define	BALLOBJECT_H
 
+#include "RobotConstants.h"
+
 class Ball {    
 public:
-    Ball(float distance, float angle, int cen_x, int cen_y, int len);
+    Ball(float distance, float angle, int cen_x, int cen_y, int len, RobotConstants::Direction dir);
     Ball(const Ball &other);
     virtual ~Ball();
         
@@ -22,6 +24,8 @@ public:
     int getCen_x();
     
     int getLen();
+    
+    RobotConstants::Direction getDir();
     
     bool operator>(const Ball& other) const
     {
@@ -44,6 +48,8 @@ public:
     }
 
 private:
+    
+    RobotConstants::Direction dir;
     
     float distance;
     float angle;

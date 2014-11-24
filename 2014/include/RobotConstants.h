@@ -200,7 +200,8 @@ namespace RobotConstants{
     
     enum Direction {
         FRONT = 201,
-        REAR = 202
+        REAR = 202,
+        UNDEFINED = 203
     };
     
 	// particle filter robot localizer parameters

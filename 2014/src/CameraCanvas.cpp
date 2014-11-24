@@ -216,38 +216,48 @@ void CameraCanvas::switchOff() {
 }
 
 void CameraCanvas::overlayObjects() {
-    blobs_processed blobs;
-    if(frontCamera){
-        blobs = pProcessor->getFrontSystem();
+    std::vector<Ball> balls = pProcessor->getBalls();
+    for(int i=0; i<balls.size(); i++){
         
-    } else {
-        blobs = pProcessor->getBackSystem();
+        Ball ball = balls.at(i);
+        if(this->frontCamera && ball.getDir()==RobotConstants::Direction::FRONT){
+            cv::circle(working_matrix, cv::Point(ball.getCen_x(), ball.getCen_y()), ball.getLen()/2, cv::Scalar(0, 128, 255), 3, 8, 0);
+        }
+        if(!this->frontCamera && ball.getDir()==RobotConstants::Direction::REAR){
+            cv::circle(working_matrix, cv::Point(ball.getCen_x(), ball.getCen_y()), ball.getLen()/2, cv::Scalar(0, 128, 255), 3, 8, 0);
+        }
     }
-    for(int i=0; i<blobs.o_ball.size(); i++){
-        orange_ball ball = blobs.o_ball.at(i);
-        cv::circle(working_matrix, cv::Point(ball.orange_cen_x, ball.orange_cen_y), ball.orange_w/2, cv::Scalar(0, 128, 255), 3, 8, 0);
+    YellowGate gateY = pProcessor->getYellowGate();
+    BlueGate gateB = pProcessor->getBlueGate();
+    
+    
+    if(gateB.GetCen_x()!=-1 && gateB.GetDir()==RobotConstants::Direction::FRONT && this->frontCamera){
+        cv::rectangle(working_matrix, cv::Point(gateB.GetX1(), gateB.GetY1()), cv::Point(gateB.GetX2(), gateB.GetY2()), cv::Scalar(255,0,0), 3, 8);
     }
     
-    if(blobs.blues_postprocessed>0){
-        blue_gate gate = blobs.b_gate.at(0);
-        cv::rectangle(working_matrix, cv::Point(gate.blue_x1, gate.blue_y1), cv::Point(gate.blue_x2, gate.blue_y2), cv::Scalar(255,0,0), 3, 8);
+    if(gateB.GetCen_x()!=-1 && gateB.GetDir()==RobotConstants::Direction::REAR && !this->frontCamera){
+        cv::rectangle(working_matrix, cv::Point(gateB.GetX1(), gateB.GetY1()), cv::Point(gateB.GetX2(), gateB.GetY2()), cv::Scalar(255,0,0), 3, 8);
     }
     
-    if(blobs.yellows_postprocessed>0){
-       yellow_gate gate = blobs.y_gate.at(0);
-       cv::rectangle(working_matrix, cv::Point(gate.yellow_x1, gate.yellow_y1), cv::Point(gate.yellow_x2, gate.yellow_y2), cv::Scalar(0,255,255), 3, 8);
+    if(gateY.GetCen_x()!=-1 && gateY.GetDir()==RobotConstants::Direction::FRONT && this->frontCamera){
+        cv::rectangle(working_matrix, cv::Point(gateY.GetX1(), gateY.GetY1()), cv::Point(gateY.GetX2(), gateY.GetY2()), cv::Scalar(255,0,0), 3, 8);
+    }
+    
+    if(gateY.GetCen_x()!=-1 && gateY.GetDir()==RobotConstants::Direction::REAR && !this->frontCamera){
+        cv::rectangle(working_matrix, cv::Point(gateY.GetX1(), gateY.GetY1()), cv::Point(gateY.GetX2(), gateY.GetY2()), cv::Scalar(255,0,0), 3, 8);
     }
 }
 
 void CameraCanvas::overlayText() {
     std::vector<Ball> balls;
-    if(frontCamera){
-        balls = pProcessor->getFrontBalls();
-    } else {
-        balls = pProcessor->getBackBalls();
-    }
+    balls = pProcessor->getBalls();
     for (Ball ball : balls){
-        putText(ball);
+        if(this->frontCamera && ball.getDir()==RobotConstants::Direction::FRONT){
+            putText(ball);
+        }
+        if(!this->frontCamera && ball.getDir()==RobotConstants::Direction::REAR){
+            putText(ball);
+        }
     }
 }
 

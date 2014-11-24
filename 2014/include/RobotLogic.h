@@ -57,8 +57,8 @@ private:
 
     Goal goal;
     int startCounter=0;
-    void runAttack();
-    void runDefend();
+    void runAttack(float dt);
+    void runDefend(float dt);
     
     RobotController *rController;
     ImageProcessor *iProcessor;

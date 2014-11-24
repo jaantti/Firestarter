@@ -8,8 +8,8 @@
 #include "Ball.h"
 
 
-Ball::Ball(float distance, float angle, int cen_x, int cen_y, int len) {
-    
+Ball::Ball(float distance, float angle, int cen_x, int cen_y, int len, RobotConstants::Direction dir) {
+    this->dir = dir;
     this->distance = distance;
     this->angle = angle;
     this->cen_x = cen_x;
@@ -50,5 +50,9 @@ float Ball::getAngle() {
 
 int Ball::getLen() {
     return len;
+}
+
+RobotConstants::Direction Ball::getDir(){
+    return dir;
 }
 

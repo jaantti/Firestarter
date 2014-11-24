@@ -30,20 +30,14 @@ public:
 
     void stopProcessor();
     
-    blobs_processed getFrontSystem();
-    blobs_processed getBackSystem();
-
-    big_yellow_gate getBiggestYellow();
-    big_blue_gate getBiggestBlue();
-    
+    //To be decommissioned once new system is in place.
     blobs_processed getUnlockedFront();
     blobs_processed getUnlockedBack();
     
     big_yellow_gate getUnlockedYellow();
     big_blue_gate getUnlockedBlue();
 
-    std::vector<Ball> getFrontBalls();
-    std::vector<Ball> getBackBalls();
+    std::vector<Ball> getBalls();
     
     YellowGate getYellowGate();
     BlueGate getBlueGate();
@@ -63,6 +57,9 @@ private:
     void processBlueBlobsBack();
     
     void runGateDecisionSystem();
+    
+    void getCalculatorCalculations();
+    
     // 0 - no gates 1 - blue gate, 2 - yellow gate, 3 - both gates
     int getFrontGates();
     int getBackGates();
@@ -90,13 +87,16 @@ private:
     blobs_processed temp_holder_front;
     blobs_processed temp_holder_back;
     
+    YellowGate yGate;
+    BlueGate bGate;
+    std::vector<Ball> balls;
+    
     ImageProcessor* iProc;
     blobs blob_container_front;
     blobs blob_container_back;
     bool codeEnd = false;
     
-    boost::mutex frontLock;
-    boost::mutex backLock;
+    boost::mutex ballLock;
     
     boost::mutex yGateLock;
     boost::mutex bGateLock;

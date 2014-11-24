@@ -14,7 +14,7 @@
 class BlueGate {
 public:    
        
-    BlueGate(RobotConstants::Direction dir);
+    BlueGate();
     
     virtual ~BlueGate();
     void SetDistance(float distance);

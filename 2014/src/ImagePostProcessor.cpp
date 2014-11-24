@@ -11,15 +11,9 @@ ImagePostProcessor::ImagePostProcessor(ImageProcessor* imageProcessor): calculat
 {
     calculator = new BlobDistanceCalculator(this);
     std::cout << " I AM THE CONSTRUCTOR " << std::endl;
-    iProc = imageProcessor;
-    
-    backLock.lock();
-    blob_structure_back = {};
-    backLock.unlock();
-    
-    frontLock.lock();
+    iProc = imageProcessor;    
+    blob_structure_back = {};    
     blob_structure_front = {};
-    frontLock.unlock();
 }
 
 
@@ -34,12 +28,8 @@ void ImagePostProcessor::run(){
         loadBlobVectors();
         processBlobVectors();
         
-        frontLock.lock();
-        backLock.lock();
         calculator->run();
-        frontLock.unlock();
-        backLock.unlock();
-        
+        getCalculatorCalculations();
         
         usleep(14000);
         
@@ -66,15 +56,10 @@ void ImagePostProcessor::loadBlobVectors() {
     blob_container_front = iProc->getBlobsFront();
     blob_container_back = iProc->getBlobsBack();
        
-    backLock.lock();
     blob_structure_back.total_green = blob_container_back.total_green;
-    backLock.unlock();
-    
-    frontLock.try_lock();
     
     //frontLock.lock();
     blob_structure_front.total_green = blob_container_front.total_green;
-    frontLock.unlock();
 }
 
 void ImagePostProcessor::processBlobVectors() {
@@ -95,10 +80,8 @@ void ImagePostProcessor::processOrangeBlobsBack(){
     std::vector<orange_blob> temp_vector = blob_container_back.o_blob;
     int size = temp_vector.size();
     if(size==0){
-        backLock.lock();
         blob_structure_back.o_ball.clear();
     	blob_structure_back.oranges_postprocessed = 0;
-    	backLock.unlock();
         return;
     }
     int count = 0;
@@ -130,11 +113,9 @@ void ImagePostProcessor::processOrangeBlobsBack(){
             count++;            
         }
     }
-    backLock.lock();
     blob_structure_back.o_ball.clear();
     blob_structure_back.o_ball = temp_holder_back.o_ball;
     blob_structure_back.oranges_postprocessed = count;
-    backLock.unlock();
 }
 
 void ImagePostProcessor::processOrangeBlobsFront(){
@@ -142,10 +123,8 @@ void ImagePostProcessor::processOrangeBlobsFront(){
     int size = temp_vector.size();
     
     if(size==0){
-    	frontLock.lock();
         blob_structure_front.o_ball.clear();
         blob_structure_front.oranges_postprocessed = 0;
-        frontLock.unlock();
         return;
     }
     int count = 0;
@@ -177,18 +156,9 @@ void ImagePostProcessor::processOrangeBlobsFront(){
             count++;            
         }
     }
-    
-    /*
-    for(int i = 0; i<temp_holder_front.o_ball.size(); i++){
-        orange_ball ball = temp_holder_front.o_ball.at(i);
-        std::cout << " BALL X:" << ball.orange_cen_x << " ; BALL Y:" << ball.orange_cen_y << " BALL WIDTH" << ball.orange_w << std::endl;
-    }
-    */
-    frontLock.lock();
     blob_structure_front.o_ball.clear();
     blob_structure_front.o_ball = temp_holder_front.o_ball;
     blob_structure_front.oranges_postprocessed = count;
-    frontLock.unlock();
     
 }
 
@@ -197,10 +167,8 @@ void ImagePostProcessor::processBlueBlobsFront() {
     std::vector<blue_blob> temp_vector = blob_container_front.b_blob;
     int size = temp_vector.size();
     if(size==0){
-    	frontLock.lock();
         blob_structure_front.b_gate.clear();
     	blob_structure_front.blues_postprocessed = 0;
-    	frontLock.unlock();
     	return;
     }
 
@@ -250,14 +218,11 @@ void ImagePostProcessor::processBlueBlobsFront() {
 
     gate.blue_w = gate.blue_x2 - gate.blue_x1;
     gate.blue_cen_x = gate.blue_x2 - gate.blue_w/2;
-       
     
-    frontLock.lock();
     blob_structure_front.b_gate.clear();
     blob_structure_front.b_gate.push_back(blue_gate());
     blob_structure_front.b_gate[0] = gate;
     blob_structure_front.blues_postprocessed = 1;
-    frontLock.unlock();
 }
 
 void ImagePostProcessor::processBlueBlobsBack() {
@@ -266,10 +231,8 @@ void ImagePostProcessor::processBlueBlobsBack() {
 	int size = temp_vector.size();
 
 	if(size==0){
-            backLock.lock();
             blob_structure_back.b_gate.clear();
             blob_structure_back.blues_postprocessed = 0;
-            backLock.unlock();
 	    return;
 	}
 
@@ -323,12 +286,10 @@ void ImagePostProcessor::processBlueBlobsBack() {
 	gate.blue_w = gate.blue_x2 - gate.blue_x1;
 	gate.blue_cen_x = gate.blue_x2 - gate.blue_w/2;
 
-        backLock.lock();
         blob_structure_back.b_gate.clear();
         blob_structure_back.b_gate.push_back(blue_gate());
 	blob_structure_back.b_gate[0] = gate;
 	blob_structure_back.blues_postprocessed = 1;
-	backLock.unlock();
 }
 
 void ImagePostProcessor::processYellowBlobsFront(){
@@ -336,10 +297,8 @@ void ImagePostProcessor::processYellowBlobsFront(){
 	std::vector<yellow_blob> temp_vector = blob_container_front.y_blob;
 	int size = temp_vector.size();    
 	if(size==0){
-            frontLock.lock();
             blob_structure_front.y_gate.clear();
             blob_structure_front.yellows_postprocessed = 0;
-            frontLock.unlock();
 	return;
 	}
 
@@ -383,12 +342,6 @@ void ImagePostProcessor::processYellowBlobsFront(){
 	gate.yellow_x2 = x2;
 	gate.yellow_y1 = y1;
 	gate.yellow_y2 = y2;
-
-        /*
-        std::cout << " Initial data for merging : " <<std::endl<<
-                " x1 : " << x1 << " y1 : " << y1 << " x2 : " << x2 << " y2 : " << y2 << std::endl <<
-                " cen_x : " << gate.yellow_cen_x << " cen_y : " << gate.yellow_cen_y << " height :" << gate.yellow_h << std::endl;                
-        */
         
 	// Iterate over the remaining blobs, placing them in the gate structure or discarding them if they do not qualify.
 	for(int i = 1; i<size; i++){
@@ -402,27 +355,21 @@ void ImagePostProcessor::processYellowBlobsFront(){
 
 	gate.yellow_w = gate.yellow_x2 - gate.yellow_x1;
 	gate.yellow_cen_x = gate.yellow_x2 - gate.yellow_w/2;
-
-        //std::cout << " Yellow gate X :" << gate.yellow_cen_x << " ; Y :" << gate.yellow_cen_y << " WIDTH :" << gate.yellow_w << " HEIGHT :" << gate.yellow_h << std::endl;
-                
-        frontLock.lock();
+    
         blob_structure_front.y_gate.clear();
         blob_structure_front.y_gate.push_back(yellow_gate());
 	blob_structure_front.y_gate[0] = gate;
 	blob_structure_front.yellows_postprocessed = 1;
-	frontLock.unlock();
 }
 
 void ImagePostProcessor::processYellowBlobsBack(){
 	//Create temporary datastore for processing purposes
-		std::vector<yellow_blob> temp_vector = blob_container_back.y_blob;
-		int size = temp_vector.size();
+	std::vector<yellow_blob> temp_vector = blob_container_back.y_blob;
+	int size = temp_vector.size();
 
         if(size==0){
-            backLock.lock();
             blob_structure_back.y_gate.clear();
             blob_structure_back.yellows_postprocessed = 0;
-            backLock.unlock();
 		    return;
 		}
 
@@ -476,12 +423,10 @@ void ImagePostProcessor::processYellowBlobsBack(){
 		gate.yellow_w = gate.yellow_x2 - gate.yellow_x1;
 		gate.yellow_cen_x = gate.yellow_x2 - gate.yellow_w/2;
                                 
-        backLock.lock();
         blob_structure_back.y_gate.clear();
         blob_structure_back.y_gate.push_back(yellow_gate());
 	blob_structure_back.y_gate[0] = gate;
 	blob_structure_back.yellows_postprocessed = 1;
-	backLock.unlock();
 }
 
 //These processes iterate over the existing processed list
@@ -609,17 +554,10 @@ yellow_gate ImagePostProcessor::expandYellowGate(yellow_gate gate, yellow_blob e
 
 void ImagePostProcessor::runGateDecisionSystem(){
 	int front, back;
-	frontLock.lock();
-	backLock.lock();
-
 	front = getFrontGates();
 	back = getBackGates();
 	eliminateFalseGates(front, back);
 	assignBigGates();
-
-	frontLock.unlock();
-	backLock.unlock();
-
 }
 
 int ImagePostProcessor::getFrontGates(){
@@ -699,8 +637,6 @@ void ImagePostProcessor::eliminateFalseGates(int front, int back)
 }
 
 void ImagePostProcessor::assignBigGates(){
-	bGateLock.lock();
-	yGateLock.lock();
 	if(blob_structure_front.blues_postprocessed>0){
 		biggestBlueGate = {};
 		blue_gate gate_t = blob_structure_front.b_gate.at(0);
@@ -735,41 +671,7 @@ void ImagePostProcessor::assignBigGates(){
 		biggestYellowGate.yellow_w = gate_t.yellow_w;
 		biggestYellowGate.direction = false;
 	}
-	yGateLock.unlock();
-	bGateLock.unlock();
 
-}
-
-blobs_processed ImagePostProcessor::getBackSystem(){
-    blobs_processed temp;
-    backLock.lock();
-    temp = blob_structure_back;
-    backLock.unlock();
-    return temp;
-}
-
-blobs_processed ImagePostProcessor::getFrontSystem(){
-    blobs_processed temp;
-    frontLock.lock();
-    temp = blob_structure_front;
-    frontLock.unlock();
-    return temp;
-}
-
-big_blue_gate ImagePostProcessor::getBiggestBlue(){
-	big_blue_gate gate = {};
-	bGateLock.lock();
-	gate = biggestBlueGate;
-	bGateLock.unlock();
-	return gate;
-}
-
-big_yellow_gate ImagePostProcessor::getBiggestYellow(){
-	big_yellow_gate gate = {};
-	yGateLock.lock();
-	gate = biggestYellowGate;
-	yGateLock.unlock();
-	return gate;
 }
 
 blobs_processed ImagePostProcessor::getUnlockedFront() {
@@ -790,16 +692,30 @@ big_yellow_gate ImagePostProcessor::getUnlockedYellow() {
     return biggestYellowGate;
 }
 
-std::vector<Ball> ImagePostProcessor::getFrontBalls() {
-    frontLock.lock();
-    std::vector<Ball> balls = calculator->getFrontBalls();
-    frontLock.unlock();
-    return balls;
+void ImagePostProcessor::getCalculatorCalculations() {
+    this->balls = calculator->getBalls();
+    this->bGate = calculator->getBlueGate();
+    this->yGate = calculator->getYellowGate();
 }
 
-std::vector<Ball> ImagePostProcessor::getBackBalls() {
-    backLock.lock();
-    std::vector<Ball> balls = calculator->getBackBalls();
-    backLock.unlock();
-    return balls;
+
+std::vector<Ball> ImagePostProcessor::getBalls() {
+    ballLock.lock();
+    std::vector<Ball> temp = this->balls;
+    ballLock.unlock();
+    return temp;
+}
+
+YellowGate ImagePostProcessor::getYellowGate() {
+    yGateLock.lock();
+    YellowGate temp = this->yGate;
+    yGateLock.unlock();
+    return temp;
+}
+
+BlueGate ImagePostProcessor::getBlueGate() {
+    bGateLock.lock();
+    BlueGate temp = this->bGate;
+    bGateLock.unlock();
+    return temp;
 }

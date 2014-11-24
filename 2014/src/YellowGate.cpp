@@ -7,8 +7,7 @@
 
 #include "YellowGate.h"
 
-YellowGate::YellowGate(RobotConstants::Direction dir) {
-    this->dir = dir;
+YellowGate::YellowGate() :dir(RobotConstants::Direction::UNDEFINED) {
 }
 
 

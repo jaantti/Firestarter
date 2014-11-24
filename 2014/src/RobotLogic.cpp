@@ -9,6 +9,11 @@
 #include "RobotLogic.h"
 #include <iostream>
 
+
+// IMPORTANT : 
+// this system is being refactored to use new inputs
+// from imagePostProcessor : Ball and YellowGate / BlueGate structures.
+//
 using namespace std;
 
 RobotLogic::RobotLogic() {
@@ -80,14 +85,14 @@ float RobotLogic::getAngle(int x_coor) {
 
 void RobotLogic::run(Role role, float deltaTime) {
     if (role == Role::rATTACK) {
-        runAttack();
+        runAttack(dt);
     }
     if (role == Role::rDEFEND) {
-        runDefend();
+        runDefend(dt);
     }
 }
 
-void RobotLogic::runAttack() {
+void RobotLogic::runAttack(float dt) {
 
     blobs_processed blobsFront = pProcessor->getFrontSystem();
     blobs_processed blobsBack = pProcessor->getBackSystem();
@@ -134,9 +139,13 @@ void RobotLogic::runAttack() {
             break;
     }
     //Handle odometry, localization.
+    /*
     vector<float> speeds = rController->getAllMotorSpeeds();
+    Odometer::Movement movement = odometer->calculateMovement(speeds.at(0), speeds.at(3), speeds.at(1), speeds.at(2));
+    odometryLocalizer->move(movement.velocityX, movement.velocityY, movement.omega, dt);
+    Localizer->move(movement.velocityX, movement.velocityY, movement.omega, dt);
     std::cout << " The robot is stalled : " << rController->isStalled() << std::endl;
-    
+    */
     
 }
 

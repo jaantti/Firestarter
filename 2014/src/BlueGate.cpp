@@ -7,8 +7,7 @@
 
 #include "BlueGate.h"
 
-BlueGate::BlueGate(RobotConstants::Direction dir) {
-    this->dir = dir;
+BlueGate::BlueGate(): dir(RobotConstants::Direction::UNDEFINED) {
 }
 
 

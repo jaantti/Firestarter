@@ -190,7 +190,9 @@ enum RobotState{
 
 enum DriveDirection{
     FRONT,
-    REAR
+    REAR,
+    ROTATE_LEFT,
+    ROTATE_RIGHT
 };
 
 enum BallFindState{
@@ -205,7 +207,8 @@ enum GateFindState{
     GATE_VISIBLE_REAR,
     OPPOSING_GATE_FRONT,
     OPPOSING_GATE_REAR,
-    GATE_INVISIBLE    
+    GATE_INVISIBLE,
+    GATE_ROTATE
 };
 
 enum TimeoutGateDir{
@@ -233,7 +236,13 @@ namespace RobotConstants{
         UNDEFINED = 203
     };
     
-	// particle filter robot localizer parameters
+    const int ballTimeoutThresh = 6;
+    const int TurnThreshold = 5;
+    const float ballTurnThreshold = 0.25f;
+    const float gateTimeoutDistance = 2.0f;
+    const float rearGateDistance = 3.0f
+    
+    // particle filter robot localizer parameters
     const int robotLocalizerParticleCount = 1000;
     const float robotLocalizerForwardNoise = 0.25f;
     const float robotLocalizerTurnNoise = 0.3f; // 45deg
@@ -265,6 +274,8 @@ namespace RobotConstants{
     
     //Robot logic cannot run faster than this.
     const float minimumDeltaT = 0.0166666f;
+    const float Euler = 2.718281f;
+    
 }
 
 

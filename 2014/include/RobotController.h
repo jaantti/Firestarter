@@ -68,6 +68,7 @@ public:
     unsigned long timeSinceLastLoop();
     void driveReverse();
     
+    DriveDirection getDriveDir();
     
 private:
     int stallCounters[4] = {0,0,0,0};
@@ -75,12 +76,18 @@ private:
     float lastSpeed = 0.0f;
     float lastAngle = 0.0f;
     float lastRotationSpeed = 0.0f;
+    DriveDirection dir;
     
     void stallStep();
     std::vector<StallComparator> stallings;
     unsigned long timeSinceLastSerial = 0;
     void driveThree(float spd, float angle, float rotSpd);
     void driveFour(float spd, float angle, float rotSpd);
+    void CalculateDriveDirection(float spd, float angle, float rotSpd);
+    
+    void setDriveDirection(DriveDirection dir);
+    DriveDirection getDriveDirection();
+    
 };
 
 #endif	/* ROBOTCONTROLLER_H */

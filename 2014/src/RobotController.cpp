@@ -189,4 +189,14 @@ unsigned long RobotController::timeSinceLastLoop() {
     connection.getTimeSinceLastLoop();
 }
 
+DriveDirection RobotController::getDriveDir() {
+    return this->dir;
+}
 
+void RobotController::setDriveDirection(DriveDirection dir) {
+    this->dir = dir;
+}
+
+void RobotController::CalculateDriveDirection(float spd, float angle, float rotSpd) {
+    
+}

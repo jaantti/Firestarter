@@ -16,6 +16,7 @@
 #include "ParticleFilterLocalizer.h"
 #include "Odometer.h"
 #include "OdometerLocalizer.h"
+#include "Maths.h"
 
 class RobotLogic {
 
@@ -77,15 +78,22 @@ private:
     RobotState rState = RobotState::FIND_BALL;
     RobotState lastState = RobotState::IDLE;
     
-    DriveDirection driveDir;
     BallFindState ballState;
     GateFindState gateState;
     TimeoutGateDir timeoutGateDir;
     
+    int gateTurnCount = 0;
+    int ballTurnCount = 0;
     bool gate_rear_turn;
     bool ball_rear_turn;
     bool ball_rear_drive;
     bool ball_front_drive;
+    
+    bool ballTimeout = false;
+    bool gateTimeout = false;
+    
+    int ballTimeoutCount = 0;
+    int gateTimeoutCount = 0;
     
     bool isGreen();
     
@@ -100,9 +108,42 @@ private:
     
     GateFindState getGateState();
     
+    BallFindState getBallState();
+    
     void countBallData();   
     void loadOperationalData();
-        
+    
+    void lockFrontBallDrive();
+    void lockRearBallDrive();
+    void releaseBallDriveLocks();
+    
+    void lockGateTurn();
+    void releaseGateTurnLock();
+    
+    void lockBallTurn();
+    void releaseBallTurnLock();
+    
+    bool hasBallsFront();
+    bool hasBallsRear();
+    
+    Ball getFirstFrontBall();
+    Ball getFirstRearBall();
+    
+    void gateVisibleFront();
+    void gateVisibleRear();
+    void opposingGateFront();
+    void opposingGateRear();
+    void gateInvisible();
+    
+    void driveBallsFront();
+    void driveBallsRear();
+    void ballsNotFound();
+    
+    //If true, increase the gate rotation counter, if false, increase ball rotation counter
+    void robotRotate(bool gateBall);
+    
+    int calculateMoveSpeed(float distance);
+    
 };
 
 #endif	/* ROBOTLOGIC_H */

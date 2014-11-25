@@ -158,16 +158,20 @@ void RobotLogic::setRState(RobotState state) {
 }
 
 bool RobotLogic::isGreen() {
-    
-    if (greens.front_green < MIN_GREEN_AREA) return false;
-    else return true; 
-    
+    if(rController->getDriveDir()==DriveDirection::FRONT){
+        if (greens.front_green < MIN_GREEN_AREA) return false;
+        else return true; 
+    } else if(rController->getDriveDir()==DriveDirection::REAR){
+        if (greens.back_green < MIN_GREEN_AREA) return false;
+        else return true;
+    }
+    return true;
 }
 
 void RobotLogic::idle() {
     
     //Set the initial time for serial connection. Odometry purposes.
-    struct timeval tv, tv2;
+    struct timeval tv;
     gettimeofday(&tv, NULL);
     unsigned long int tim1 = 1000000 * tv.tv_sec + tv.tv_usec;
     rController->initSerialTime(tim1);
@@ -275,7 +279,7 @@ void RobotLogic::driveBallsRear() {
     int moveDir = ball.getAngle()/180*PI*0.8;
     //TODO : Replace len usage with distance.
     int moveSpd = calculateMoveSpeed(ball.getDistance());
-        
+       
     rController->driveRobot( (-1.0*moveSpd), (-1.0*moveDir), (-1.0*turnSpd) );   
 }
 
@@ -288,19 +292,15 @@ void RobotLogic::ballsNotFound() {
     }
 }
 
-void RobotLogic::robotRotate(bool gateBall) {
-    if(gateBall){
-        gateTurnCount++;
-    } else {
-        ballTurnCount++;
-    }
-    
+void RobotLogic::robotRotate() {
+    rController->turnAround(80);    
+    releaseBallDriveLocks();
 }
 
 //Neither camera saw balls for 1 second.
 //This function should keep the robot in timeout state until both gates can be seen.
 void RobotLogic::ballTimeout() {
-
+    //TODO : Some smart logamathingie
 }
 
 
@@ -456,14 +456,7 @@ BallFindState RobotLogic::getBallState() {
     //If neither lock is currently active, look for a new one (or keep rotating until 180 deg)
     releaseBallDriveLocks();
     if(ball_rear_turn){
-        ballTurnCount++;
-        if(ballTurnCount>RobotConstants::TurnThreshold){
-            ballTurnCount=0;
-            releaseBallTurnLock();
-            //Turning complete - carry on with state selection;
-        } else {
-            return BallFindState::ROBOT_ROTATE;
-        }
+        return BallFindState::ROBOT_ROTATE;
     }
     
     if(balls.size()>0){
@@ -485,15 +478,9 @@ BallFindState RobotLogic::getBallState() {
 GateFindState RobotLogic::getGateState() {
     
     if(gate_rear_turn){
-        gateTurnCount++;
-        if(gateTurnCount<RobotConstants::TurnThreshold){
-            //The robot has turned around, continue state selection.
-        }
-        else {
-            return GateFindState::GATE_ROTATE;
-        }
+        return GateFindState::GATE_ROTATE;
     }
-    
+        
     if(goal == Goal::gBLUE){
         if(bGate.GetDir()==RobotConstants::Direction::FRONT){
             return GateFindState::GATE_VISIBLE_FRONT;

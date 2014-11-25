@@ -69,6 +69,7 @@ public:
     void driveReverse();
     
     DriveDirection getDriveDir();
+    void turnAround(int spd);
     
 private:
     int stallCounters[4] = {0,0,0,0};

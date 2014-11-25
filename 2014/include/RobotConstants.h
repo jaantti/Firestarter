@@ -27,9 +27,9 @@
 #define MAX_MOTOR_SPEED 250
 #define GET_BALL_BOARD_ID 2
 #define GET_SWITCH_BOARD_ID 3
-#define MIN_BLOB_SIZE 10
+#define MIN_BLOB_SIZE 7
 #define MIN_GATE_HEIGHT 10
-#define MIN_BLOB_WID 4
+#define MIN_BLOB_WID 2
 #define MIN_GREEN_AREA 1000
 #define MIN_GATE_WIDTH 80
 #define MIN_GATE_SIZE 600
@@ -237,7 +237,6 @@ namespace RobotConstants{
     };
     
     const int ballTimeoutThresh = 6;
-    const int TurnThreshold = 5;
     const float ballTurnThreshold = 0.25f;
     const float gateTimeoutDistance = 2.0f;
     const float rearGateDistance = 3.0f

@@ -200,3 +200,7 @@ void RobotController::setDriveDirection(DriveDirection dir) {
 void RobotController::CalculateDriveDirection(float spd, float angle, float rotSpd) {
     
 }
+
+void RobotController::turnAround(int spd) {
+    //Magic code here.
+}

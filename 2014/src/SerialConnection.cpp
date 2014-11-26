@@ -129,10 +129,10 @@ Role SerialConnection::getRole() {
     unsigned char answer[1300] = {0};
     sendCommand(serialDevice[GET_SWITCH_BOARD_ID], "s2\n", answer);
     
-    if (answer[4] == '1') {
+    if (answer[4] == '0') {
         cout << "Attacking" << endl;
         return Role::rATTACK;
-    } else if (answer[4] == '0') {
+    } else if (answer[4] == '1') {
         cout << "Defending" << endl;
         return Role::rDEFEND;
     } else {

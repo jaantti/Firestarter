@@ -200,3 +200,11 @@ void RobotController::setDriveDirection(DriveDirection dir) {
 void RobotController::CalculateDriveDirection(float spd, float angle, float rotSpd) {
     
 }
+
+void RobotController::turnAround(int speed){
+    driveRobot(0, 0, speed);
+    float turnTime = 37.1/speed*1000000.0 * RobotConstants::magicTurnConstant;
+    usleep(turnTime);
+    driveRobot(0, 0, 0);
+}
+

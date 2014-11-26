@@ -11,6 +11,7 @@
 #include "RobotConstants.h"
 #include "SerialConnection.h"
 #include <vector>
+#include <stdlib.h>
 
 class RobotController {
     SerialConnection connection;
@@ -67,6 +68,8 @@ public:
     void initSerialTime(unsigned long timeInMicros);
     unsigned long timeSinceLastLoop();
     void driveReverse();
+    
+    void turnAround(int speed);
     
     DriveDirection getDriveDir();
     

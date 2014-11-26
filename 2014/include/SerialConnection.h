@@ -12,6 +12,12 @@
 #include <array>
 #include <vector>
 #include <unordered_map>
+#include "rs232.h"
+#include <iostream>
+#include <boost/algorithm/string.hpp>
+#include "Maths.h"
+#include <cstdlib>
+#include <sys/time.h>
 
 using namespace std;
 

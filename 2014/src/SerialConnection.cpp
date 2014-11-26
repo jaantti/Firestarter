@@ -5,14 +5,6 @@
  * Created on September 7, 2014, 12:24 PM
  */
 #include "SerialConnection.h"
-#include "rs232.h"
-#include <iostream>
-#include <stdlib.h>
-#include <boost/algorithm/string.hpp>
-#include "RobotConstants.h"
-#include "Maths.h"
-#include <cstdlib>
-#include <sys/time.h>
 
 using namespace std;
 

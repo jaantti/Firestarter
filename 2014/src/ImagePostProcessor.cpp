@@ -56,7 +56,7 @@ void ImagePostProcessor::loadBlobVectors() {
     blob_container_front = iProc->getBlobsFront();
     blob_container_back = iProc->getBlobsBack();
        
-    greenLock.lock();
+    greenLock.try_lock();
     green.back_green = blob_container_back.total_green;
     green.front_green = blob_container_front.total_green;
     greenLock.unlock();
@@ -221,8 +221,12 @@ void ImagePostProcessor::processBlueBlobsFront() {
     
     blob_structure_front.b_gate.clear();
     blob_structure_front.b_gate.push_back(blue_gate());
-    blob_structure_front.b_gate[0] = gate;
-    blob_structure_front.blues_postprocessed = 1;
+    if(gate.blue_h * gate.blue_w > MIN_GATE_SIZE){
+            blob_structure_front.b_gate[0] = gate;        
+            blob_structure_front.blues_postprocessed = 1;
+    } else {
+             blob_structure_front.blues_postprocessed = 0;
+        }
 }
 
 void ImagePostProcessor::processBlueBlobsBack() {
@@ -288,8 +292,12 @@ void ImagePostProcessor::processBlueBlobsBack() {
 
         blob_structure_back.b_gate.clear();
         blob_structure_back.b_gate.push_back(blue_gate());
-	blob_structure_back.b_gate[0] = gate;
-	blob_structure_back.blues_postprocessed = 1;
+        if(gate.blue_h * gate.blue_w > MIN_GATE_SIZE){
+            blob_structure_back.b_gate[0] = gate;        
+            blob_structure_back.blues_postprocessed = 1;
+        } else {
+             blob_structure_back.blues_postprocessed = 0;
+        }
 }
 
 void ImagePostProcessor::processYellowBlobsFront(){
@@ -358,8 +366,12 @@ void ImagePostProcessor::processYellowBlobsFront(){
     
         blob_structure_front.y_gate.clear();
         blob_structure_front.y_gate.push_back(yellow_gate());
-	blob_structure_front.y_gate[0] = gate;
-	blob_structure_front.yellows_postprocessed = 1;
+        if(gate.yellow_h * gate.yellow_w > MIN_GATE_SIZE){
+            blob_structure_front.y_gate[0] = gate;        
+            blob_structure_front.yellows_postprocessed = 1;
+        } else {
+             blob_structure_front.yellows_postprocessed = 0;
+        }
 }
 
 void ImagePostProcessor::processYellowBlobsBack(){
@@ -422,11 +434,17 @@ void ImagePostProcessor::processYellowBlobsBack(){
 
 		gate.yellow_w = gate.yellow_x2 - gate.yellow_x1;
 		gate.yellow_cen_x = gate.yellow_x2 - gate.yellow_w/2;
-                                
+        
+                
         blob_structure_back.y_gate.clear();
         blob_structure_back.y_gate.push_back(yellow_gate());
-	blob_structure_back.y_gate[0] = gate;
-	blob_structure_back.yellows_postprocessed = 1;
+        if(gate.yellow_h * gate.yellow_w > MIN_GATE_SIZE){
+           
+            blob_structure_back.y_gate[0] = gate;        
+            blob_structure_back.yellows_postprocessed = 1;
+        } else {
+             blob_structure_back.yellows_postprocessed = 0;
+        }
 }
 
 //These processes iterate over the existing processed list
@@ -637,19 +655,31 @@ void ImagePostProcessor::eliminateFalseGates(int front, int back)
 }
 
 void ImagePostProcessor::assignBigGates(){
+    biggestBlueGate = {};
+    biggestYellowGate = {};
 	if(blob_structure_front.blues_postprocessed>0){
 		biggestBlueGate = {};
 		blue_gate gate_t = blob_structure_front.b_gate.at(0);
+            std::cout << " Blue gate in front : [ " << gate_t.blue_x1 << ":" << gate_t.blue_x2 << "]" << std::endl;
 		biggestBlueGate.blue_cen_x = gate_t.blue_cen_x;
 		biggestBlueGate.blue_cen_y = gate_t.blue_cen_y;
+                biggestBlueGate.blue_x1 = gate_t.blue_x1;
+                biggestBlueGate.blue_x2 = gate_t.blue_x2;
+                biggestBlueGate.blue_y1 = gate_t.blue_y1;
+                biggestBlueGate.blue_y2 = gate_t.blue_y2;                
 		biggestBlueGate.blue_h = gate_t.blue_h;
 		biggestBlueGate.blue_w = gate_t.blue_w;
 		biggestBlueGate.direction = true;
 	} else if(blob_structure_front.yellows_postprocessed>0){
 		biggestYellowGate = {};
 		yellow_gate gate_t = blob_structure_front.y_gate.at(0);
+            std::cout << " Yellow gate in front : [ " << gate_t.yellow_x1 << ":" << gate_t.yellow_x2 << "]" << std::endl;
 		biggestYellowGate.yellow_cen_x = gate_t.yellow_cen_x;
-		biggestYellowGate.yellow_cen_y = gate_t.yellow_cen_y;
+		biggestYellowGate.yellow_cen_y = gate_t.yellow_cen_y;                
+                biggestYellowGate.yellow_x1 = gate_t.yellow_x1;
+                biggestYellowGate.yellow_x2 = gate_t.yellow_x2;
+                biggestYellowGate.yellow_y1 = gate_t.yellow_y1;
+                biggestYellowGate.yellow_y2 = gate_t.yellow_y2; 
 		biggestYellowGate.yellow_h = gate_t.yellow_h;
 		biggestYellowGate.yellow_w = gate_t.yellow_w;
 		biggestYellowGate.direction = true;
@@ -657,16 +687,26 @@ void ImagePostProcessor::assignBigGates(){
 	if(blob_structure_back.blues_postprocessed>0){
 		biggestBlueGate = {};
 		blue_gate gate_t = blob_structure_back.b_gate.at(0);
+            std::cout << " Blue gate in back : [ " << gate_t.blue_x1 << ":" << gate_t.blue_x2 << "]" << std::endl;
 		biggestBlueGate.blue_cen_x = gate_t.blue_cen_x;
-		biggestBlueGate.blue_cen_y = gate_t.blue_cen_y;
+		biggestBlueGate.blue_cen_y = gate_t.blue_cen_y;               
+                biggestBlueGate.blue_x1 = gate_t.blue_x1;
+                biggestBlueGate.blue_x2 = gate_t.blue_x2;
+                biggestBlueGate.blue_y1 = gate_t.blue_y1;
+                biggestBlueGate.blue_y2 = gate_t.blue_y2; 
 		biggestBlueGate.blue_h = gate_t.blue_h;
 		biggestBlueGate.blue_w = gate_t.blue_w;
 		biggestBlueGate.direction = false;
 	} else if(blob_structure_back.yellows_postprocessed>0){
 		biggestYellowGate = {};
 		yellow_gate gate_t = blob_structure_back.y_gate.at(0);
+            std::cout << " Yellow gate in back : [ " << gate_t.yellow_x1 << ":" << gate_t.yellow_x2 << "]" << std::endl;
 		biggestYellowGate.yellow_cen_x = gate_t.yellow_cen_x;
-		biggestYellowGate.yellow_cen_y = gate_t.yellow_cen_y;
+		biggestYellowGate.yellow_cen_y = gate_t.yellow_cen_y;                
+                biggestYellowGate.yellow_x1 = gate_t.yellow_x1;
+                biggestYellowGate.yellow_x2 = gate_t.yellow_x2;
+                biggestYellowGate.yellow_y1 = gate_t.yellow_y1;
+                biggestYellowGate.yellow_y2 = gate_t.yellow_y2; 
 		biggestYellowGate.yellow_h = gate_t.yellow_h;
 		biggestYellowGate.yellow_w = gate_t.yellow_w;
 		biggestYellowGate.direction = false;

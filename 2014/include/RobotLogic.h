@@ -82,15 +82,13 @@ private:
     GateFindState gateState;
     TimeoutGateDir timeoutGateDir;
     
-    int gateTurnCount = 0;
-    int ballTurnCount = 0;
     bool gate_rear_turn;
     bool ball_rear_turn;
     bool ball_rear_drive;
     bool ball_front_drive;
     
-    bool ballTimeout = false;
-    bool gateTimeout = false;
+    bool ballTimeoutLock = false;
+    bool gateTimeoutLock = false;
     
     int ballTimeoutCount = 0;
     int gateTimeoutCount = 0;
@@ -139,8 +137,8 @@ private:
     void driveBallsRear();
     void ballsNotFound();
     
-    //If true, increase the gate rotation counter, if false, increase ball rotation counter
-    void robotRotate(bool gateBall);
+    //Rotates the robot 180 degrees.
+    void robotRotate();
     
     int calculateMoveSpeed(float distance);
     

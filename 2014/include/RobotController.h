@@ -72,6 +72,7 @@ public:
     void turnAround(int speed);
     
     DriveDirection getDriveDir();
+    void turnAround(int spd);
     
 private:
     int stallCounters[4] = {0,0,0,0};

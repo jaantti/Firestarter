@@ -23,6 +23,7 @@ Ball::Ball(const Ball &other){
     cen_x = other.cen_x;
     cen_y = other.cen_y;
     len = other.len;
+    dir = other.dir;
 }
 
 Ball::~Ball() {

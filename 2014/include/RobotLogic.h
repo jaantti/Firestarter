@@ -87,8 +87,8 @@ private:
     bool ball_rear_drive;
     bool ball_front_drive;
     
-    bool ballTimeout = false;
-    bool gateTimeout = false;
+    bool ballTimeoutLock = false;
+    bool gateTimeoutLock = false;
     
     int ballTimeoutCount = 0;
     int gateTimeoutCount = 0;

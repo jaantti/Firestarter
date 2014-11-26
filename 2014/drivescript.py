@@ -3,9 +3,9 @@ import pygame
 import time
 import math
 
-deadZone=0.1
-maxSpeed = 30
-maxTurnSpeed = 30
+deadZone=0.3
+maxSpeed = 220
+maxTurnSpeed = 120
 
 ##portPrefix = "COM"
 portPrefix = "/dev/ttyACM"
@@ -50,7 +50,7 @@ def driveFour(spd, angle, rotSpd):
 for i in range(0,20):
     try:
         print "trying port:"+ str(i)
-        ser = serial.Serial(port = portPrefix+str(i), baudrate = 115200)
+        ser = serial.Serial(port = portPrefix+str(i), baudrate = 115200, timeout=1)
 	##print "port: " + ser.
         print "closing port if open"
         ser.close()
@@ -62,7 +62,7 @@ for i in range(0,20):
             print "writing to port"
             ser.write('?\n')
             print "waiting"
-            time.sleep(0.7)
+            ##time.sleep(0.7)
             print "reading from port"
             d = ser.readline()
             print "read data:"+d
@@ -106,16 +106,16 @@ if cont.get_init():
     if (number == 5):
         button_data = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
         hat_data = (0,0)
-        axes_data = [0,0,0,0,0]
+        axes_data = [0.0,0.0,0.0,0.0,0.0]
         move_dir = 0
         move_speed = 0
         rotate_speed = 0
 
-        coil = serial.Serial(port = coilPORT, baudrate = 115200)
-        M1 = serial.Serial(port = motorPORTS[0], baudrate = 115200)
-        M2 = serial.Serial(port = motorPORTS[1], baudrate = 115200)
-        M3 = serial.Serial(port = motorPORTS[2], baudrate = 115200)
-        M4 = serial.Serial(port = motorPORTS[3], baudrate = 115200)
+        coil = serial.Serial(port = coilPORT, baudrate = 115200, timeout=1)
+        M1 = serial.Serial(port = motorPORTS[0], baudrate = 115200, timeout=1)
+        M2 = serial.Serial(port = motorPORTS[1], baudrate = 115200, timeout=1)
+        M3 = serial.Serial(port = motorPORTS[2], baudrate = 115200, timeout=1)
+        M4 = serial.Serial(port = motorPORTS[3], baudrate = 115200, timeout=1)
         ##if not coil.isOpen(): coil.open()
         ##if not M1.isOpen(): M1.open()
 		##if not M2.isOpen(): M2.open()
@@ -133,19 +133,23 @@ if cont.get_init():
                 ##print "hat " + str(i) + ": \t\t" + str(hat_data)
             for i in range(axes):
                 axes_data[i] = cont.get_axis(i)
+		##print "preaxis " + str(i) + ": \t" + str(axes_data[i])
+		##axes_data[i] = float(axes_data[i])/32768.0
                 if abs(axes_data[i]) < deadZone:
                     axes_data[i] = 0
-                ##print "axis " + str(i) + ": \t" + str(axes_data[i])
-            if button_data[6] == 1:
+                ##print "postaxis " + str(i) + ": \t" + str(axes_data[i])
+            if button_data[8] == 1:
                 break
-            if button_data[2] == 1:
+            if button_data[6] == 1:
                 coil.write('k2000\n')
+	    if button_data[7] == 1:
+                coil.write('k3000\n')
             if button_data[4] == 1:
                 coil.write('ts\n')
             if button_data[5] == 1:
                 coil.write('tg\n')
             move_dir = get_angle(axes_data[0], axes_data[1])
-            rotate_speed = -maxTurnSpeed*axes_data[4]
+            rotate_speed = -maxTurnSpeed*axes_data[2]
             move_speed = math.pow(math.sqrt(math.pow(axes_data[0],2)+math.pow(axes_data[1],2))*0.86,2)*maxSpeed
             print "moving angle: " + str(move_dir)
             print "rotate speed: " + str(rotate_speed)
@@ -159,7 +163,12 @@ if cont.get_init():
             M4.write('sd'+str(speeds[3])+'\n')
             
             time.sleep(0.1)
-            
+
+        coil.write('ts\n')
+	M1.write('sd0\n')
+	M2.write('sd0\n')
+        M3.write('sd0\n')
+        M4.write('sd0\n')    
         coil.close()
         M1.close()
         M2.close()

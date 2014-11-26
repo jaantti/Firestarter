@@ -228,8 +228,8 @@ void CameraCanvas::overlayObjects() {
     }
     YellowGate gateY = pProcessor->getYellowGate();
     BlueGate gateB = pProcessor->getBlueGate();
-    cout << " Yellow gate direction :" << gateY.GetDir() << std::endl;
-    cout << " Blue gate direction :" << gateB.GetDir() << std::endl;
+    //cout << " Yellow gate direction :" << gateY.GetDir() << std::endl;
+    //cout << " Blue gate direction :" << gateB.GetDir() << std::endl;
     if(gateB.GetCen_x()!=-1 && gateB.GetDir()==RobotConstants::Direction::FRONT && this->frontCamera){
         cv::rectangle(working_matrix, cv::Point(gateB.GetX1(), gateB.GetY1()), cv::Point(gateB.GetX2(), gateB.GetY2()), cv::Scalar(255,0,0), 3, 8);
     }

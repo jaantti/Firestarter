@@ -183,8 +183,8 @@ void RobotLogic::idle() {
         return;
     }
 
-    rController->dischargeCoil();
-    usleep(1000000);
+    //rController->dischargeCoil();
+    usleep(100000);
 }
 
 
@@ -247,7 +247,7 @@ void RobotLogic::findBall() {
 
 int RobotLogic::calculateMoveSpeed(float distance) {
     if (distance > 5.0f) distance = 5.0f;
-    float minSpeed=20.0f, maxSpeed=200.0f, maxSpeedDistance=1.5f;
+    float minSpeed=20.0f, maxSpeed=50.0f, maxSpeedDistance=1.5f;
         
     float speed = minSpeed + (maxSpeed-minSpeed)/maxSpeedDistance * distance;
     return Math::min(speed, maxSpeed);
@@ -257,12 +257,12 @@ int RobotLogic::calculateMoveSpeed(float distance) {
 
 void RobotLogic::driveBallsFront() {
     Ball ball = getFirstFrontBall();
-    std::cout << "DRIVIN TO FIRST BALL FRONT." << std::endl;
-    std::cout << " BALL COORDS : " << ball.getCen_x() << " and " << ball.getCen_y() << " AT DIST:" << ball.getDistance() << std::endl;
-    int turnSpd = getAngle(ball.getCen_x())*0.8;
-    int moveDir = ball.getAngle() / 180 * PI * 0.8;
+    //std::cout << "DRIVIN TO FIRST BALL FRONT." << std::endl;
+    //std::cout << " BALL COORDS : " << ball.getCen_x() << " and " << ball.getCen_y() << " AT DIST:" << ball.getDistance() << std::endl;
+    float turnSpd = getAngle(ball.getCen_x())*0.8;
+    float moveDir = ball.getAngle() /180.0 * PI * 0.8;
     //TODO : Replace len usage with distance.
-    int moveSpd = calculateMoveSpeed(ball.getDistance());
+    float moveSpd = calculateMoveSpeed(ball.getDistance());
 
     rController->driveRobot(moveSpd, moveDir, turnSpd);
 }
@@ -270,26 +270,32 @@ void RobotLogic::driveBallsFront() {
 //Drive to the closest rear ball until it is under 20cm, then rotate.
 
 void RobotLogic::driveBallsRear() {
-    std::cout << " DRIVING TO BALL REAR " << std::endl;
     Ball ball = getFirstRearBall();
-
     if (ball.getDistance() < 0.2f) {
+        cout << "BALL AT REAR, TURNING" << endl;
         lockBallTurn();
         return;
     }
 
-    int turnSpd = getAngle(ball.getCen_x())*0.8;
-    int moveDir = ball.getAngle() / 180 * PI * 0.8;
+    float turnSpd = getAngle(ball.getCen_x())*0.8;
+    float moveDir = ball.getAngle() / 180.0 * PI;
+    moveDir = PI + ((moveDir - PI) * 0.8);
+    
+    if (moveDir >= PI) {
+        moveDir -= 2*PI;
+    }
+    
     //TODO : Replace len usage with distance.
-    int moveSpd = calculateMoveSpeed(ball.getDistance());
+    float moveSpd = calculateMoveSpeed(ball.getDistance());
 
-    rController->driveRobot((moveSpd), (moveDir + Math::MATHPI), (turnSpd));
+    rController->driveRobot((-1.0f*moveSpd), (moveDir + Math::MATHPI), (turnSpd));
 }
 
 void RobotLogic::ballsNotFound() {
     ballTimeoutCount++;
     rController->driveRobot(0, 0, 40);
     if (ballTimeoutCount > RobotConstants::ballTimeoutThresh) {
+        ballTimeoutCount = 0;
         setRState(RobotState::BALL_TIMEOUT);
     }
 }
@@ -297,6 +303,8 @@ void RobotLogic::ballsNotFound() {
 void RobotLogic::robotRotate() {
     rController->turnAround(80);
     releaseBallDriveLocks();
+    releaseBallTurnLock();
+    releaseGateTurnLock();
 }
 
 //Neither camera saw balls for 1 second.
@@ -456,6 +464,10 @@ void RobotLogic::loadOperationalData() {
 }
 
 BallFindState RobotLogic::getBallState() {
+    if (ball_rear_turn) {
+        return BallFindState::ROBOT_ROTATE;
+    }
+    
     if (ball_front_drive && hasBallsFront()) {
         return BallFindState::BALL_FRONT;
     } else if (ball_rear_drive && hasBallsRear()) {
@@ -464,10 +476,7 @@ BallFindState RobotLogic::getBallState() {
 
     //If neither lock is currently active, look for a new one (or keep rotating until 180 deg)
     releaseBallDriveLocks();
-    if (ball_rear_turn) {
-        return BallFindState::ROBOT_ROTATE;
-    }
-
+    
     if (balls.size() > 0) {
         if (balls.at(0).getDir() == RobotConstants::Direction::FRONT) {
             lockFrontBallDrive();

@@ -240,7 +240,7 @@ namespace RobotConstants{
     const float ballTurnThreshold = 0.25f;
     const float gateTimeoutDistance = 2.0f;
     const float rearGateDistance = 3.0f;
-    const float magicTurnConstant = 1.5f;
+    const float magicTurnConstant = 1.05f;
     
     // particle filter robot localizer parameters
     const int robotLocalizerParticleCount = 1000;

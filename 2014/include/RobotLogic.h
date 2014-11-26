@@ -52,6 +52,10 @@ private:
     float posY = 0.0f;
     float orientation = 0.0f;
 
+    int wantedGateRotation = 0;
+    float startingOppositeDistance = 0.0f;
+    int wantedRotateSpeed = 0;
+    
     Odometer *odometer;
     ParticleFilterLocalizer *localizer;
     OdometerLocalizer *odometryLocalizer;
@@ -138,9 +142,12 @@ private:
     void ballsNotFound();
     
     //Rotates the robot 180 degrees.
-    void robotRotate();
+    void robotRotate(int angle, int spd);
     
-    int calculateMoveSpeed(float distance);
+    int calculateMoveSpeed(float distance, float min, float max, float thresh);
+    
+    void robotDriveWrapperFront(int cen_x, float angle, float distance, float minSpd, float maxSpd, float speedThreshold);
+    void robotDriveWrapperRear(int cen_x, float angle, float distance, float minSpd, float maxSpd, float speedThreshold);
     
 };
 

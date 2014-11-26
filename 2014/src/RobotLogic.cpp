@@ -165,7 +165,8 @@ bool RobotLogic::isGreen() {
 }
 
 void RobotLogic::idle() {
-
+    
+    startingOppositeDistance = 0.0f;
     //Set the initial time for serial connection. Odometry purposes.
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -194,7 +195,8 @@ void RobotLogic::idle() {
 void RobotLogic::findBall() {
 
     ballState = getBallState();
-
+    
+    startingOppositeDistance = 0.0f;
     startCounter++;
     rController->stopDribbler();
     if (startCounter >= 5) {
@@ -233,7 +235,7 @@ void RobotLogic::findBall() {
             break;
         case BallFindState::ROBOT_ROTATE:
             //The robot should use this state to turn around and reinitialize the state.
-            robotRotate();
+            robotRotate(180, 80);
             break;
     }
 }
@@ -245,27 +247,21 @@ void RobotLogic::findBall() {
 
 //This function should handle the ball movement speed calculation based on distance.
 
-int RobotLogic::calculateMoveSpeed(float distance) {
-    if (distance > 5.0f) distance = 5.0f;
-    float minSpeed=20.0f, maxSpeed=50.0f, maxSpeedDistance=1.5f;
+int RobotLogic::calculateMoveSpeed(float distance, float min, float max, float thresh) {
         
-    float speed = minSpeed + (maxSpeed-minSpeed)/maxSpeedDistance * distance;
-    return Math::min(speed, maxSpeed);
+    float speed = min + (max-min)/thresh * distance;
+    return Math::min(speed, max);
 }
 
 //Generic drive to ball based on the ball's distance and angle.
 
 void RobotLogic::driveBallsFront() {
     Ball ball = getFirstFrontBall();
-    //std::cout << "DRIVIN TO FIRST BALL FRONT." << std::endl;
-    //std::cout << " BALL COORDS : " << ball.getCen_x() << " and " << ball.getCen_y() << " AT DIST:" << ball.getDistance() << std::endl;
-    float turnSpd = getAngle(ball.getCen_x())*0.8;
-    float moveDir = ball.getAngle() /180.0 * PI * 0.8;
-    //TODO : Replace len usage with distance.
-    float moveSpd = calculateMoveSpeed(ball.getDistance());
-
-    rController->driveRobot(moveSpd, moveDir, turnSpd);
+    
+    robotDriveWrapperFront(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 20, 200, 1.0f);
+    
 }
+
 
 //Drive to the closest rear ball until it is under 20cm, then rotate.
 
@@ -276,32 +272,44 @@ void RobotLogic::driveBallsRear() {
         lockBallTurn();
         return;
     }
+    
+    robotDriveWrapperRear(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 35, 200, 1.0f);
+}
 
-    float turnSpd = getAngle(ball.getCen_x())*0.8;
-    float moveDir = ball.getAngle() / 180.0 * PI;
+void RobotLogic::robotDriveWrapperFront(int cen_x, float angle, float distance, float minSpd, float maxSpd, float speedThreshold){
+    float turnSpd = getAngle(cen_x)*0.8;
+    float moveDir = angle /180.0 * PI * 0.8;
+    float moveSpd = calculateMoveSpeed(distance, minSpd, maxSpd, speedThreshold);
+    
+    
+    rController->driveRobot(moveSpd, moveDir, turnSpd);
+}
+
+void RobotLogic::robotDriveWrapperRear(int cen_x, float angle, float distance, float minSpd, float maxSpd, float speedThreshold) {
+    float turnSpd = getAngle(cen_x)*0.8;
+    float moveDir = angle / 180.0 * PI;
     moveDir = PI + ((moveDir - PI) * 0.8);
     
     if (moveDir >= PI) {
         moveDir -= 2*PI;
     }
-    
-    //TODO : Replace len usage with distance.
-    float moveSpd = calculateMoveSpeed(ball.getDistance());
+    float moveSpd = calculateMoveSpeed(distance, minSpd, maxSpd, speedThreshold);
 
     rController->driveRobot((-1.0f*moveSpd), (moveDir + Math::MATHPI), (turnSpd));
 }
 
+
 void RobotLogic::ballsNotFound() {
     ballTimeoutCount++;
-    rController->driveRobot(0, 0, 40);
+    rController->driveRobot(0, 0, 50);
     if (ballTimeoutCount > RobotConstants::ballTimeoutThresh) {
         ballTimeoutCount = 0;
         setRState(RobotState::BALL_TIMEOUT);
     }
 }
 
-void RobotLogic::robotRotate() {
-    rController->turnAround(80);
+void RobotLogic::robotRotate(int angle, int spd) {
+    rController->turnAround(angle, spd);
     releaseBallDriveLocks();
     releaseBallTurnLock();
     releaseGateTurnLock();
@@ -365,7 +373,7 @@ void RobotLogic::findGate() {
             break;
             //The system has decided that it must rotate to reach an optimal aiming solution. Rotation = ~180 deg.
         case GateFindState::GATE_ROTATE:
-            robotRotate();
+            robotRotate(wantedGateRotation, 70);
             break;
     }
 }
@@ -373,6 +381,7 @@ void RobotLogic::findGate() {
 //Default aiming algorithm
 
 void RobotLogic::gateVisibleFront() {
+    startingOppositeDistance = 0.0f;
     int aimThresh = -1;
     int turnSpeed = -1;
 
@@ -411,31 +420,114 @@ void RobotLogic::gateVisibleFront() {
 //Rotate from whichever side is more beneficial, remember the direction of rotation
 
 void RobotLogic::gateVisibleRear() {
-
+    startingOppositeDistance = 0.0f;
+    lockGateTurn();
+    return;
 }
 
-//Drive a bit until
+//Drive a bit until the opposing gate reaches some threshold or 
 
 void RobotLogic::opposingGateFront() {
-
+    float distance, angle;
+    int cen_x;
+    if(goal == Goal::gBLUE){
+        distance = yGate.GetDistance();
+        angle = yGate.GetAngle();
+        cen_x = yGate.GetCen_x();
+    } else {
+        distance = bGate.GetDistance();
+        angle = bGate.GetAngle();
+        cen_x = bGate.GetCen_x();
+    }
+    
+    if(startingOppositeDistance==0.0f){
+        startingOppositeDistance = distance;
+    } else if (startingOppositeDistance-distance>=0.4f){
+         wantedGateRotation = int(Math::abs(angle) + 90.0);
+        if(angle>0){
+            wantedRotateSpeed=-70;
+        } else {
+            wantedRotateSpeed = 70;
+        }
+         lockGateTurn();
+        return;
+    } else if(distance<2.5f){
+        wantedGateRotation = int(Math::abs(angle) + 90.0);
+        if(angle>0){
+            wantedRotateSpeed=-70;
+        } else {
+            wantedRotateSpeed = 70;
+        }
+        lockGateTurn();
+        return;
+    } else {
+        robotDriveWrapperFront(cen_x, angle, distance, 30, 180, 1.5);
+    }
 }
 
 void RobotLogic::opposingGateRear() {
-
+    float distance, angle;
+    int cen_x;
+    if(goal == Goal::gBLUE){
+        distance = yGate.GetDistance();
+        angle = yGate.GetAngle();
+        cen_x = yGate.GetCen_x();
+    } else {
+        distance = bGate.GetDistance();
+        angle = bGate.GetAngle();
+        cen_x = bGate.GetCen_x();
+    }
+    if(startingOppositeDistance==0.0f){
+        startingOppositeDistance = distance;
+    } else if (startingOppositeDistance-distance>=0.4f){
+         wantedGateRotation = int(Math::abs(angle)-+ 90.0);
+        if(angle>0){
+            wantedRotateSpeed=-70;
+        } else {
+            wantedRotateSpeed = 70;
+        }
+         lockGateTurn();
+        return;
+    } else if(distance<2.5f){
+        wantedGateRotation = int(Math::abs(angle) - 90);
+        if(angle>0){
+            wantedRotateSpeed=-70;
+        } else {
+            wantedRotateSpeed = 70;
+        }
+        lockGateTurn();
+        return;
+    } else {
+        robotDriveWrapperRear(cen_x, angle, distance, 30, 180, 1.5);
+    }
+    
 }
 
 void RobotLogic::gateInvisible() {
-
+    startingOppositeDistance = 0.0f;
+    gateTimeoutCount++;
+    float lastRot = rController->getLastRotation();
+    if(lastRot>0 || lastRot == -50){
+        rController->driveRobot(0, 0, -50);
+    } else if (lastRot<0 || lastRot==50){
+        rController->driveRobot(0, 0, 50);    
+    }
+    
+    if (gateTimeoutCount > RobotConstants::ballTimeoutThresh) {
+        gateTimeoutCount = 0;
+        setRState(RobotState::GATE_TIMEOUT);
+    }
 }
 
 
 //Drive the robot closer to own goal.
 
 void RobotLogic::gateTimeout() {
-
+    startingOppositeDistance = 0.0f;
 }
 
 void RobotLogic::kickBall() {
+    startingOppositeDistance = 0.0f;
     rController->stopDribbler();
     rController->kickBall(2000);
     usleep(16667);
@@ -443,6 +535,7 @@ void RobotLogic::kickBall() {
 }
 
 void RobotLogic::notGreen() {
+    startingOppositeDistance = 0.0f;
     //TODO : something smart
     rController->driveRobot(0, 0, 100);
     cout << "STATE: FIND_BALL" << endl;

@@ -70,8 +70,9 @@ public:
     void driveReverse();
         
     DriveDirection getDriveDir();
-    void turnAround(int spd);
+    void turnAround(int angle, int spd);
     
+    float getLastRotation(){ return lastRotationSpeed; }
 private:
     int stallCounters[4] = {0,0,0,0};
     

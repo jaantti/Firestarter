@@ -30,7 +30,6 @@ public:
 
     void stopProcessor();
     
-    //To be decommissioned once new system is in place.
     blobs_processed getUnlockedFront();
     blobs_processed getUnlockedBack();
     

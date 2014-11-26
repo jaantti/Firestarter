@@ -29,17 +29,17 @@ public:
     
     bool operator>(const Ball& other) const
     {
-        return (distance < other.distance);
+        return (distance > other.distance);
     }
 
     bool operator<(const Ball& other) const
     {
-        return (distance > other.distance);
+        return (distance < other.distance);
     }
 
     bool operator<=(const Ball& other) const
     {
-        return !(distance < other.distance);
+        return !(distance > other.distance);
     }
 
     bool operator>=(const Ball& other) const

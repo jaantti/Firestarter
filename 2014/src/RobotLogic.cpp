@@ -466,7 +466,7 @@ void RobotLogic::idle() {
     if (rController->getStart()) {
         rController->chargeCoil();
         rState = RobotState::FIND_BALL;
-        usleep(250000);
+        usleep(50000);
         return;
     }
 
@@ -550,7 +550,7 @@ void RobotLogic::driveBallsFront() {
     } else {
         rController->stopDribbler();
     }
-    robotDriveWrapperFront(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 20, 60, 1.0f);
+    robotDriveWrapperFront(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 30, 111, 1.0f);
     
 }
 
@@ -559,13 +559,13 @@ void RobotLogic::driveBallsFront() {
 
 void RobotLogic::driveBallsRear() {
     Ball ball = getFirstRearBall();
-    if (ball.getDistance() < 0.2f) {
+    if (ball.getDistance() < 0.4f) {
         cout << "BALL AT REAR, TURNING" << endl;
         lockBallTurn();
         return;
     }
     
-    robotDriveWrapperRear(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 35, 60, 1.0f);
+    robotDriveWrapperRear(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 35, 160, 1.0f);
 }
 
 void RobotLogic::robotDriveWrapperFront(int cen_x, float angle, float distance, float minSpd, float maxSpd, float speedThreshold){
@@ -593,7 +593,7 @@ void RobotLogic::robotDriveWrapperRear(int cen_x, float angle, float distance, f
 
 void RobotLogic::ballsNotFound() {
     ballTimeoutCount++;
-    rController->driveRobot(0, 0, 50);
+    rController->driveRobot(0, 0, 30);
     if (ballTimeoutCount > RobotConstants::ballTimeoutThresh) {
         ballTimeoutCount = 0;
         setRState(RobotState::BALL_TIMEOUT);
@@ -672,8 +672,7 @@ void RobotLogic::findGate() {
             break;
             //The system has decided that it must rotate to reach an optimal aiming solution. Rotation = ~180 deg.
         case GateFindState::GATE_ROTATE:
-            std::cout << " ROTATING FOR " << wantedGateRotation << " DEGREES." << std::endl;
-            robotRotate(wantedGateRotation, 60);
+            robotRotate(180, 60);
             break;
     }
 }
@@ -701,7 +700,7 @@ void RobotLogic::gateVisibleFront() {
         gate_y = yGate.GetCen_y();
         gate_w = yGate.GetWidth();
     }
-    aimThresh = gate_w * 0.2 + 5;
+    aimThresh = gate_w * 0.15 + 5;
     float angleSpd = gateAngle * 0.5;
     float turn = 0;
     if (angleSpd < 0) turn = -3;
@@ -711,6 +710,7 @@ void RobotLogic::gateVisibleFront() {
     if (gate_x < CAM_W / 2 - aimThresh) rController->driveRobot(0, 0, turnSpeed);
     else if (gate_x > CAM_W / 2 + aimThresh) rController->driveRobot(0, 0, turnSpeed);
     else {
+        rController->driveRobot(0, 0, 0);
         cout << "STATE: KICK_BALL" << endl;
         rState = RobotState::KICK_BALL;
         return;
@@ -721,7 +721,6 @@ void RobotLogic::gateVisibleFront() {
 
 void RobotLogic::gateVisibleRear() {
     startingOppositeDistance = 0.0f;
-    wantedGateRotation = 180;
     lockGateTurn();
     return;
 }
@@ -740,8 +739,8 @@ void RobotLogic::opposingGateFront() {
         angle = bGate.GetAngle();
         cen_x = bGate.GetCen_x();
     }
-    if(distance>2.8f){
-        robotDriveWrapperFront(cen_x, angle, distance, 10, 50, 2.5);
+    if(distance>2.0f){
+        robotDriveWrapperFront(cen_x, angle, distance, 10, 150, 2.5);
     } else {
         rController->driveRobot(0, 0, -50);
     }
@@ -762,7 +761,7 @@ void RobotLogic::opposingGateRear() {
     
     std::cout << " OPPOSING GATE DISTANCE :" << distance << std::endl;
     if(distance>2.0f){
-        robotDriveWrapperRear(cen_x, angle, distance, 10, 50, 2.5);
+        robotDriveWrapperRear(cen_x, angle, distance, 10, 150, 2.5);
     } else {
         rController->driveRobot(0, 0, -50);
     }
@@ -771,7 +770,6 @@ void RobotLogic::opposingGateRear() {
 void RobotLogic::gateInvisible() {
     startingOppositeDistance = 0.0f;
     gateTimeoutCount++;
-    float lastRot = rController->getLastRotation();
     rController->driveRobot(0,0,-50);
     /*
     if (gateTimeoutCount > RobotConstants::ballTimeoutThresh) {

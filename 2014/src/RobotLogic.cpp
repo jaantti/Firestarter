@@ -154,8 +154,17 @@ void RobotLogic::runDefend(float dt) {
         case RobotState::FIND_BALL:
             driveToGate();
             break;
-        case RobotState::DEFEND:
-            defend();
+        case RobotState::DEFEND_BALL:
+            defendBall();
+            break;
+        case RobotState::DEFEND_FINDGATE:
+            defendFindGate();
+            break;
+        case RobotState::DEFEND_SCAN:
+            defendScan();
+            break;
+        case RobotState::DEFEND_KICK:
+            defendKick();
             break;
 
     }
@@ -172,10 +181,199 @@ void RobotLogic::driveToGate() {
     usleep(driveTime);
     rController->driveRobot(50, PI / 2.0, 0);
     usleep(driveTime * 7);
-    rState = RobotState::DEFEND;
+    rState = RobotState::DEFEND_FINDGATE;
+}
+
+void RobotLogic::defendBall() {
+    startCounter++;
+    if (startCounter >= 5) {
+        startCounter = 0;
+        if (!(rController->getStart())) {
+            cout << "STATE: IDLE" << endl;
+            rState = RobotState::IDLE;
+            return;
+        }
+    }
+    
+    rController->stopDribbler();
+    
+    if (rController->hasBall()) {
+        cout << "STATE: DEFEND_KICK" << endl;
+        rState = RobotState::DEFEND_KICK;
+        return;
+    }
+    
+    gateState = getGateState();
+    ballState = getBallState();
+    
+    if (gateState != GateFindState::OPPOSING_GATE_REAR) {
+        cout << "STATE: DEFEND_FINDGATE" << endl;
+        rState = RobotState::DEFEND_FINDGATE;
+        return;
+    }
+    if (ballState != BallFindState::BALL_FRONT) {
+        cout << "STATE: DEFEND_SCAN" << endl;
+        rState = RobotState::DEFEND_SCAN;
+        return;
+    }
+    
+    float gateAngle, ballAngle, gateDistance, ballDistance;
+    Ball ball = getFirstFrontBall();
+    
+    ballAngle = ball.getAngle() / 180.0 * PI;
+    ballDistance = ball.getDistance();
+    
+    if (ballDistance < 0.3) {
+        rController->runDribbler();
+    }
+    
+    if (goal == Goal::gBLUE) {
+        gateAngle = yGate.GetAngle() / 180.0 * PI;
+        gateDistance = yGate.GetDistance();
+    } else {
+        gateAngle = bGate.GetAngle() / 180.0 * PI;
+        gateDistance = bGate.GetDistance();
+    }
+    
+    float moveDir, rotSpd, moveSpd;
+    
+    moveDir = (PI - gateAngle) + ballAngle;
+    rotSpd = (gateAngle - PI) + ballAngle;
+    
+    if (moveDir > 0.1) {
+        moveSpd = Math::abs((float)(MAX_MOTOR_SPEED) * moveDir / PI);
+        moveDir = PI / 2.0;
+    } else if (moveDir < -0.1) {
+        moveSpd = Math::abs((float)(MAX_MOTOR_SPEED) * moveDir / PI);
+        moveDir = PI / -2.0;
+    } else {
+        moveSpd = 0.0;
+    }
+    
+    rController->driveRobot(moveSpd, moveDir, rotSpd);
+}
+
+void RobotLogic::defendFindGate() {
+    startCounter++;
+    if (startCounter >= 5) {
+        startCounter = 0;
+        if (!(rController->getStart())) {
+            cout << "STATE: IDLE" << endl;
+            rState = RobotState::IDLE;
+            return;
+        }
+    }
+    
+    if (rController->hasBall()) {
+        cout << "STATE: DEFEND_KICK" << endl;
+        rState = RobotState::DEFEND_KICK;
+        return;
+    }
+    
+    rController->stopDribbler();
+    
+    gateState = getGateState();
+    
+    switch (gateState) {
+            //Aim for the gate and shoot.
+        case GateFindState::GATE_VISIBLE_FRONT:
+            rController->turnAround(30, 40);
+            break;
+            //Rotate, shoot.
+        case GateFindState::GATE_VISIBLE_REAR:
+            rController->turnAround(30, 40);
+            break;
+            //Relocate to a better position, rotate until gate visible, shoot.
+        case GateFindState::OPPOSING_GATE_FRONT:
+            rController->turnAround(180, 100);
+            break;
+            //Relocate to a better position, rotate, shoot..
+        case GateFindState::OPPOSING_GATE_REAR:
+            cout << "STATE: DEFEND_SCAN" << endl;
+            rState = RobotState::DEFEND_SCAN;
+            return;
+            break;
+            //Turn until a gate is found, otherwise enter a timeout. (RobotConstants::gateTimeout)
+        case GateFindState::GATE_INVISIBLE:
+            rController->turnAround(30, 40);
+            break;
+        case GateFindState::GATE_ROTATE:
+            rController->turnAround(30, 40);
+            break;
+    }
+    
+    
+    
+}
+
+void RobotLogic::defendKick() {
+    startingOppositeDistance = 0.0f;
+    rController->stopDribbler();
+    rController->kickBall(2000);
+    usleep(16667);
+    rState = RobotState::DEFEND_FINDGATE;
+    
+}
+
+void RobotLogic::defendScan() {
+    startCounter++;
+    if (startCounter >= 5) {
+        startCounter = 0;
+        if (!(rController->getStart())) {
+            rState = RobotState::IDLE;
+            return;
+        }
+    }
+    
+    rController->stopDribbler();
+    
+    if (rController->hasBall()) {
+        cout << "STATE: DEFEND_KICK" << endl;
+        rState = RobotState::DEFEND_KICK;
+        return;
+    }
+    
+    gateState = getGateState();
+    ballState = getBallState();
+    
+    if (gateState != GateFindState::OPPOSING_GATE_REAR) {
+        cout << "STATE: DEFEND_FINDGATE" << endl;
+        rState = RobotState::DEFEND_FINDGATE;
+        return;
+    }
+    if (ballState == BallFindState::BALL_FRONT) {
+        cout << "STATE: DEFEND_BALL" << endl;
+        rState = RobotState::DEFEND_BALL;
+        return;
+    }
+    
+    float gateAngle, gateDistance;
+    
+    if (goal == Goal::gBLUE) {
+        gateAngle = yGate.GetAngle();
+        gateDistance = yGate.GetDistance();
+    } else {
+        gateAngle = bGate.GetAngle();
+        gateDistance = bGate.GetDistance();
+    }
+    
+    if (gateAngle < 160) {
+        defendScanDir = 1.0;
+    } else if (gateAngle > 200) {
+        defendScanDir = -1.0;
+    }
+    
+    float moveDir, rotSpd, moveSpd;
+    
+    moveDir = ((gateDistance - DEFEND_GATE_DISTANCE) + (PI / 2.0)) * defendScanDir;
+    moveSpd = 70.0;
+    rotSpd = (gateAngle / 180.0 * PI - PI) * 0.05;
+    
+    rController->driveRobot(moveSpd, moveDir, rotSpd);
 }
 
 void RobotLogic::defend() {
+    
     int defendX = -1;
     float defendAngle = -1;
     float defendDistance = -1;

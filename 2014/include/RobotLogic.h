@@ -52,6 +52,8 @@ private:
     float posX = 0.0f;
     float posY = 0.0f;
     float orientation = 0.0f;
+    
+    float defendScanDir = 1.0f;
 
     int wantedGateRotation = 0;
     float startingOppositeDistance = 0.0f;
@@ -110,6 +112,10 @@ private:
     void notGreen();
     void stalled();
     void defend();
+    void defendBall();
+    void defendFindGate();
+    void defendScan();
+    void defendKick();
     void driveToGate();
     
     GateFindState getGateState();

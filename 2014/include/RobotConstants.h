@@ -34,6 +34,8 @@
 #define MIN_GATE_WIDTH 80
 #define MIN_GATE_SIZE 600
 
+#define DEFEND_GATE_DISTANCE 0.4f
+
 #define SEG_BLACK 0
 #define SEG_WHITE 1
 #define SEG_GREEN 2
@@ -186,7 +188,10 @@ enum RobotState{
     NOT_GREEN,
     KICK_BALL,
     STALLING,
-    DEFEND
+    DEFEND_BALL,
+    DEFEND_SCAN,
+    DEFEND_FINDGATE,
+    DEFEND_KICK
 };
 
 enum DriveDirection{

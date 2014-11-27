@@ -721,6 +721,7 @@ void RobotLogic::gateVisibleFront() {
 
 void RobotLogic::gateVisibleRear() {
     startingOppositeDistance = 0.0f;
+    wantedGateRotation = 180;
     lockGateTurn();
     return;
 }
@@ -742,7 +743,7 @@ void RobotLogic::opposingGateFront() {
     if(distance>2.8f){
         robotDriveWrapperFront(cen_x, angle, distance, 10, 50, 2.5);
     } else {
-        rController->driveRobot(0, 0, 50);
+        rController->driveRobot(0, 0, -50);
     }
 }
 
@@ -761,7 +762,7 @@ void RobotLogic::opposingGateRear() {
     
     std::cout << " OPPOSING GATE DISTANCE :" << distance << std::endl;
     if(distance>2.0f){
-        robotDriveWrapperRear(cen_x, angle, distance, 40, 200, 2.5);
+        robotDriveWrapperRear(cen_x, angle, distance, 10, 50, 2.5);
     } else {
         rController->driveRobot(0, 0, -50);
     }
@@ -771,7 +772,7 @@ void RobotLogic::gateInvisible() {
     startingOppositeDistance = 0.0f;
     gateTimeoutCount++;
     float lastRot = rController->getLastRotation();
-    rController->driveRobot(0,0,lastRot);
+    rController->driveRobot(0,0,-50);
     /*
     if (gateTimeoutCount > RobotConstants::ballTimeoutThresh) {
         gateTimeoutCount = 0;

@@ -198,7 +198,6 @@ void RobotLogic::findBall() {
     
     startingOppositeDistance = 0.0f;
     startCounter++;
-    rController->stopDribbler();
     if (startCounter >= 5) {
         startCounter = 0;
         if (!(rController->getStart())) {
@@ -215,6 +214,7 @@ void RobotLogic::findBall() {
     }
 
     if (ballTimeoutLock) {
+        rController->stopDribbler();
         cout << "STATE: BALL_TIMEOUT" << endl;
         rState = RobotState::BALL_TIMEOUT;
         return;
@@ -257,8 +257,12 @@ int RobotLogic::calculateMoveSpeed(float distance, float min, float max, float t
 
 void RobotLogic::driveBallsFront() {
     Ball ball = getFirstFrontBall();
-    
-    robotDriveWrapperFront(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 20, 200, 1.0f);
+    if(ball.getDistance()<0.33f){
+        rController->runDribbler();
+    } else {
+        rController->stopDribbler();
+    }
+    robotDriveWrapperFront(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 20, 60, 1.0f);
     
 }
 
@@ -273,7 +277,7 @@ void RobotLogic::driveBallsRear() {
         return;
     }
     
-    robotDriveWrapperRear(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 35, 200, 1.0f);
+    robotDriveWrapperRear(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 35, 60, 1.0f);
 }
 
 void RobotLogic::robotDriveWrapperFront(int cen_x, float angle, float distance, float minSpd, float maxSpd, float speedThreshold){
@@ -335,6 +339,7 @@ void RobotLogic::findGate() {
     }
 
     if (!rController->hasBall()) {
+        rController->stopDribbler();
         releaseBallDriveLocks();
         rState = RobotState::FIND_BALL;
         return;

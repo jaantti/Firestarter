@@ -46,7 +46,7 @@ public:
      * Run code
      * @param role Robot role
      */
-    void run(float deltaTime);
+    void run(Role role, float deltaTime);
 private:
 
     float posX = 0.0f;

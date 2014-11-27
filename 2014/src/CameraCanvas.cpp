@@ -258,6 +258,8 @@ void CameraCanvas::overlayText() {
             putText(ball);
         }
     }
+    putText(pProcessor->getYellowGate());
+    putText(pProcessor->getBlueGate());
 }
 
 void CameraCanvas::putText(Ball ball){    
@@ -270,14 +272,23 @@ void CameraCanvas::putText(Ball ball){
     }
     yCoord = ball.getCen_y()-halflen;
     compileObjectString(ball.getDistance(), ball.getAngle(), 0, xCoord, yCoord);
-    
-    }
+   
+}
 
-void CameraCanvas::putText(YellowGate gate){    
+void CameraCanvas::putText(YellowGate gate){ 
+    if(gate.GetDir()==RobotConstants::Direction::FRONT && frontCamera){
+        compileObjectString(gate.GetDistance(), gate.GetAngle(), 1, gate.GetCen_x(), gate.GetCen_y());
+    } else if (gate.GetDir()==RobotConstants::Direction::REAR && !frontCamera){
+        compileObjectString(gate.GetDistance(), gate.GetAngle(), 1, gate.GetCen_x(), gate.GetCen_y());
+    }
 }
 
 void CameraCanvas::putText(BlueGate gate){
-    
+    if(gate.GetDir()==RobotConstants::Direction::FRONT && frontCamera){
+        compileObjectString(gate.GetDistance(), gate.GetAngle(), 1, gate.GetCen_x(), gate.GetCen_y());
+    } else if (gate.GetDir()==RobotConstants::Direction::REAR && !frontCamera){
+        compileObjectString(gate.GetDistance(), gate.GetAngle(), 1, gate.GetCen_x(), gate.GetCen_y());
+    }    
 }
 
 //TODO : Rework it into putText functions.
@@ -293,8 +304,8 @@ void CameraCanvas::compileObjectString(float distance, float angle, int objectTy
     else objectStream << "BlueGate";
     
     cv::putText(working_matrix, distanceStream.str(), cv::Point(xPoint, yPoint) , cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
-    cv::putText(working_matrix, angleStream.str(), cv::Point(xPoint, yPoint+10) , cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
-    cv::putText(working_matrix, objectStream.str(), cv::Point(xPoint, yPoint+20) , cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
+    cv::putText(working_matrix, angleStream.str(), cv::Point(xPoint, yPoint+13) , cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
+    cv::putText(working_matrix, objectStream.str(), cv::Point(xPoint, yPoint+26) , cv::FONT_HERSHEY_COMPLEX_SMALL, 0.8, cvScalar(200,200,250), 1, CV_AA);
 
     
 }

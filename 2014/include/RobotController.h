@@ -64,6 +64,7 @@ public:
     bool getStart();    
     void closeSerial(){connection.closeSerial();}
     vector<float> getAllMotorSpeeds();
+    Role getRole();
     
     void initSerialTime(unsigned long timeInMicros);
     unsigned long timeSinceLastLoop();

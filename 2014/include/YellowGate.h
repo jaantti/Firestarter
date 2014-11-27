@@ -9,7 +9,7 @@
 #define	YELLOWGATE_H
 #include "RobotConstants.h"
 
-class YellowGate {
+class YellowGate{
 public:
     
     
@@ -53,7 +53,7 @@ public:
     RobotConstants::Direction dir;
     
     float angle = 0.0f;
-    float distance = 0.0f;
+    float distance = -1;
     
     
 private:   

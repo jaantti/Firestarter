@@ -35,6 +35,7 @@ public:
     bool hasBall();
     bool getStart();
     char getGoal();
+    Role getRole();
     void setDetectSerial(bool serial);
     void chargeCoil();
     void dischargeCoil();

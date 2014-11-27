@@ -146,11 +146,98 @@ void RobotLogic::runAttack(float dt) {
 }
 
 void RobotLogic::runDefend(float dt) {
+    loadOperationalData();
+    switch (rState) {
+        case RobotState::IDLE:
+            idle();
+            break;
+        case RobotState::FIND_BALL:
+            driveToGate();
+            break;
+        case RobotState::DEFEND:
+            defend();
+            break;
+
+    }
 
 }
 
 void RobotLogic::setRState(RobotState state) {
     rState = state;
+}
+
+void RobotLogic::driveToGate() {
+    long driveTime = 100000;
+    rController->driveRobot(50, 0, 0);
+    usleep(driveTime);
+    rController->driveRobot(50, PI / 2.0, 0);
+    usleep(driveTime * 7);
+    rState = RobotState::DEFEND;
+}
+
+void RobotLogic::defend() {
+    int defendX = -1;
+    float defendAngle = -1;
+    float defendDistance = -1;
+    
+    int attackX = -1;
+    float attackDistance = -1;
+    float attackAngle = -1;
+    
+    int angleTolerance = 15;
+    
+    startCounter++;
+    if (startCounter >= 5) {
+        startCounter = 0;
+        if (!(rController->getStart())) {
+            rState = RobotState::IDLE;
+            return;
+        }
+    }
+    
+    if (goal == Goal::gBLUE) {
+        defendX = yGate.GetCen_x();
+        defendDistance = yGate.GetDistance();
+        defendAngle = yGate.GetAngle();
+        attackX = bGate.GetCen_x();
+        attackDistance = bGate.GetDistance();
+        attackAngle = bGate.GetAngle();
+        
+    } else if (goal == Goal::gYELLOW) {
+        defendX = bGate.GetCen_x();
+        defendDistance = bGate.GetDistance();
+        defendAngle = bGate.GetAngle();
+        
+        attackX = yGate.GetCen_x();
+        attackDistance = yGate.GetDistance();
+        attackAngle = yGate.GetAngle();
+        
+    } else {
+        cout << "defend(): I shouldn't be here" << endl;
+        return;
+    }
+    
+    if ((hasBallsFront() || hasBallsRear()) && false) {
+        //Kaitse palli vastu
+    } else {
+        //Väravate vahele keskele minemine
+        if (Math::abs(attackAngle) > angleTolerance) {
+            if (attackAngle > 0) {
+                rController->driveRobot(30, 1.5 * PI, -15);
+            } else {
+                rController->driveRobot(30, PI/2.0, 15);
+            }
+            
+        } else if (Math::abs(defendAngle) > angleTolerance && false) {
+            if (defendAngle > 0) {
+                rController->driveRobot(30, PI/2.0, 15);
+            } else {
+                rController->driveRobot(30, 1.5 * PI, -15);
+            }
+        }
+    }
+    
+    
 }
 
 bool RobotLogic::isGreen() {
@@ -176,6 +263,7 @@ void RobotLogic::idle() {
     rController->stopDribbler();
     rController->driveRobot(0, 0, 0);
     setGoal();
+    setRole();
 
     if (rController->getStart()) {
         rController->chargeCoil();
@@ -580,7 +668,7 @@ BallFindState RobotLogic::getBallState() {
             lockFrontBallDrive();
             return BallFindState::BALL_FRONT;
         } else {
-            lockRearBallDrive();            
+            lockRearBallDrive();
             return BallFindState::BALL_REAR;
         }
     } else {
@@ -677,5 +765,9 @@ Ball RobotLogic::getFirstRearBall() {
     for (Ball ball : balls) {
         if (ball.getDir() == RobotConstants::Direction::REAR) return ball;
     }
+}
+
+void RobotLogic::setRole() {
+    role = rController->getRole();
 }
 

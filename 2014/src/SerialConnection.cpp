@@ -124,6 +124,24 @@ bool SerialConnection::getStart() {
     return false;
 }
 
+Role SerialConnection::getRole() {
+   
+    unsigned char answer[1300] = {0};
+    sendCommand(serialDevice[GET_SWITCH_BOARD_ID], "s2\n", answer);
+    
+    if (answer[4] == '1') {
+        cout << "Attacking" << endl;
+        return Role::rATTACK;
+    } else if (answer[4] == '0') {
+        cout << "Defending" << endl;
+        return Role::rDEFEND;
+    } else {
+        cout << "getRole(): I should not be here" << endl;
+        return Role::rATTACK;
+    }
+    
+}
+
 void SerialConnection::runDribbler() {
     if(serialDevice[0] == -1) return;
     RS232_cputs(serialDevice[0], (const char*)("tg\n"));

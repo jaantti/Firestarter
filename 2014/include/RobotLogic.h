@@ -24,6 +24,7 @@ public:
     RobotLogic();
     RobotLogic(Goal gl);
     void setGoal();
+    void setRole();
     float getAngle(int x_coor);
     virtual ~RobotLogic();
     /**
@@ -45,7 +46,7 @@ public:
      * Run code
      * @param role Robot role
      */
-    void run(Role role, float deltaTime);
+    void run(float deltaTime);
 private:
 
     float posX = 0.0f;
@@ -61,6 +62,7 @@ private:
     OdometerLocalizer *odometryLocalizer;
 
     Goal goal;
+    Role role = Role::rATTACK;
     int startCounter=0;
     void runAttack(float dt);
     void runDefend(float dt);
@@ -107,6 +109,8 @@ private:
     void kickBall();
     void notGreen();
     void stalled();
+    void defend();
+    void driveToGate();
     
     GateFindState getGateState();
     

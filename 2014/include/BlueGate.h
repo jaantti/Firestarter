@@ -11,7 +11,7 @@
 #include "RobotConstants.h"
 
 
-class BlueGate {
+class BlueGate{
 public:    
        
     BlueGate();
@@ -54,7 +54,7 @@ public:
     RobotConstants::Direction dir;
     
     float angle = 0.0f;
-    float distance = 0.0f;
+    float distance = -1;
     
 private:
     

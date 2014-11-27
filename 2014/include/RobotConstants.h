@@ -185,7 +185,8 @@ enum RobotState{
     GATE_TIMEOUT,
     NOT_GREEN,
     KICK_BALL,
-    STALLING
+    STALLING,
+    DEFEND
 };
 
 enum DriveDirection{

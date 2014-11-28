@@ -94,7 +94,7 @@ void RobotLogic::runAttack(float dt) {
 
     switch (rState) {
         case RobotState::IDLE:
-            cout << "IDLE" << endl;
+            cout << "IDLE: ATTACK" << endl;
             idle();
             break;
         case RobotState::FIND_BALL:
@@ -149,21 +149,27 @@ void RobotLogic::runDefend(float dt) {
     loadOperationalData();
     switch (rState) {
         case RobotState::IDLE:
+            cout << "IDLE: DEFENSE" << endl;
             idle();
             break;
         case RobotState::FIND_BALL:
+            cout << "FIND_BALL" << endl;
             driveToGate();
             break;
         case RobotState::DEFEND_BALL:
+            cout << "DEFEND_BALL" << endl;
             defendBall();
             break;
         case RobotState::DEFEND_FINDGATE:
+            cout << "DEFEND_FINDGATE" << endl;
             defendFindGate();
             break;
         case RobotState::DEFEND_SCAN:
+            cout << "DEFEND_SCAN" << endl;
             defendScan();
             break;
         case RobotState::DEFEND_KICK:
+            cout << "DEFEND_KICK" << endl;
             defendKick();
             break;
 

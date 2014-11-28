@@ -82,7 +82,8 @@ bool Starter::start() {
         canvas1.refreshFrame();
         canvas2.refreshFrame();        
         float f = translateMicrosToSec(rLogic.timeSinceLastSerial());
-        rLogic.run(Role::rATTACK, f);
+        Role role = rController.getRole();
+        rLogic.run(role, f);
         
         gettimeofday(&tv2, NULL);
         tim2 = 1000000 * tv2.tv_sec + tv2.tv_usec;

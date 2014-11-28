@@ -83,7 +83,7 @@ private:
     
     void moveToBall(int x, int y);
     void setRState(RobotState state);
-    RobotState rState = RobotState::FIND_BALL;
+    RobotState rState = RobotState::IDLE;
     RobotState lastState = RobotState::IDLE;
     
     BallFindState ballState;

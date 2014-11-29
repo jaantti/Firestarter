@@ -78,6 +78,8 @@ private:
     BlueGate bGate;
     GreenContainer greens;
     
+   	float rotationSpeedSaver = 0;
+
     int ballsFront = 0;
     int ballsBack = 0;
     
@@ -161,6 +163,8 @@ private:
     void robotDriveWrapperFront(int cen_x, float angle, float distance, float minSpd, float maxSpd, float speedThreshold);
     void robotDriveWrapperRear(int cen_x, float angle, float distance, float minSpd, float maxSpd, float speedThreshold);
     
+    int getGateCentering(int x1, int x2);
+
 };
 
 #endif	/* ROBOTLOGIC_H */

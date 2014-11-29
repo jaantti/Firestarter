@@ -79,7 +79,7 @@ float RobotLogic::getAngle(int x_coor) {
     return (((float) x_coor - (float) CAM_W / 2.0) / (float) CAM_W * (float) CAM_HFOV*-1.0);
 }
 
-void RobotLogic::run(Role role, float deltaTime) {
+void RobotLogic::run(float deltaTime) {
     if (role == Role::rATTACK) {
         runAttack(deltaTime);
     }
@@ -526,7 +526,7 @@ void RobotLogic::idle() {
     gettimeofday(&tv, NULL);
     unsigned long int tim1 = 1000000 * tv.tv_sec + tv.tv_usec;
     rController->initSerialTime(tim1);
-
+    role = rController->getRole();
     rController->stopDribbler();
     rController->driveRobot(0, 0, 0);
     setGoal();
@@ -641,7 +641,7 @@ void RobotLogic::robotDriveWrapperFront(int cen_x, float angle, float distance, 
     float turnSpd = getAngle(cen_x)*0.8;
     float moveDir = angle /180.0 * PI * 0.8;
     float moveSpd = calculateMoveSpeed(distance, minSpd, maxSpd, speedThreshold);
-    
+    rotationSpeedSaver = turnSpd;
     
     rController->driveRobot(moveSpd, moveDir, turnSpd);
 }
@@ -650,19 +650,23 @@ void RobotLogic::robotDriveWrapperRear(int cen_x, float angle, float distance, f
     float turnSpd = getAngle(cen_x)*0.8;
     float moveDir = angle / 180.0 * PI;
     moveDir = PI + ((moveDir - PI) * 0.8);
-    
     if (moveDir >= PI) {
         moveDir -= 2*PI;
     }
     float moveSpd = calculateMoveSpeed(distance, minSpd, maxSpd, speedThreshold);
-
+    rotationSpeedSaver = turnSpd;
     rController->driveRobot((-1.0f*moveSpd), (moveDir + Math::MATHPI), (turnSpd));
 }
 
 
 void RobotLogic::ballsNotFound() {
     ballTimeoutCount++;
-    rController->driveRobot(0, 0, 30);
+    if(rotationSpeedSaver>0 && (rotationSpeedSaver>20 || rotationSpeedSaver<-20)){
+    	rController->driveRobot(0, 0, rotationSpeedSaver);
+    } else {
+    	rController->driveRobot(0, 0, 35);
+    	rotationSpeedSaver = 35;
+    }
     if (ballTimeoutCount > RobotConstants::ballTimeoutThresh) {
         ballTimeoutCount = 0;
         setRState(RobotState::BALL_TIMEOUT);
@@ -810,8 +814,10 @@ void RobotLogic::opposingGateFront() {
     }
     if(distance>2.0f){
         robotDriveWrapperFront(cen_x, angle, distance, 10, 150, 2.5);
+    } else if(rotationSpeedSaver>=30 || rotationSpeedSaver<=-30){
+        rController->driveRobot(0, 0, rotationSpeedSaver);
     } else {
-        rController->driveRobot(0, 0, -25);
+    	rController->driveRobot(0, 0, 40);
     }
 }
 
@@ -831,8 +837,10 @@ void RobotLogic::opposingGateRear() {
     std::cout << " OPPOSING GATE DISTANCE :" << distance << std::endl;
     if(distance>2.0f){
         robotDriveWrapperRear(cen_x, angle, distance, 10, 150, 2.5);
+    }  else if(rotationSpeedSaver>=30 || rotationSpeedSaver<=-30){
+        rController->driveRobot(0, 0, rotationSpeedSaver);
     } else {
-        rController->driveRobot(0, 0, -25);
+    	rController->driveRobot(0, 0, 40);
     }
     rState = RobotState::FIND_GATE;
 }

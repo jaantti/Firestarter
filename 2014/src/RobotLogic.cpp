@@ -154,7 +154,11 @@ void RobotLogic::runDefend(float dt) {
             break;
         case RobotState::FIND_BALL:
             cout << "FIND_BALL" << endl;
-            driveToGate();
+            rState = RobotState::DEFEND_INITIAL;
+            break;
+        case RobotState::DEFEND_INITIAL:
+            cout << "DEFEND_INITIAL" << endl;
+            defendInitial();
             break;
         case RobotState::DEFEND_BALL:
             cout << "DEFEND_BALL" << endl;
@@ -209,10 +213,11 @@ void RobotLogic::defendBall() {
         return;
     }
     
-    gateState = getGateState();
+    gateState = getDefendGateState();
     ballState = getBallState();
     
-    if (gateState != GateFindState::OPPOSING_GATE_REAR) {
+    if ((gateState != GateFindState::OPPOSING_GATE_REAR) && 
+            (gateState != GateFindState::OPPOSING_REAR_OTHER_FRONT)) {
         cout << "STATE: DEFEND_FINDGATE" << endl;
         rState = RobotState::DEFEND_FINDGATE;
         return;
@@ -246,11 +251,11 @@ void RobotLogic::defendBall() {
     moveDir = (PI - gateAngle) + ballAngle;
     rotSpd = (gateAngle - PI) + ballAngle;
     
-    if (moveDir > 0.1) {
-        moveSpd = Math::abs((float)(MAX_MOTOR_SPEED) * moveDir / PI);
+    if (moveDir > 0.04) {
+        moveSpd = Math::abs((float)(MAX_MOTOR_SPEED) * moveDir / PI)*3;
         moveDir = PI / 2.0;
-    } else if (moveDir < -0.1) {
-        moveSpd = Math::abs((float)(MAX_MOTOR_SPEED) * moveDir / PI);
+    } else if (moveDir < -0.04) {
+        moveSpd = Math::abs((float)(MAX_MOTOR_SPEED) * moveDir / PI)*3;
         moveDir = PI / -2.0;
     } else {
         moveSpd = 0.0;
@@ -278,33 +283,47 @@ void RobotLogic::defendFindGate() {
     
     rController->stopDribbler();
     
-    gateState = getGateState();
+    gateState = getDefendGateState();
+    
     
     switch (gateState) {
             //Aim for the gate and shoot.
         case GateFindState::GATE_VISIBLE_FRONT:
-            rController->turnAround(30, 40);
+            cout << "gate visible front" << endl;
+            rController->driveRobot(0, 0, 30);
             break;
             //Rotate, shoot.
         case GateFindState::GATE_VISIBLE_REAR:
-            rController->turnAround(30, 40);
+            cout << "gate visible rear" << endl;
+            rController->driveRobot(0, 0, 30);
             break;
             //Relocate to a better position, rotate until gate visible, shoot.
         case GateFindState::OPPOSING_GATE_FRONT:
+            cout << "opposing gate visible front" << endl;
             rController->turnAround(180, 100);
             break;
             //Relocate to a better position, rotate, shoot..
         case GateFindState::OPPOSING_GATE_REAR:
+            cout << "opposing gate visible rear" << endl;
+            cout << "STATE: DEFEND_SCAN" << endl;
+            rState = RobotState::DEFEND_SCAN;
+            return;
+            break;
+        case GateFindState::OPPOSING_REAR_OTHER_FRONT:
+            cout << "opposing gate visible rear, other front" << endl;
             cout << "STATE: DEFEND_SCAN" << endl;
             rState = RobotState::DEFEND_SCAN;
             return;
             break;
             //Turn until a gate is found, otherwise enter a timeout. (RobotConstants::gateTimeout)
         case GateFindState::GATE_INVISIBLE:
-            rController->turnAround(30, 40);
+            cout << "gate invisible" << endl;
+            rController->driveRobot(0, 0, 30);
             break;
         case GateFindState::GATE_ROTATE:
-            rController->turnAround(30, 40);
+            cout << "gate rotate" << endl;
+            rController->driveRobot(0, 0, 30);
+            releaseGateTurnLock();
             break;
     }
     
@@ -319,6 +338,37 @@ void RobotLogic::defendKick() {
     usleep(16667);
     rState = RobotState::DEFEND_FINDGATE;
     
+}
+
+void RobotLogic::defendInitial() {
+    startCounter++;
+    if (startCounter >= 5) {
+        startCounter = 0;
+        if (!(rController->getStart())) {
+            rState = RobotState::IDLE;
+            return;
+        }
+    }
+    
+    if (rController->hasBall()) {
+        cout << "STATE: DEFEND_KICK" << endl;
+        rState = RobotState::DEFEND_KICK;
+        return;
+    }
+    
+    rController->stopDribbler();
+    
+    releaseGateTurnLock();
+    gateState = getDefendGateState();
+    
+    if ((gateState == GateFindState::OPPOSING_GATE_REAR) || 
+            (gateState == GateFindState::OPPOSING_REAR_OTHER_FRONT)) {
+        cout << "STATE: DEFEND_FINDGATE" << endl;
+        rState = RobotState::DEFEND_FINDGATE;
+        return;
+    }
+    
+    rController->driveRobot(60, PI/2.4, 0);
 }
 
 void RobotLogic::defendScan() {
@@ -339,10 +389,14 @@ void RobotLogic::defendScan() {
         return;
     }
     
-    gateState = getGateState();
+    releaseBallDriveLocks();
+    ballTimeoutLock = false;
+    
+    gateState = getDefendGateState();
     ballState = getBallState();
     
-    if (gateState != GateFindState::OPPOSING_GATE_REAR) {
+    if ((gateState != GateFindState::OPPOSING_GATE_REAR) && 
+            (gateState != GateFindState::OPPOSING_REAR_OTHER_FRONT)) {
         cout << "STATE: DEFEND_FINDGATE" << endl;
         rState = RobotState::DEFEND_FINDGATE;
         return;
@@ -353,27 +407,36 @@ void RobotLogic::defendScan() {
         return;
     }
     
-    float gateAngle, gateDistance;
+    float gateAngle, gateDistance, attackingGateAngle;
     
     if (goal == Goal::gBLUE) {
         gateAngle = yGate.GetAngle();
         gateDistance = yGate.GetDistance();
+        attackingGateAngle = bGate.GetAngle();
     } else {
         gateAngle = bGate.GetAngle();
         gateDistance = bGate.GetDistance();
+        attackingGateAngle = yGate.GetAngle();
     }
     
-    if (gateAngle < 160) {
+    if (gateAngle < 165) {
         defendScanDir = 1.0;
-    } else if (gateAngle > 200) {
+    } else if (gateAngle > 195) {
         defendScanDir = -1.0;
     }
     
     float moveDir, rotSpd, moveSpd;
     
-    moveDir = ((gateDistance - DEFEND_GATE_DISTANCE) + (PI / 2.0)) * defendScanDir;
-    moveSpd = 70.0;
-    rotSpd = (gateAngle / 180.0 * PI - PI) * 0.05;
+    if (gateState == GateFindState::OPPOSING_GATE_REAR) {
+        moveDir = ((gateDistance - DEFEND_GATE_DISTANCE) + (PI / 2.0)) * defendScanDir;
+        moveSpd = 70.0;
+        rotSpd = (gateAngle / 180.0 * PI - PI) * 0.15;
+    }
+    if (gateState == GateFindState::OPPOSING_REAR_OTHER_FRONT) {
+        moveDir = ((gateDistance - DEFEND_GATE_DISTANCE) + (PI / 2.0)) * defendScanDir;
+        moveSpd = 70.0;
+        rotSpd = (attackingGateAngle / 180.0 * PI) * 1.2;
+    }
     
     rController->driveRobot(moveSpd, moveDir, rotSpd);
 }
@@ -556,7 +619,7 @@ void RobotLogic::driveBallsFront() {
     } else {
         rController->stopDribbler();
     }
-    robotDriveWrapperFront(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 30, 111, 1.0f);
+    robotDriveWrapperFront(ball.getCen_x(), ball.getAngle(), ball.getDistance(), 30, 160, 1.0f);
     
 }
 
@@ -565,7 +628,7 @@ void RobotLogic::driveBallsFront() {
 
 void RobotLogic::driveBallsRear() {
     Ball ball = getFirstRearBall();
-    if (ball.getDistance() < 0.4f) {
+    if (ball.getDistance() < 0.5f) {
         cout << "BALL AT REAR, TURNING" << endl;
         lockBallTurn();
         return;
@@ -706,11 +769,11 @@ void RobotLogic::gateVisibleFront() {
         gate_y = yGate.GetCen_y();
         gate_w = yGate.GetWidth();
     }
-    aimThresh = gate_w * 0.15 + 5;
+    aimThresh = gate_w * 0.15;
     float angleSpd = gateAngle * 0.5;
     float turn = 0;
-    if (angleSpd < 0) turn = -3;
-    if (angleSpd > 0) turn = 3;
+    if (angleSpd < 0) turn = -7;
+    if (angleSpd > 0) turn = 7;
     turnSpeed = angleSpd + turn;
 
     if (gate_x < CAM_W / 2 - aimThresh) rController->driveRobot(0, 0, turnSpeed);
@@ -748,7 +811,7 @@ void RobotLogic::opposingGateFront() {
     if(distance>2.0f){
         robotDriveWrapperFront(cen_x, angle, distance, 10, 150, 2.5);
     } else {
-        rController->driveRobot(0, 0, -50);
+        rController->driveRobot(0, 0, -25);
     }
 }
 
@@ -769,8 +832,9 @@ void RobotLogic::opposingGateRear() {
     if(distance>2.0f){
         robotDriveWrapperRear(cen_x, angle, distance, 10, 150, 2.5);
     } else {
-        rController->driveRobot(0, 0, -50);
+        rController->driveRobot(0, 0, -25);
     }
+    rState = RobotState::FIND_GATE;
 }
 
 void RobotLogic::gateInvisible() {
@@ -946,3 +1010,40 @@ void RobotLogic::setRole() {
     role = rController->getRole();
 }
 
+GateFindState RobotLogic::getDefendGateState() {
+    if (gate_rear_turn) {
+        return GateFindState::GATE_ROTATE;
+    }
+
+    if (goal == Goal::gBLUE) {
+        if ((yGate.GetDir() == RobotConstants::Direction::REAR) && 
+                (bGate.GetDir() == RobotConstants::Direction::FRONT)) {
+            return GateFindState::OPPOSING_REAR_OTHER_FRONT;
+        } else if (yGate.GetDir() == RobotConstants::Direction::REAR) {
+            return GateFindState::OPPOSING_GATE_REAR;
+        } else if (yGate.GetDir() == RobotConstants::Direction::FRONT) {
+            return GateFindState::OPPOSING_GATE_FRONT;
+        } else if (bGate.GetDir() == RobotConstants::Direction::REAR) {
+            return GateFindState::GATE_VISIBLE_REAR;
+        } else if (bGate.GetDir() == RobotConstants::Direction::FRONT) {
+            return GateFindState::GATE_VISIBLE_FRONT;
+        } else {
+            return GateFindState::GATE_INVISIBLE;
+        }
+    } else {
+        if ((bGate.GetDir() == RobotConstants::Direction::REAR) && 
+                (yGate.GetDir() == RobotConstants::Direction::FRONT)) {
+            return GateFindState::OPPOSING_REAR_OTHER_FRONT;
+        } else if (bGate.GetDir() == RobotConstants::Direction::REAR) {
+            return GateFindState::OPPOSING_GATE_REAR;
+        } else if (bGate.GetDir() == RobotConstants::Direction::FRONT) {
+            return GateFindState::OPPOSING_GATE_FRONT;
+        } else if (yGate.GetDir() == RobotConstants::Direction::REAR) {
+            return GateFindState::GATE_VISIBLE_REAR;
+        } else if (yGate.GetDir() == RobotConstants::Direction::FRONT) {
+            return GateFindState::GATE_VISIBLE_FRONT;
+        } else {
+            return GateFindState::GATE_INVISIBLE;
+        }
+    }
+}

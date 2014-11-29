@@ -34,7 +34,7 @@
 #define MIN_GATE_WIDTH 80
 #define MIN_GATE_SIZE 600
 
-#define DEFEND_GATE_DISTANCE 0.4f
+#define DEFEND_GATE_DISTANCE 0.22f
 
 #define SEG_BLACK 0
 #define SEG_WHITE 1
@@ -189,6 +189,7 @@ enum RobotState{
     KICK_BALL,
     STALLING,
     DEFEND_BALL,
+    DEFEND_INITIAL,
     DEFEND_SCAN,
     DEFEND_FINDGATE,
     DEFEND_KICK
@@ -214,7 +215,8 @@ enum GateFindState{
     OPPOSING_GATE_FRONT,
     OPPOSING_GATE_REAR,
     GATE_INVISIBLE,
-    GATE_ROTATE
+    GATE_ROTATE,
+    OPPOSING_REAR_OTHER_FRONT
 };
 
 enum TimeoutGateDir{

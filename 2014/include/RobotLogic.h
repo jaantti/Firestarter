@@ -117,8 +117,10 @@ private:
     void defendScan();
     void defendKick();
     void driveToGate();
+    void defendInitial();
     
     GateFindState getGateState();
+    GateFindState getDefendGateState();
     
     BallFindState getBallState();
     

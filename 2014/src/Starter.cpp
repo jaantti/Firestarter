@@ -73,6 +73,10 @@ bool Starter::start() {
     rLogic.setInitialTime(tim1);
     unsigned long int tim2;
     
+    rController.runDribbler();
+    usleep(50000);
+    rController.stopDribbler();
+    
     unsigned long int serialDif;
     
     //TODO : Measure time for main loop AND measure time between serial communications.

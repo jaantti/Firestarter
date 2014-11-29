@@ -234,7 +234,12 @@ enum class Role : int{
     rDEFEND = 2
 };
 
- 
+enum BallTimeoutState{
+	GATE_SCAN,
+	GATE_DRIVE,
+	TIMEOUT_RELEASE,
+	UNDEFINED
+};
 
 namespace RobotConstants{
     
@@ -244,7 +249,9 @@ namespace RobotConstants{
         UNDEFINED = 203
     };
     
+
     const int ballTimeoutThresh = 45;
+    const int timeoutScanCount = 60;
     const float ballTurnThreshold = 0.25f;
     const float gateTimeoutDistance = 2.0f;
     const float rearGateDistance = 3.0f;

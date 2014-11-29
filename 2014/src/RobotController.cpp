@@ -20,6 +20,7 @@ RobotController::RobotController() {
 }
 
 RobotController::~RobotController() {
+
 }
 
 void RobotController::init() {
@@ -50,7 +51,7 @@ void RobotController::driveReverse() {
     }
 
     if (NR_OF_WHEELS == 4) {
-        driveFour((lastSpeed*-1.0f), (lastAngle*-1.0f), (lastRotationSpeed*-1.0f));
+        driveFour((lastSpeed*-1.0f), (lastAngle + Math::MATHPI), (lastRotationSpeed*-1.0f));
     }
 }
 
@@ -121,6 +122,7 @@ void RobotController::driveThree(float spd, float angle, float rotSpd) {
 }
 
 void RobotController::driveFour(float spd, float angle, float rotSpd) {
+	CalculateDriveDirection(spd, angle, rotSpd);
     stallings.clear();
     int speed0 = spd * sin(angle - PI / 4.0) + rotSpd;
     int speed1 = spd * -sin(angle + PI / 4.0) + rotSpd;
@@ -201,7 +203,15 @@ void RobotController::setDriveDirection(DriveDirection dir) {
 }
 
 void RobotController::CalculateDriveDirection(float spd, float angle, float rotSpd) {
-
+	if(spd<0 && angle >Math::MATHPI){
+		this->dir = DriveDirection::REAR;
+	} else if(spd>0){
+		this->dir = DriveDirection::FRONT;
+	} else if(rotSpd>0){
+		this->dir = DriveDirection::ROTATE_LEFT;
+	} else {
+		this->dir = DriveDirection::ROTATE_RIGHT;
+	}
 }
 
 void RobotController::turnAround(int angle, int spd) {
@@ -212,4 +222,5 @@ void RobotController::turnAround(int angle, int spd) {
     usleep(turnTime);
     driveRobot(0, 0, 0);
 }
+
 

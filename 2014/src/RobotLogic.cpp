@@ -671,6 +671,12 @@ void RobotLogic::ballsNotFound() {
         ballTimeoutCount = 0;
         setRState(RobotState::BALL_TIMEOUT);
     }
+
+    if(yGate.GetDir()!=RobotConstants::Direction::UNDEFINED){
+    	timeoutYellowDist = yGate.GetDistance();
+    } else if (bGate.GetDir()!=RobotConstants::Direction::UNDEFINED){
+    	timeoutBlueDist = bGate.GetDistance();
+    }
 }
 
 void RobotLogic::robotRotate(int angle, int spd) {
@@ -684,9 +690,101 @@ void RobotLogic::robotRotate(int angle, int spd) {
 //This function should keep the robot in timeout state until both gates can be seen.
 
 void RobotLogic::ballTimeout() {
+
+
+
+	switch(ballTimeoutState){
+	case BallTimeoutState::GATE_SCAN:
+		gateScan();
+		break;
+	case BallTimeoutState::GATE_DRIVE:
+		gateScanDrive();
+		break;
+	case BallTimeoutState::TIMEOUT_RELEASE:
+		resetTimeoutDistances();
+		releaseTimeoutLock();
+		rState = RobotState::FIND_BALL;
+		ballTimeoutState = BallTimeoutState::UNDEFINED;
+		break;
+	case BallTimeoutState::UNDEFINED:
+		rState = RobotState::FIND_BALL;
+		break;
+	}
     //TODO : Some smart logamathingie
     rState = RobotState::FIND_BALL;
 }
+
+void RobotLogic::gateScan(){
+	rController->driveRobot(0, 0, 30);
+	if(yGate.GetDir()!=UNDEFINED){
+		timeoutYellowDist = getGreaterDistance(yGate.GetDistance(), timeoutYellowDist);
+	} else if (bGate.GetDir()!=UNDEFINED){
+		timeoutBlueDist = getGreaterDistance(bGate.GetDistance(), timeoutBlueDist);
+	}
+	if(timeoutYellowDist>0 && timeoutBlueDist>0){
+		ballTimeoutScanCount = 0;
+		ballTimeoutState = BallTimeoutState::GATE_DRIVE;
+	} else {
+		ballTimeoutScanCount++;
+		if(ballTimeoutScanCount>=RobotConstants::timeoutScanCount){
+			ballTimeoutScanCount = 0;
+			ballTimeoutState = BallTimeoutState::GATE_DRIVE;
+		}
+	}
+
+}
+
+void RobotLogic::gateScanDrive(){
+	if(timeoutYellowLock || timeoutBlueLock){
+		if(timeoutYellowLock){
+			if(yGate.GetDir()!=RobotConstants::Direction::UNDEFINED){
+				if(yGate.GetDir()==RobotConstants::Direction::FRONT){
+					if(yGate.GetDistance()>1.5f){
+						robotDriveWrapperFront(yGate.GetCen_x(), yGate.GetAngle(), yGate.GetDistance(), 40, 150, 2.0);
+					} else {
+						ballTimeoutState = BallTimeoutState::TIMEOUT_RELEASE;
+					}
+				} else {
+					if(yGate.GetDistance()>1.5f){
+						robotDriveWrapperRear(yGate.GetCen_x(), yGate.GetAngle(), yGate.GetDistance(), 40, 150, 2.0);
+					} else {
+						ballTimeoutState = BallTimeoutState::TIMEOUT_RELEASE;
+					}
+				}
+			} else {
+				rController->driveRobot(0, 0, 30);
+			}
+		} else if(timeoutBlueLock) {
+			if(bGate.GetDir()!=RobotConstants::Direction::UNDEFINED){
+				if(bGate.GetDir()==RobotConstants::Direction::FRONT){
+					if(bGate.GetDistance()>1.5f){
+						robotDriveWrapperFront(bGate.GetCen_x(), bGate.GetAngle(), bGate.GetDistance(), 40, 150, 2.0);
+					} else {
+						ballTimeoutState = BallTimeoutState::TIMEOUT_RELEASE;
+					}
+				} else {
+					if(bGate.GetDistance()>1.5f){
+						robotDriveWrapperRear(bGate.GetCen_x(), bGate.GetAngle(), bGate.GetDistance(), 40, 150, 2.0);
+					} else {
+						ballTimeoutState = BallTimeoutState::TIMEOUT_RELEASE;
+					}
+				}
+			} else {
+				rController->driveRobot(0, 0, 30);
+			}
+		}
+	} else {
+		if(timeoutYellowDist>timeoutBlueDist){
+			timeoutYellowLock = true;
+		} else if (timeoutYellowDist<timeoutBlueDist){
+			timeoutBlueLock = true;
+		} else {
+			ballTimeoutState = BallTimeoutState::GATE_SCAN;
+		}
+	}
+}
+
+
 
 void RobotLogic::findGate() {
 
@@ -1054,4 +1152,20 @@ GateFindState RobotLogic::getDefendGateState() {
             return GateFindState::GATE_INVISIBLE;
         }
     }
+}
+
+
+void RobotLogic::releaseTimeoutLock(){
+	this->timeoutYellowLock = false;
+	this->timeoutBlueLock = false;
+}
+
+void RobotLogic::resetTimeoutDistances(){
+	this->timeoutYellowDist = 0.0f;
+	this->timeoutBlueDist = 0.0f;
+}
+
+float RobotLogic::getGreaterDistance(float current, float previous){
+	if(current>previous) return current;
+	else return previous;
 }

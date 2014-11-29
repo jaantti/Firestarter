@@ -124,6 +124,19 @@ private:
     GateFindState getGateState();
     GateFindState getDefendGateState();
     
+    BallTimeoutState ballTimeoutState = BallTimeoutState::UNDEFINED;
+    int ballTimeoutScanCount = 0;
+    float timeoutYellowDist = 0.0f;
+    float timeoutBlueDist = 0.0f;
+    bool timeoutYellowLock = false;
+    bool timeoutBlueLock = false;
+    void releaseTimeoutLock();
+    void resetTimeoutDistances();
+    float getGreaterDistance(float current, float previous);
+
+    void gateScan();
+    void gateScanDrive();
+
     BallFindState getBallState();
     
     void countBallData();   

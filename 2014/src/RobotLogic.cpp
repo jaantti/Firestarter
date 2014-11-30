@@ -91,44 +91,44 @@ void RobotLogic::run(float deltaTime) {
 void RobotLogic::runAttack(float dt) {
 
     loadOperationalData();
-
+    
     switch (rState) {
         case RobotState::IDLE:
-            cout << "IDLE: ATTACK" << endl;
+            //cout << "IDLE: ATTACK" << endl;
             idle();
             break;
         case RobotState::FIND_BALL:
-            cout << "FIND_BALL" << endl;
+            //cout << "FIND_BALL" << endl;
             findBall();
             lastState = RobotState::FIND_BALL;
             break;
         case RobotState::BALL_TIMEOUT:
-            cout << "BALL_TIMEOUT" << endl;
+            //cout << "BALL_TIMEOUT" << endl;
             ballTimeout();
             lastState = RobotState::BALL_TIMEOUT;
             break;
         case RobotState::FIND_GATE:
-            cout << "FIND_GATE" << endl;
+            //cout << "FIND_GATE" << endl;
             findGate();
             lastState = RobotState::FIND_GATE;
             break;
         case RobotState::GATE_TIMEOUT:
-            cout << "GATE_TIMEOUT" << endl;
+            //cout << "GATE_TIMEOUT" << endl;
             gateTimeout();
             lastState = RobotState::GATE_TIMEOUT;
             break;
         case RobotState::KICK_BALL:
-            cout << "KICK_BALL" << endl;
+            //cout << "KICK_BALL" << endl;
             kickBall();
             lastState = RobotState::KICK_BALL;
             break;
         case RobotState::NOT_GREEN:
-            cout << "NOT_GREEN" << endl;
+            //cout << "NOT_GREEN" << endl;
             notGreen();
             lastState = RobotState::NOT_GREEN;
             break;
         case RobotState::STALLING:
-            cout << "STALLING" << endl;
+            //cout << "STALLING" << endl;
             stalled();
             lastState = RobotState::STALLING;
             break;
@@ -149,31 +149,31 @@ void RobotLogic::runDefend(float dt) {
     loadOperationalData();
     switch (rState) {
         case RobotState::IDLE:
-            cout << "IDLE: DEFENSE" << endl;
+            //cout << "IDLE: DEFENSE" << endl;
             idle();
             break;
         case RobotState::FIND_BALL:
-            cout << "FIND_BALL" << endl;
+            //cout << "FIND_BALL" << endl;
             rState = RobotState::DEFEND_INITIAL;
             break;
         case RobotState::DEFEND_INITIAL:
-            cout << "DEFEND_INITIAL" << endl;
+            //cout << "DEFEND_INITIAL" << endl;
             defendInitial();
             break;
         case RobotState::DEFEND_BALL:
-            cout << "DEFEND_BALL" << endl;
+            //cout << "DEFEND_BALL" << endl;
             defendBall();
             break;
         case RobotState::DEFEND_FINDGATE:
-            cout << "DEFEND_FINDGATE" << endl;
+            //cout << "DEFEND_FINDGATE" << endl;
             defendFindGate();
             break;
         case RobotState::DEFEND_SCAN:
-            cout << "DEFEND_SCAN" << endl;
+            //cout << "DEFEND_SCAN" << endl;
             defendScan();
             break;
         case RobotState::DEFEND_KICK:
-            cout << "DEFEND_KICK" << endl;
+            //cout << "DEFEND_KICK" << endl;
             defendKick();
             break;
 
@@ -199,7 +199,7 @@ void RobotLogic::defendBall() {
     if (startCounter >= 5) {
         startCounter = 0;
         if (!(rController->getStart())) {
-            cout << "STATE: IDLE" << endl;
+            //cout << "STATE: IDLE" << endl;
             rState = RobotState::IDLE;
             return;
         }
@@ -208,7 +208,7 @@ void RobotLogic::defendBall() {
     rController->stopDribbler();
     
     if (rController->hasBall()) {
-        cout << "STATE: DEFEND_KICK" << endl;
+        //cout << "STATE: DEFEND_KICK" << endl;
         rState = RobotState::DEFEND_KICK;
         return;
     }
@@ -229,7 +229,7 @@ void RobotLogic::defendBall() {
     }
     */
     if (ballState != BallFindState::BALL_FRONT) {
-        cout << "STATE: DEFEND_SCAN" << endl;
+        //cout << "STATE: DEFEND_SCAN" << endl;
         rState = RobotState::DEFEND_SCAN;
         return;
     }
@@ -406,7 +406,7 @@ void RobotLogic::defendInitial() {
     if (startCounter >= 5) {
         startCounter = 0;
         if (!(rController->getStart())) {
-            rState = RobotState::IDLE;n
+            rState = RobotState::IDLE;
             return;
         }
     }
@@ -543,7 +543,7 @@ void RobotLogic::defend() {
         attackAngle = yGate.GetAngle();
         
     } else {
-        cout << "defend(): I shouldn't be here" << endl;
+        //cout << "defend(): I shouldn't be here" << endl;
         return;
     }
     
@@ -572,9 +572,11 @@ void RobotLogic::defend() {
 
 bool RobotLogic::isGreen() {
     if (rController->getDriveDir() == DriveDirection::FRONT) {
+        //std::cout << " Front green : " << greens.front_green << std::endl;
         if (greens.front_green < MIN_GREEN_AREA) return false;
         else return true;
     } else if (rController->getDriveDir() == DriveDirection::REAR) {
+        //std::cout << " Back green : " << greens.back_green << std::endl;
         if (greens.back_green < MIN_GREEN_AREA) return false;
         else return true;
     }
@@ -612,6 +614,8 @@ void RobotLogic::idle() {
 
 void RobotLogic::findBall() {
 
+    
+    
     ballState = getBallState();
     
     startingOppositeDistance = 0.0f;
@@ -625,6 +629,7 @@ void RobotLogic::findBall() {
     }
 
     if (rController->hasBall()) {
+        gateKickCounter = 0;
         rState = RobotState::FIND_GATE;
         return;
     }
@@ -638,24 +643,24 @@ void RobotLogic::findBall() {
 
     switch (ballState) {
         case BallFindState::BALL_FRONT:
-            cout << " Driving to ball in front." << std::endl;
+            //cout << " Driving to ball in front." << std::endl;
             //Drive to ball, pick it up, shoot for the moon.
             driveBallsFront();
             break;
         case BallFindState::BALL_REAR:
             //Drive until the ball is closer than a threshold, then turn and pick it up.
-            cout << " Driving to ball in rear." << std::endl;
+            //cout << " Driving to ball in rear." << std::endl;
             driveBallsRear();
             break;
         case BallFindState::BALL_NOT_FOUND:
-            std::cout << " Balls not found state." << std::endl;
+            //std::cout << " Balls not found state." << std::endl;
             //Turn for a bit, then enter timeout
             ballsNotFound();
             break;
         case BallFindState::ROBOT_ROTATE:
-            std::cout << " Doing robot rotation." << std::endl;
+            //std::cout << " Doing robot rotation." << std::endl;
             //The robot should use this state to turn around and reinitialize the state.
-            robotRotate(180, 80);
+            robotRotate(180, 100);
             break;
     }
 }
@@ -676,6 +681,8 @@ int RobotLogic::calculateMoveSpeed(float distance, float min, float max, float t
 //Generic drive to ball based on the ball's distance and angle.
 
 void RobotLogic::driveBallsFront() {
+    releaseTimeoutLock();
+    resetTimeoutDistances();
     Ball ball = getFirstFrontBall();
     if(ball.getDistance()<0.33f){
         rController->runDribbler();
@@ -690,9 +697,11 @@ void RobotLogic::driveBallsFront() {
 //Drive to the closest rear ball until it is under 20cm, then rotate.
 
 void RobotLogic::driveBallsRear() {
+    releaseTimeoutLock();
+    resetTimeoutDistances();
     Ball ball = getFirstRearBall();
     if (ball.getDistance() < 0.5f) {
-        cout << "BALL AT REAR, TURNING" << endl;
+        //cout << "BALL AT REAR, TURNING" << endl;
         lockBallTurn();
         return;
     }
@@ -724,20 +733,18 @@ void RobotLogic::robotDriveWrapperRear(int cen_x, float angle, float distance, f
 
 void RobotLogic::ballsNotFound() {
     ballTimeoutCount++;
-    if(rotationSpeedSaver>0 && (rotationSpeedSaver>20 || rotationSpeedSaver<-20)){
-    	rController->driveRobot(0, 0, rotationSpeedSaver);
-    } else {
-    	rController->driveRobot(0, 0, 35);
-    	rotationSpeedSaver = 35;
-    }
+    rController->driveRobot(0,0,-25);
+    
     if (ballTimeoutCount > RobotConstants::ballTimeoutThresh) {
         ballTimeoutCount = 0;
-        setRState(RobotState::BALL_TIMEOUT);
+        rState = RobotState::BALL_TIMEOUT;
     }
 
     if(yGate.GetDir()!=RobotConstants::Direction::UNDEFINED){
+        //std::cout << " Timeout yellow saved." << std::endl;
     	timeoutYellowDist = yGate.GetDistance();
     } else if (bGate.GetDir()!=RobotConstants::Direction::UNDEFINED){
+        //std::cout << " Timeout blue saved." << std::endl;
     	timeoutBlueDist = bGate.GetDistance();
     }
 }
@@ -754,24 +761,32 @@ void RobotLogic::robotRotate(int angle, int spd) {
 
 void RobotLogic::ballTimeout() {
 
-
-
+        if(getBallState()!=BallFindState::BALL_NOT_FOUND){
+            //std::cout << " I HAVE FOUND BALLS IN TIMEOUT." << std::endl;
+            rState = RobotState::FIND_BALL;
+        }
+        
+        //std::cout << "Ball timeout." << std::endl;
 	switch(ballTimeoutState){
 	case BallTimeoutState::GATE_SCAN:
-		gateScan();
-		break;
+            //std::cout << " Scanning for gates." << std::endl;
+            gateScan();
+            break;
 	case BallTimeoutState::GATE_DRIVE:
-		gateScanDrive();
-		break;
+            //std::cout << " Driving to gate." << std::endl;
+            gateScanDrive();
+            break;
 	case BallTimeoutState::TIMEOUT_RELEASE:
-		resetTimeoutDistances();
-		releaseTimeoutLock();
-		rState = RobotState::FIND_BALL;
-		ballTimeoutState = BallTimeoutState::UNDEFINED;
-		break;
+            //std::cout << " Timeout released." << std::endl;
+            resetTimeoutDistances();
+            releaseTimeoutLock();
+            rState = RobotState::FIND_BALL;
+            ballTimeoutState = BallTimeoutState::UNDEFINED;
+            break;
 	case BallTimeoutState::UNDEFINED:
-		rState = RobotState::FIND_BALL;
-		break;
+            ballTimeoutState = BallTimeoutState::GATE_SCAN;
+            rState = RobotState::FIND_BALL;
+            break;
 	}
     //TODO : Some smart logamathingie
     rState = RobotState::FIND_BALL;
@@ -785,21 +800,23 @@ void RobotLogic::gateScan(){
 		timeoutBlueDist = getGreaterDistance(bGate.GetDistance(), timeoutBlueDist);
 	}
 	if(timeoutYellowDist>0 && timeoutBlueDist>0){
-		ballTimeoutScanCount = 0;
-		ballTimeoutState = BallTimeoutState::GATE_DRIVE;
+            //std::cout << "Distances found. Entering GATE_DRIVE" << std::endl;
+            ballTimeoutScanCount = 0;
+            ballTimeoutState = BallTimeoutState::GATE_DRIVE;
 	} else {
-		ballTimeoutScanCount++;
-		if(ballTimeoutScanCount>=RobotConstants::timeoutScanCount){
-			ballTimeoutScanCount = 0;
-			ballTimeoutState = BallTimeoutState::GATE_DRIVE;
-		}
-	}
+            ballTimeoutScanCount++;
+            if(ballTimeoutScanCount>=RobotConstants::timeoutScanCount){
+            	ballTimeoutScanCount = 0;
+            	ballTimeoutState = BallTimeoutState::GATE_DRIVE;
+            }
+    }
 
 }
 
 void RobotLogic::gateScanDrive(){
 	if(timeoutYellowLock || timeoutBlueLock){
 		if(timeoutYellowLock){
+                    //std::cout << " DRIVING TO YELLOW." << std::endl;
 			if(yGate.GetDir()!=RobotConstants::Direction::UNDEFINED){
 				if(yGate.GetDir()==RobotConstants::Direction::FRONT){
 					if(yGate.GetDistance()>1.5f){
@@ -818,6 +835,7 @@ void RobotLogic::gateScanDrive(){
 				rController->driveRobot(0, 0, 30);
 			}
 		} else if(timeoutBlueLock) {
+                    //std::cout << " DRIVING TO BLUE " << std::endl;
 			if(bGate.GetDir()!=RobotConstants::Direction::UNDEFINED){
 				if(bGate.GetDir()==RobotConstants::Direction::FRONT){
 					if(bGate.GetDistance()>1.5f){
@@ -851,6 +869,13 @@ void RobotLogic::gateScanDrive(){
 
 void RobotLogic::findGate() {
 
+    gateKickCounter++;
+    if(gateKickCounter>120){
+        gateKickCounter++;
+        rState = RobotState::KICK_BALL;
+        return;
+    }
+    
     startCounter++;
     if (startCounter >= 5) {
         startCounter = 0;
@@ -868,7 +893,7 @@ void RobotLogic::findGate() {
     }
 
     if (gateTimeoutLock) {
-        cout << "ENTERING GATE TIMEOUT" << endl;
+        //cout << "ENTERING GATE TIMEOUT" << endl;
         gateTimeoutLock = false;
         rState = RobotState::GATE_TIMEOUT;
         return;
@@ -881,27 +906,27 @@ void RobotLogic::findGate() {
     switch (gateState) {
             //Aim for the gate and shoot.
         case GateFindState::GATE_VISIBLE_FRONT:
-            std::cout << " GATE VISIBLE FRONT." << std::endl;
+            //std::cout << " GATE VISIBLE FRONT." << std::endl;
             gateVisibleFront();
             break;
             //Rotate, shoot.
         case GateFindState::GATE_VISIBLE_REAR:
-            std::cout << " GATE VISIBLE REAR." << std::endl;
+            //std::cout << " GATE VISIBLE REAR." << std::endl;
             gateVisibleRear();
             break;
             //Relocate to a better position, rotate until gate visible, shoot.
         case GateFindState::OPPOSING_GATE_FRONT:
-            std::cout << " OPPOSING GATE VISIBLE FRONT." << std::endl;
+            //std::cout << " OPPOSING GATE VISIBLE FRONT." << std::endl;
             opposingGateFront();
             break;
             //Relocate to a better position, rotate, shoot..
         case GateFindState::OPPOSING_GATE_REAR:
-            std::cout << " OPPOSING GATE VISIBLE REAR." << std::endl;
+            //std::cout << " OPPOSING GATE VISIBLE REAR." << std::endl;
             opposingGateRear();
             break;
             //Turn until a gate is found, otherwise enter a timeout. (RobotConstants::gateTimeout)
         case GateFindState::GATE_INVISIBLE:
-            std::cout << " GATE INVISIBLE " << std::endl;
+            //std::cout << " GATE INVISIBLE " << std::endl;
             gateInvisible();
             break;
             //The system has decided that it must rotate to reach an optimal aiming solution. Rotation = ~180 deg.
@@ -945,7 +970,7 @@ void RobotLogic::gateVisibleFront() {
     else if (gate_x > CAM_W / 2 + aimThresh) rController->driveRobot(0, 0, turnSpeed);
     else {
         rController->driveRobot(0, 0, 0);
-        cout << "STATE: KICK_BALL" << endl;
+        //cout << "STATE: KICK_BALL" << endl;
         rState = RobotState::KICK_BALL;
         return;
     }
@@ -962,6 +987,7 @@ void RobotLogic::gateVisibleRear() {
 //Drive a bit until the opposing gate reaches some threshold or 
 
 void RobotLogic::opposingGateFront() {
+    //std::cout << "OPPOSING GATE FRONT." << std::endl;
     float distance, angle;
     int cen_x;
     if(goal == Goal::gBLUE){
@@ -975,14 +1001,14 @@ void RobotLogic::opposingGateFront() {
     }
     if(distance>2.0f){
         robotDriveWrapperFront(cen_x, angle, distance, 10, 150, 2.5);
-    } else if(rotationSpeedSaver>=30 || rotationSpeedSaver<=-30){
-        rController->driveRobot(0, 0, rotationSpeedSaver);
     } else {
-    	rController->driveRobot(0, 0, 40);
-    }
+        rController->driveRobot(0, 0, 40);
+    } 
+    rState = RobotState::FIND_GATE;
 }
 
 void RobotLogic::opposingGateRear() {
+    //std::cout << "OPPOSING GATE REAR." << std::endl;
     float distance, angle;
     int cen_x;
     if(goal == Goal::gBLUE){
@@ -995,21 +1021,20 @@ void RobotLogic::opposingGateRear() {
         cen_x = bGate.GetCen_x();
     }
     
-    std::cout << " OPPOSING GATE DISTANCE :" << distance << std::endl;
+    //std::cout << " OPPOSING GATE DISTANCE :" << distance << std::endl;
     if(distance>2.0f){
         robotDriveWrapperRear(cen_x, angle, distance, 10, 150, 2.5);
-    }  else if(rotationSpeedSaver>=30 || rotationSpeedSaver<=-30){
-        rController->driveRobot(0, 0, rotationSpeedSaver);
     } else {
     	rController->driveRobot(0, 0, 40);
     }
+    
     rState = RobotState::FIND_GATE;
 }
 
 void RobotLogic::gateInvisible() {
     startingOppositeDistance = 0.0f;
-    gateTimeoutCount++;
-    rController->driveRobot(0,0,-50);
+    //gateTimeoutCount++;
+    rController->driveRobot(0,0, 40);
     /*
     if (gateTimeoutCount > RobotConstants::ballTimeoutThresh) {
         gateTimeoutCount = 0;
@@ -1036,10 +1061,16 @@ void RobotLogic::kickBall() {
 }
 
 void RobotLogic::notGreen() {
+    //std::cout<< " I AM IN NOT_GGREEEEEEN" << std::endl;
     startingOppositeDistance = 0.0f;
-    //TODO : something smart
-    rController->driveRobot(0, 0, 100);
-    cout << "STATE: FIND_BALL" << endl;
+    if(rController->getDriveDir()==DriveDirection::FRONT){        
+        rController->turnAround(50, -50);
+    } else {
+        rController->turnAround(50, 50);
+    }
+           
+        
+    //cout << "STATE: FIND_BALL" << endl;
     rState = RobotState::FIND_BALL;
 }
 
@@ -1136,7 +1167,7 @@ void RobotLogic::lockGateTurn() {
 }
 
 void RobotLogic::releaseBallDriveLocks() {
-    std::cout << " Ball driver locks released." << std::endl;
+    //std::cout << " Ball driver locks released." << std::endl;
     ball_rear_drive = false;
     ball_front_drive = false;
 }

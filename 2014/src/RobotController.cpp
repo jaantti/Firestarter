@@ -64,7 +64,7 @@ void RobotController::chargeCoil() {
 }
 
 Role RobotController::getRole() {
-    return connection.getRole();
+    return Role::rATTACK;
 }
 
 void RobotController::dischargeCoil() {

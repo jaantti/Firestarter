@@ -124,7 +124,9 @@ private:
     GateFindState getGateState();
     GateFindState getDefendGateState();
     
-    BallTimeoutState ballTimeoutState = BallTimeoutState::UNDEFINED;
+    int gateKickCounter = 0;
+    
+    BallTimeoutState ballTimeoutState = BallTimeoutState::GATE_SCAN;
     int ballTimeoutScanCount = 0;
     float timeoutYellowDist = 0.0f;
     float timeoutBlueDist = 0.0f;

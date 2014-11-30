@@ -58,7 +58,6 @@ void SerialConnection::readAnswer(int comport, unsigned char* answer) {
 void SerialConnection::sendCommand(int comport, const char* command) {
     if(comport == -1) return;
     RS232_cputs(comport, command);
-    //usleep(5000);
 }
 
 void SerialConnection::setSpeed(int motor, int speed) {

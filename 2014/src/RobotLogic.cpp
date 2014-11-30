@@ -213,26 +213,36 @@ void RobotLogic::defendBall() {
         return;
     }
     
+    releaseBallDriveLocks();
+    releaseBallTurnLock();
+    releaseGateTurnLock();
+    ballTimeoutLock = false;
+    
     gateState = getDefendGateState();
     ballState = getBallState();
-    
+    /*
     if ((gateState != GateFindState::OPPOSING_GATE_REAR) && 
             (gateState != GateFindState::OPPOSING_REAR_OTHER_FRONT)) {
         cout << "STATE: DEFEND_FINDGATE" << endl;
         rState = RobotState::DEFEND_FINDGATE;
         return;
     }
+    */
     if (ballState != BallFindState::BALL_FRONT) {
         cout << "STATE: DEFEND_SCAN" << endl;
         rState = RobotState::DEFEND_SCAN;
         return;
     }
     
-    float gateAngle, ballAngle, gateDistance, ballDistance;
+    float gateAngle, ballAngle, gateDistance, ballDistance, attackingGateAngle;
     Ball ball = getFirstFrontBall();
     
     ballAngle = ball.getAngle() / 180.0 * PI;
     ballDistance = ball.getDistance();
+    
+    if (ballAngle > PI) {
+        ballAngle -= (PI*2.0);
+    }
     
     if (ballDistance < 0.3) {
         rController->runDribbler();
@@ -241,13 +251,64 @@ void RobotLogic::defendBall() {
     if (goal == Goal::gBLUE) {
         gateAngle = yGate.GetAngle() / 180.0 * PI;
         gateDistance = yGate.GetDistance();
+        attackingGateAngle = bGate.GetAngle() / 180.0 * PI;
     } else {
         gateAngle = bGate.GetAngle() / 180.0 * PI;
         gateDistance = bGate.GetDistance();
+        attackingGateAngle = yGate.GetAngle() / 180.0 * PI;
     }
     
     float moveDir, rotSpd, moveSpd;
     
+    if (gateState == GateFindState::GATE_VISIBLE_FRONT) {
+        moveDir = (PI / 2.0);
+        moveSpd = 210.0 * ballAngle;
+        if (moveSpd < 0) {
+            moveSpd -= 30;
+        } else if (moveSpd > 0) {
+            moveSpd += 30;
+        }
+        rotSpd = (attackingGateAngle / 180.0 * PI) * 1.2;
+    } else if (gateState == GateFindState::OPPOSING_REAR_OTHER_FRONT){
+        moveDir = (PI / 2.0);
+        moveSpd = 210.0 * (ballAngle);
+        if (moveSpd < 0) {
+            moveSpd -= 30;
+            if ((gateAngle / 180 * PI - PI) < -10) {
+                moveSpd *= -1.0;
+            }
+        } else if (moveSpd > 0) {
+            moveSpd += 30;
+            if ((gateAngle / 180 * PI - PI) > 10) {
+                moveSpd *= -1.0;
+            }
+        }
+        rotSpd = (attackingGateAngle / 180.0 * PI) * 1.2;
+    }
+    else if (gateState == GateFindState::OPPOSING_GATE_REAR) {
+        moveDir = (PI / 2.0);
+        moveSpd = 210.0 * ballAngle;
+        if (moveSpd < 0) {
+            moveSpd -= 30;
+        } else if (moveSpd > 0) {
+            moveSpd += 30;
+        }
+        rotSpd = ((gateAngle / 180.0 * PI) - PI) * 0.2;
+    } else {
+        moveDir = (PI / 2.0);
+        moveSpd = 210.0 * ballAngle;
+        if (moveSpd < 0) {
+            moveSpd -= 30;
+            moveDir -= (gateDistance - DEFEND_GATE_DISTANCE);
+        } else if (moveSpd > 0) {
+            moveSpd += 30;
+            moveDir += (gateDistance - DEFEND_GATE_DISTANCE);
+        }
+        rotSpd = 0;
+    }
+    
+    
+    /**
     moveDir = (PI - gateAngle) + ballAngle;
     rotSpd = (gateAngle - PI) + ballAngle;
     
@@ -260,7 +321,7 @@ void RobotLogic::defendBall() {
     } else {
         moveSpd = 0.0;
     }
-    
+    */
     rController->driveRobot(moveSpd, moveDir, rotSpd);
 }
 
@@ -345,7 +406,7 @@ void RobotLogic::defendInitial() {
     if (startCounter >= 5) {
         startCounter = 0;
         if (!(rController->getStart())) {
-            rState = RobotState::IDLE;
+            rState = RobotState::IDLE;n
             return;
         }
     }
@@ -368,7 +429,7 @@ void RobotLogic::defendInitial() {
         return;
     }
     
-    rController->driveRobot(60, PI/2.4, 0);
+    rController->driveRobot(120, PI/2.2, 5);
 }
 
 void RobotLogic::defendScan() {
@@ -390,6 +451,8 @@ void RobotLogic::defendScan() {
     }
     
     releaseBallDriveLocks();
+    releaseBallTurnLock();
+    releaseGateTurnLock();
     ballTimeoutLock = false;
     
     gateState = getDefendGateState();

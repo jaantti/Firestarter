@@ -76,7 +76,8 @@ if (number == 5):
 		##if not M3.isOpen(): M3.open()
 		##if not M4.isOpen(): M4.open()
 
-
+else:
+    sys.exit()
 time.sleep(0.1)
 
 
@@ -84,7 +85,7 @@ time.sleep(0.1)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 
 # get local machine name
-host = "172.17.201.154"                           
+host = "192.168.0.100"                           
 
 port = 9999
 
